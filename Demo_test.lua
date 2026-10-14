@@ -1,7 +1,11 @@
 --[[ ============================================================
-  CHAT BRIDGE v42.7 · UI + ROSE THEME + CUSTOM EMOJI + SCRIPT FORUM  Xeno (PC) · Delta (Android)
+  CHAT BRIDGE v42.7 · UI REDESIGN + ROSE THEME + EMOJI + SCRIPT FORUM  Xeno (PC) · Delta (Android)
   ─────────────────────────────────────────────────────────────
   v42.7 UPGRADES & FIXES:
+       • Redesigned Chat & Script Forum UI: deterministic TextService sizing
+         for Role Chips (Icon + Name), Reaction Pills, Author Headers & Reply bars
+       • Intuitive Profile & Built-in Profile Editor: edit Display Name, Status
+         (with 1-click presets), Bio, and Country Flag directly inside Profile
        • Discord Custom Emoji (:name: / [img:ID]): inline & jumbo display,
          autocomplete :name:, works in both chat input & message reactions
        • Share Emoji Roblox: custom emoji naming, live search bar, single
@@ -9,11 +13,7 @@
        • New "📜 Scripts" Tab (Discord Forum style): post scripts, 1-click
          Copy & Run, emoji reactions, topic reporting, single & multi-delete
        • Upgraded bright "Rose" theme + Bright/Dark theme collection
-       • Fixed: Chat Emoji button popup close() bug
-       • Fixed: 100% full English (EN) & Vietnamese (VI) localization
-       • Fixed: Reliable Script "Run" execution (smart quotes, code fences,
-         URLs, HttpGet fallback, no ellipsis truncation)
-       • Fixed: Overhead Chat Bubble & Same-Server badge only on script users
+       • 100% full English (EN) & Vietnamese (VI) localization
   ─────────────────────────────────────────────────────────────
   v42.4: UI redesign (Profile / Chat / Settings / Context menu)
        + fix Role không hiện trên Profile (case-insensitive assign)
@@ -68,6 +68,7 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local SoundService = game:GetService("SoundService")
 local ContentProvider = game:GetService("ContentProvider")
+local TextService = game:GetService("TextService")
 local Debris = game:GetService("Debris")
 local LP = Players.LocalPlayer
 if not LP then return end
@@ -143,6 +144,13 @@ function H.contrast(a, b)
     return (la + 0.05) / (lb + 0.05)
 end
 function H.mix(a, b, t) return Color3.new(a.R + (b.R - a.R) * t, a.G + (b.G - a.G) * t, a.B + (b.B - a.B) * t) end
+function H.textW(text, ts, font)
+    local s = tostring(text or "")
+    if s == "" then return 0 end
+    local ok, sz = pcall(TextService.GetTextSize, TextService, s, ts or 12, font or Enum.Font.GothamBold, Vector2.new(1000, 100))
+    if ok and sz then return math.ceil(sz.X) end
+    return (#s * math.floor((ts or 12) * 0.62))
+end
 function H.shortTime(ts)
     ts = tonumber(ts)
     if not ts or ts <= 0 then return "" end
@@ -428,6 +436,13 @@ local TXT = {
     sample_hi = { "Xin chào mọi người!", "Hello everyone!" },
     sample_reply = { "Chào Alice 👋", "Hey Alice 👋" },
     sample_ping = { " ơi!", " check this!" },
+    edit_profile = { "Chỉnh sửa Hồ sơ của bạn", "Edit Your Profile" },
+    edit_profile_btn = { "✏ Sửa Hồ sơ", "✏ Edit Profile" },
+    save_profile = { "💾 Lưu Hồ sơ", "💾 Save Profile" },
+    quick_status = { "Chọn nhanh trạng thái:", "Quick status presets:" },
+    quick_country = { "Chọn nhanh quốc gia:", "Quick country flag:" },
+    bio_ph = { "Giới thiệu ngắn về bạn...", "Short bio about yourself..." },
+    status_ph = { "Đang làm gì / trạng thái...", "What are you up to..." },
 }
 local L = saved.lang == "en" and "en" or "vi"
 local function T(k)
@@ -1007,7 +1022,7 @@ local function tb(text, order, w)
     th(b, "TextColor3", "muted")
     return b
 end
-U.bLang, U.bFind, U.bMe, U.bSet, U.bMin = tb(L == "en" and "EN" or "VI", 1), tb("🔍", 2), tb("👤", 3), tb("⚙", 4), tb("–", 5, 28)
+U.bLang, U.bFind, U.bUsers, U.bMe, U.bSet, U.bMin = tb(L == "en" and "EN" or "VI", 1, 28), tb("🔍", 2, 28), tb("👥", 3, 28), tb("👤", 4, 28), tb("⚙", 5, 28), tb("–", 6, 26)
 
 U.divider = mk("Frame", { Size = UDim2.new(1, 0, 0, 1), Position = UDim2.fromOffset(0, 32), BorderSizePixel = 0, ZIndex = 2 }, U.main)
 th(U.divider, "BackgroundColor3", "bg3")
@@ -1101,7 +1116,7 @@ function F.layout()
 
     if veryTiny and micro then
         U.titleLbl.Visible = false
-        U.bLang.Visible = false; U.bFind.Visible = false; U.bMe.Visible = false; U.bSet.Visible = false
+        U.bLang.Visible = false; U.bFind.Visible = false; U.bUsers.Visible = false; U.bMe.Visible = false; U.bSet.Visible = false
         U.tbtns.Size = UDim2.fromOffset(28, 32); U.tbtns.Position = UDim2.new(1, -30, 0, 0)
         U.bMin.Size = UDim2.fromOffset(26, 26)
         U.tabsBar.Visible = false
@@ -1127,7 +1142,7 @@ function F.layout()
 
     U.titleLbl.Visible = wide
     U.titleLbl.Size = UDim2.new(0, math.max(0, W - 196), 1, 0)
-    U.bLang.Visible = wide; U.bFind.Visible = wide; U.bMe.Visible = wide; U.bSet.Visible = true
+    U.bLang.Visible = wide; U.bFind.Visible = wide; U.bUsers.Visible = wide; U.bMe.Visible = wide; U.bSet.Visible = true
     U.tbtns.Size = UDim2.fromOffset(wide and 176 or 92, 32)
     U.tbtns.Position = UDim2.new(1, -(wide and 178 or 94), 0, 0)
     U.bMin.Size = UDim2.fromOffset(28, 26)
@@ -1608,49 +1623,48 @@ function F.roleChip(parent, r, order, big)
     if not r then return nil end
     local col = H.hex(r.color)
     local h = big and 22 or 18
+    local ts = big and 12 or 10
+    local nameStr = F.disp(r.name or "Role")
+    local hasIcon = r.icon ~= nil and tostring(r.icon) ~= ""
+    local icSz = hasIcon and (h - 4) or 0
+    local txtW = math.clamp(H.textW(nameStr, ts, Enum.Font.GothamBold), 12, big and 140 or 100)
+    local padL = hasIcon and 5 or 7
+    local gap = hasIcon and 4 or 0
+    local padR = 7
+    local chipW = padL + icSz + gap + txtW + padR
+
     local f = mk("Frame", {
-        Size = UDim2.fromOffset(0, h),
-        AutomaticSize = Enum.AutomaticSize.X,
+        Size = UDim2.fromOffset(chipW, h),
         BackgroundColor3 = col,
-        BackgroundTransparency = 0.78,
+        BackgroundTransparency = 0.82,
         BorderSizePixel = 0,
         LayoutOrder = order or 0,
-        ZIndex = 4,
-        ClipsDescendants = false,
+        ZIndex = 5,
+        ClipsDescendants = true,
     }, parent)
-    corner(f, h / 2)
-    pad(f, 8, 1, 9, 1)
-    local st = mk("UIStroke", { Color = col, Thickness = 1.2, Transparency = 0.35, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, f)
-    st.ZIndex = 4
-    mk("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal,
-        Padding = UDim.new(0, 4),
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        VerticalAlignment = Enum.VerticalAlignment.Center,
-    }, f)
-    local hasIcon = r.icon and r.icon ~= ""
+    corner(f, math.floor(h / 2))
+    local st = mk("UIStroke", { Color = col, Thickness = 1, Transparency = 0.32, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, f)
+    st.ZIndex = 5
+
     if hasIcon then
-        local ic = F.iconBox(f, r.icon, h - 6, { layout = 1 })
-        ic.ZIndex = 5
+        local ic = F.iconBox(f, r.icon, icSz)
+        ic.Position = UDim2.fromOffset(padL, math.floor((h - icSz) / 2))
+        ic.ZIndex = 6
     end
-    local lbl = mk("TextLabel", {
-        AutomaticSize = Enum.AutomaticSize.X,
-        Size = UDim2.fromOffset(0, h),
+    mk("TextLabel", {
+        Size = UDim2.fromOffset(txtW + 2, h),
+        Position = UDim2.fromOffset(padL + icSz + gap, 0),
         BackgroundTransparency = 1,
-        Text = F.disp(r.name),
+        Text = nameStr,
         TextColor3 = col,
         Font = Enum.Font.GothamBold,
-        TextSize = big and 13 or 11,
-        LayoutOrder = 2,
+        TextSize = ts,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        TextTruncate = Enum.TextTruncate.AtEnd,
         BorderSizePixel = 0,
-        ZIndex = 5,
+        ZIndex = 6,
     }, f)
-    task.defer(function()
-        if f.Parent and f.AbsoluteSize.X < 8 then
-            f.AutomaticSize = Enum.AutomaticSize.None
-            f.Size = UDim2.fromOffset(math.max(40, #tostring(r.name) * 8 + (hasIcon and 26 or 16)), h)
-        end
-    end)
     return f
 end
 
@@ -2147,8 +2161,50 @@ function F.openEmoji(opt)
     show(cur)
 end
 
--- ═══════════════ REACTIONS (FIXED) ═══════════════
+-- ═══════════════ REACTIONS (DETERMINISTIC PIXEL LAYOUT) ═══════════════
 function F.reactionMap(id) S.reactions[id] = S.reactions[id] or {}; return S.reactions[id] end
+
+function F.makeReactionPill(parent, emoji, count, mine, order, onClick)
+    local h = 22
+    local icSz = 15
+    local cStr = tostring(count or 1)
+    local cW = math.max(8, H.textW(cStr, 11, Enum.Font.GothamBold))
+    local pillW = 6 + icSz + 4 + cW + 7
+    local b = mk("TextButton", {
+        Text = "",
+        Size = UDim2.fromOffset(pillW, h),
+        BorderSizePixel = 0,
+        AutoButtonColor = true,
+        Active = true,
+        ZIndex = 20,
+        LayoutOrder = order or 1,
+    }, parent)
+    th(b, "BackgroundColor3", mine and "accent" or "bg3")
+    corner(b, 11)
+    local st = mk("UIStroke", {
+        Color = mine and TH.accent or TH.muted,
+        Thickness = 1,
+        Transparency = mine and 0.2 or 0.65,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    }, b)
+    st.ZIndex = 20
+    local ic = F.iconBox(b, emoji, icSz)
+    ic.Position = UDim2.fromOffset(6, math.floor((h - icSz) / 2))
+    ic.ZIndex = 21
+    local cl = lab(b, cStr, {
+        size = UDim2.fromOffset(cW + 2, h),
+        pos = UDim2.fromOffset(6 + icSz + 4, 0),
+        ts = 11,
+        bold = true,
+    })
+    cl.ZIndex = 21
+    if mine then
+        themed(cl, function(x) x.TextColor3 = H.lum(TH.accent) > 0.55 and Color3.fromRGB(20, 20, 24) or Color3.new(1, 1, 1) end)
+    end
+    if onClick then hook(b.MouseButton1Click, onClick) end
+    return b
+end
+
 function F.renderReactions(id)
     local holder = S.rxHolders and S.rxHolders[id]
     if not holder or not holder.Parent then return end
@@ -2166,46 +2222,28 @@ function F.renderReactions(id)
         local n = 0
         for _ in pairs(map[e]) do n = n + 1 end
         local mine = map[e][P.username] == true
-
-        local b = mk("TextButton", {
-            Text = "",
-            Size = UDim2.fromOffset(52, 26),
-            AutomaticSize = Enum.AutomaticSize.X,
-            BorderSizePixel = 0,
-            AutoButtonColor = false,
-            Active = true,
-            ZIndex = 20,
-            LayoutOrder = i,
-        }, holder)
-        th(b, "BackgroundColor3", mine and "accent" or "bg3")
-        corner(b, 13)
-        pad(b, 8, 2, 8, 2)
-        local st = mk("UIStroke", {
-            Color = mine and TH.accent or TH.muted,
-            Thickness = 1,
-            Transparency = mine and 0.3 or 0.7,
-            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-        }, b)
-        st.ZIndex = 20
-        mk("UIListLayout", {
-            FillDirection = Enum.FillDirection.Horizontal,
-            Padding = UDim.new(0, 5),
-            VerticalAlignment = Enum.VerticalAlignment.Center,
-            HorizontalAlignment = Enum.HorizontalAlignment.Center,
-            SortOrder = Enum.SortOrder.LayoutOrder,
-        }, b)
-        local ic = F.iconBox(b, e, 18, { layout = 1 })
-        ic.ZIndex = 21
-        local cl = lab(b, tostring(n), { size = UDim2.fromOffset(16, 26), ts = 12, bold = true, layout = 2 })
-        cl.AutomaticSize = Enum.AutomaticSize.X
-        cl.ZIndex = 21
-        if mine then
-            cl.TextColor3 = H.lum(TH.accent) > 0.55 and Color3.fromRGB(20, 20, 24) or Color3.new(1, 1, 1)
-        end
-        hook(b.MouseButton1Click, function()
+        F.makeReactionPill(holder, e, n, mine, i, function()
             F.safeTap("rx:" .. id .. ":" .. e, function()
                 F.doReact(S.msgs[id] or { packetId = id, chan = S.chan }, e)
-            end, 0.35)
+            end, 0.32)
+        end)
+    end
+    if #keys > 0 then
+        local addB = mk("TextButton", {
+            Text = "+",
+            Font = Enum.Font.GothamBold,
+            TextSize = 12,
+            Size = UDim2.fromOffset(24, 22),
+            BorderSizePixel = 0,
+            AutoButtonColor = true,
+            Active = true,
+            ZIndex = 20,
+            LayoutOrder = #keys + 1,
+        }, holder)
+        th(addB, "BackgroundColor3", "bg3"); th(addB, "TextColor3", "muted"); corner(addB, 11)
+        hook(addB.MouseButton1Click, function()
+            local m = S.msgs[id] or { packetId = id, chan = S.chan }
+            F.openEmoji({ title = T("react"), onPick = function(e) F.doReact(m, e) end })
         end)
     end
 end
@@ -2271,7 +2309,19 @@ function F.matchSearch(m)
     return tostring(m.content or ""):lower():find(q, 1, true) ~= nil or tostring(m.author or ""):lower():find(q, 1, true) ~= nil
 end
 
--- ═══════════════ MESSAGE RENDER (FIXED ZIndex + long-press) ═══════════════
+-- ═══════════════ MESSAGE RENDER (REDESIGNED & COLLISION-FREE) ═══════════════
+function F.jumpToMsg(targetId)
+    local tf = targetId and S.frames and S.frames[targetId]
+    if not tf or not tf.Parent then return end
+    pcall(function()
+        local dy = tf.AbsolutePosition.Y - U.scroll.AbsolutePosition.Y + U.scroll.CanvasPosition.Y - 30
+        U.scroll.CanvasPosition = Vector2.new(0, math.max(0, dy))
+        local orig = tf.BackgroundColor3
+        tf.BackgroundColor3 = TH.accent
+        task.delay(0.55, function() if tf.Parent then tf.BackgroundColor3 = orig end end)
+    end)
+end
+
 function F.renderMessage(m)
     if not m or m.deleted or m.type ~= "msg" then return end
     if not F.visibleIn(m, S.chan) or not F.matchSearch(m) then return end
@@ -2291,13 +2341,13 @@ function F.renderMessage(m)
         ClipsDescendants = false,
     }, U.scroll)
     th(frame, "BackgroundColor3", mine and "own" or (pinged and "mention" or "bg2"), true)
-    corner(frame, 12)
-    pad(frame, 10, grp and 4 or 8, 10, grp and 4 or 8)
+    corner(frame, 10)
+    pad(frame, 10, grp and 4 or 7, 8, grp and 4 or 7)
 
     -- Vertical role accent bar
     local topR = F.topRole(m.author)
     local barCol = (topR and H.hex(topR.color)) or (F.isDev(m.author) and H.hex(F.DEVROLE.color)) or TH.accent
-    local bar = mk("Frame", { Size = UDim2.new(0, 3, 1, -10), Position = UDim2.fromOffset(0, 5), BackgroundColor3 = barCol, BorderSizePixel = 0, ZIndex = 1 }, frame)
+    local bar = mk("Frame", { Size = UDim2.new(0, 3, 1, -8), Position = UDim2.fromOffset(0, 4), BackgroundColor3 = barCol, BorderSizePixel = 0, ZIndex = 2 }, frame)
     corner(bar, 2)
 
     S.frames[id] = frame
@@ -2307,6 +2357,7 @@ function F.renderMessage(m)
     if not grp then
         local av = mk("ImageButton", {
             Size = UDim2.fromOffset(32, 32),
+            Position = UDim2.fromOffset(0, 1),
             BackgroundTransparency = 1, BorderSizePixel = 0,
             Image = F.avatarUrl(m.uid or F.uidOf(m.author)),
             AutoButtonColor = false, Active = true, ZIndex = 8,
@@ -2317,55 +2368,92 @@ function F.renderMessage(m)
         end)
     end
 
-    -- Content column
-    local colX = grp and 8 or 42
+    -- Content column (reserves right margin so text/buttons never collide)
+    local colX = grp and 8 or 40
+    local rightReserve = grp and 24 or 4
     local col = mk("Frame", {
         Position = UDim2.fromOffset(colX, 0),
-        Size = UDim2.new(1, -(colX + 28), 0, 0),
+        Size = UDim2.new(1, -(colX + rightReserve), 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundTransparency = 1,
         ZIndex = 3,
     }, frame)
-    list(col, 3)
+    list(col, 4)
 
-    -- Header
+    -- Header (Name + Role Chip + Timestamp — reserves 64px on right for Quick Action Bar)
     if not grp then
-        local hdr = mk("Frame", { Size = UDim2.new(1, 0, 0, 18), BackgroundTransparency = 1, LayoutOrder = 1, ZIndex = 3 }, col)
-        mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, hdr)
-        local top = F.topRole(m.author)
+        local hdr = mk("Frame", { Size = UDim2.new(1, -64, 0, 20), BackgroundTransparency = 1, LayoutOrder = 1, ZIndex = 4 }, col)
+        mk("UIListLayout", {
+            FillDirection = Enum.FillDirection.Horizontal,
+            Padding = UDim.new(0, 5),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            VerticalAlignment = Enum.VerticalAlignment.Center,
+        }, hdr)
+        local dispStr = F.disp(m.display or m.author or "?")
+        local nmW = math.clamp(H.textW(dispStr, 13, Enum.Font.GothamBold) + 2, 20, 118)
         local nm = mk("TextButton", {
-            AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 18),
-            BackgroundTransparency = 1, Text = F.disp(m.display or m.author or "?"),
+            Size = UDim2.fromOffset(nmW, 18),
+            BackgroundTransparency = 1, Text = dispStr,
             Font = Enum.Font.GothamBold, TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Left,
             TextTruncate = Enum.TextTruncate.AtEnd,
             LayoutOrder = 1, BorderSizePixel = 0, AutoButtonColor = false, Active = true, ZIndex = 8,
         }, hdr)
         hook(nm.MouseButton1Click, function()
             F.safeTap("nm:" .. id, function() F.openProfile(m.author) end)
         end)
-        mk("UISizeConstraint", { MaxSize = Vector2.new(150, 18) }, nm)
-        if top then nm.TextColor3 = H.hex(top.color) else th(nm, "TextColor3", "text") end
-        if top then F.roleChip(hdr, top, 2)
-        elseif F.isDev(m.author) then F.roleChip(hdr, F.DEVROLE, 2) end
+        if topR then nm.TextColor3 = H.hex(topR.color) else th(nm, "TextColor3", "text") end
+
+        if topR then F.roleChip(hdr, topR, 2, false)
+        elseif F.isDev(m.author) then F.roleChip(hdr, F.DEVROLE, 2, false) end
+
+        local tStr = H.shortTime(m.ts) .. (m.edited and (" " .. T("edited")) or "")
+        local tW = math.max(28, H.textW(tStr, 10, Enum.Font.Gotham) + 4)
         local tm = mk("TextLabel", {
-            AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 18),
+            Size = UDim2.fromOffset(tW, 18),
             BackgroundTransparency = 1,
-            Text = H.shortTime(m.ts) .. (m.edited and (" " .. T("edited")) or ""),
+            Text = tStr,
             Font = Enum.Font.Gotham, TextSize = 10,
-            LayoutOrder = 3, BorderSizePixel = 0, ZIndex = 3,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            LayoutOrder = 3, BorderSizePixel = 0, ZIndex = 4,
         }, hdr)
         th(tm, "TextColor3", "muted")
+
         if m.failed then
-            local fl = mk("TextLabel", { AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 18), BackgroundTransparency = 1, Text = T("failed"), Font = Enum.Font.GothamBold, TextSize = 10, LayoutOrder = 4, BorderSizePixel = 0, ZIndex = 3 }, hdr)
+            local fStr = T("failed")
+            local fl = mk("TextLabel", {
+                Size = UDim2.fromOffset(H.textW(fStr, 10, Enum.Font.GothamBold) + 4, 18),
+                BackgroundTransparency = 1, Text = fStr,
+                Font = Enum.Font.GothamBold, TextSize = 10,
+                LayoutOrder = 4, BorderSizePixel = 0, ZIndex = 4,
+            }, hdr)
             th(fl, "TextColor3", "danger")
         end
     end
 
-    -- Reply preview
+    -- Reply preview (clickable Discord-style quote card)
     if m.replyTo then
-        local rb = mk("Frame", { Size = UDim2.new(1, 0, 0, 16), BackgroundTransparency = 1, LayoutOrder = 2, ZIndex = 3 }, col)
-        local rl = lab(rb, "↩ " .. F.disp(m.replyAuthor or "?") .. ": " .. F.disp(H.clip(F.plain(m.replySnippet or ""), 60)), { size = UDim2.new(1, -8, 1, 0), pos = UDim2.fromOffset(8, 0), h = 14, ts = 10, key = "muted", trunc = true, layout = 1 })
-        local rbar = mk("Frame", { Size = UDim2.new(0, 2, 1, 0), Position = UDim2.fromOffset(0, 0), BackgroundColor3 = barCol, BorderSizePixel = 0, ZIndex = 3 }, rb)
+        local rb = mk("TextButton", {
+            Size = UDim2.new(1, 0, 0, 20),
+            Text = "",
+            AutoButtonColor = true,
+            BorderSizePixel = 0,
+            LayoutOrder = 2,
+            ZIndex = 6,
+            ClipsDescendants = true,
+        }, col)
+        th(rb, "BackgroundColor3", "bg3"); corner(rb, 6)
+        local rbar = mk("Frame", { Size = UDim2.new(0, 3, 1, -4), Position = UDim2.fromOffset(2, 2), BackgroundColor3 = barCol, BorderSizePixel = 0, ZIndex = 7 }, rb)
+        corner(rbar, 2)
+        local rl = lab(rb, "↩ @" .. F.disp(m.replyAuthor or "?") .. ": " .. F.disp(H.clip(F.plain(m.replySnippet or ""), 56)), {
+            size = UDim2.new(1, -14, 1, 0),
+            pos = UDim2.fromOffset(10, 0),
+            ts = 10,
+            key = "muted",
+            trunc = true,
+        })
+        rl.ZIndex = 7
+        hook(rb.MouseButton1Click, function() F.jumpToMsg(m.replyTo) end)
     end
 
     -- Body text & Discord-style Inline / Jumbo Custom Emoji
@@ -2375,15 +2463,14 @@ function F.renderMessage(m)
         body.RichText = false
         body.ZIndex = 3
     elseif not hasText then
-        -- Jumbo Emoji mode
         local ir = mk("Frame", { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, LayoutOrder = 3, ZIndex = 4 }, col)
         mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, ir)
-        local sz = imgCount == 1 and 58 or 44
+        local sz = imgCount == 1 and 54 or 42
         for i, seg in ipairs(segs) do
             if seg.kind == "img" then
                 local info = F.emojiInfoById(seg.id)
                 local holder = mk("TextButton", {
-                    Size = UDim2.fromOffset(sz, sz + (info and 14 or 0)),
+                    Size = UDim2.fromOffset(sz, sz + (info and 13 or 0)),
                     BackgroundTransparency = 1, Text = "", BorderSizePixel = 0, LayoutOrder = i, ZIndex = 6,
                 }, ir)
                 local ib = F.iconBox(holder, "img:" .. seg.id, sz)
@@ -2399,22 +2486,23 @@ function F.renderMessage(m)
             end
         end
     else
-        -- Inline Discord Custom Emoji mode
         local flow = mk("Frame", { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, LayoutOrder = 3, ZIndex = 4 }, col)
         mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, flow)
         local orderIdx = 0
-        local inlineSz = math.clamp(P.textSize + 9, 20, 28)
+        local inlineSz = math.clamp(P.textSize + 8, 20, 26)
         for _, seg in ipairs(segs) do
             if seg.kind == "text" then
                 for word in tostring(seg.text):gmatch("%S+") do
                     orderIdx = orderIdx + 1
+                    local wStr = F.disp(word)
+                    local wW = math.max(6, H.textW(wStr, P.textSize, Enum.Font.Gotham) + 2)
                     local wl = mk("TextLabel", {
-                        AutomaticSize = Enum.AutomaticSize.XY,
-                        Size = UDim2.fromOffset(0, inlineSz),
+                        Size = UDim2.fromOffset(wW, inlineSz),
                         BackgroundTransparency = 1,
-                        Text = F.disp(word),
+                        Text = wStr,
                         Font = Enum.Font.Gotham,
                         TextSize = P.textSize,
+                        TextXAlignment = Enum.TextXAlignment.Left,
                         BorderSizePixel = 0,
                         LayoutOrder = orderIdx,
                         ZIndex = 4,
@@ -2443,34 +2531,47 @@ function F.renderMessage(m)
         Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundTransparency = 1, LayoutOrder = 5, Visible = false, ZIndex = 12,
     }, col)
-    mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, rx)
+    mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, rx)
     S.rxHolders[id] = rx
     F.renderReactions(id)
 
-    -- Quick Action Bar (React 😀+ · Reply ↩ · Menu ···)
-    local qbar = mk("Frame", {
-        Size = UDim2.fromOffset(72, 22),
-        Position = UDim2.new(1, -74, 0, 0),
-        BackgroundTransparency = 1, ZIndex = 10,
-    }, frame)
-    mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 2), HorizontalAlignment = Enum.HorizontalAlignment.Right, VerticalAlignment = Enum.VerticalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }, qbar)
-    local qReact = mk("TextButton", { Size = UDim2.fromOffset(22, 22), BackgroundTransparency = 1, Text = "😀", TextSize = 11, Font = Enum.Font.GothamBold, BorderSizePixel = 0, LayoutOrder = 1, ZIndex = 11 }, qbar)
-    th(qReact, "TextColor3", "muted")
-    hook(qReact.MouseButton1Click, function()
-        F.openEmoji({ title = T("react"), onPick = function(e) F.doReact(m, e) end })
-    end)
-    local qReply = mk("TextButton", { Size = UDim2.fromOffset(22, 22), BackgroundTransparency = 1, Text = "↩", TextSize = 12, Font = Enum.Font.GothamBold, BorderSizePixel = 0, LayoutOrder = 2, ZIndex = 11 }, qbar)
-    th(qReply, "TextColor3", "muted")
-    hook(qReply.MouseButton1Click, function() F.startReply(m) end)
-    local menu = mk("TextButton", {
-        Size = UDim2.fromOffset(24, 22),
-        BackgroundTransparency = 1, Text = "···", TextSize = 14,
-        Font = Enum.Font.GothamBold, BorderSizePixel = 0, LayoutOrder = 3, ZIndex = 11, Active = true,
-    }, qbar)
-    th(menu, "TextColor3", "muted")
-    hook(menu.MouseButton1Click, function()
-        F.openCtx(m, menu.AbsolutePosition + Vector2.new(0, 24))
-    end)
+    -- Quick Action Bar (top-right: non-grouped shows 😀 ↩ ···, grouped shows ···)
+    if not grp then
+        local qbar = mk("Frame", {
+            Size = UDim2.fromOffset(62, 20),
+            Position = UDim2.new(1, -62, 0, 0),
+            BackgroundTransparency = 1, ZIndex = 10,
+        }, frame)
+        mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 2), HorizontalAlignment = Enum.HorizontalAlignment.Right, VerticalAlignment = Enum.VerticalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }, qbar)
+        local qReact = mk("TextButton", { Size = UDim2.fromOffset(19, 19), BackgroundTransparency = 1, Text = "😀", TextSize = 11, Font = Enum.Font.GothamBold, BorderSizePixel = 0, LayoutOrder = 1, ZIndex = 11 }, qbar)
+        th(qReact, "TextColor3", "muted")
+        hook(qReact.MouseButton1Click, function()
+            F.openEmoji({ title = T("react"), onPick = function(e) F.doReact(m, e) end })
+        end)
+        local qReply = mk("TextButton", { Size = UDim2.fromOffset(19, 19), BackgroundTransparency = 1, Text = "↩", TextSize = 12, Font = Enum.Font.GothamBold, BorderSizePixel = 0, LayoutOrder = 2, ZIndex = 11 }, qbar)
+        th(qReply, "TextColor3", "muted")
+        hook(qReply.MouseButton1Click, function() F.startReply(m) end)
+        local menu = mk("TextButton", {
+            Size = UDim2.fromOffset(20, 19),
+            BackgroundTransparency = 1, Text = "···", TextSize = 13,
+            Font = Enum.Font.GothamBold, BorderSizePixel = 0, LayoutOrder = 3, ZIndex = 11, Active = true,
+        }, qbar)
+        th(menu, "TextColor3", "muted")
+        hook(menu.MouseButton1Click, function()
+            F.openCtx(m, menu.AbsolutePosition + Vector2.new(0, 22))
+        end)
+    else
+        local menu = mk("TextButton", {
+            Size = UDim2.fromOffset(22, 18),
+            Position = UDim2.new(1, -22, 0, 0),
+            BackgroundTransparency = 1, Text = "···", TextSize = 13,
+            Font = Enum.Font.GothamBold, BorderSizePixel = 0, ZIndex = 11, Active = true,
+        }, frame)
+        th(menu, "TextColor3", "muted")
+        hook(menu.MouseButton1Click, function()
+            F.openCtx(m, menu.AbsolutePosition + Vector2.new(0, 20))
+        end)
+    end
 
     -- Tap + Hold area (dưới cùng để không chặn các button khác)
     local tap = mk("TextButton", {
@@ -2660,11 +2761,8 @@ end
 
 function F.cleanScriptSource(raw)
     local s = tostring(raw or "")
-    -- Strip markdown code fences (```lua ... ```)
     s = s:gsub("^%s*```[%w_%-]*%s+", ""):gsub("%s*```%s*$", "")
-    -- Replace mobile smart quotes with standard ASCII quotes
     s = s:gsub("“", '"'):gsub("”", '"'):gsub("‘", "'"):gsub("’", "'")
-    -- Remove trailing ellipsis if truncated earlier
     s = s:gsub("…$", "")
     return H.trim(s)
 end
@@ -2679,7 +2777,6 @@ function F.executeScriptCode(rawCode, title)
     F.toast("▶ " .. T("script_exec_ok") .. label, true)
 
     task.spawn(function()
-        -- If user posted a raw URL (https://...), fetch its Lua body first
         if src:match("^https?://%S+$") then
             local fetched = F.fetchUrlBody(src)
             if not fetched then
@@ -2689,14 +2786,12 @@ function F.executeScriptCode(rawCode, title)
             src = F.cleanScriptSource(fetched)
         end
 
-        -- Rewrite game:HttpGet("url") / game:HttpGetAsync("url") calls if executor's native game:HttpGet is missing
         local compiler = (getgenv and getgenv().loadstring) or loadstring or load
         if type(compiler) ~= "function" then
             F.toast(T("script_exec_err") .. "Executor has no loadstring", true)
             return
         end
 
-        -- Ensure global HttpGet fallback exists in getgenv()
         pcall(function()
             local g = (getgenv and getgenv()) or _G
             if type(g.HttpGet) ~= "function" then
@@ -2821,12 +2916,27 @@ function F.openScriptDetail(sc)
     if not sc then return end
     local scr, close = F.modalBox("📜 " .. F.disp(sc.title), 410, 560)
     local metaCard = F.card(scr, 0); metaCard.AutomaticSize = Enum.AutomaticSize.Y; metaCard.Size = UDim2.new(1, 0, 0, 0)
-    pad(metaCard, 10, 8, 10, 8); list(metaCard, 4)
+    pad(metaCard, 10, 8, 10, 8); list(metaCard, 5)
 
-    local authorRow = row(metaCard, 24)
-    lab(authorRow, "[" .. F.disp(sc.tag or "Universal") .. "]  ·  @" .. F.disp(sc.author) .. "  ·  " .. H.shortTime(sc.ts), {
-        size = UDim2.new(1, 0, 1, 0), ts = 11, bold = true, key = "accent", trunc = true,
-    })
+    local authorRow = mk("Frame", { Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1 }, metaCard)
+    mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, authorRow)
+    local av = mk("ImageButton", { Size = UDim2.fromOffset(20, 20), BackgroundTransparency = 1, Image = F.avatarUrl(sc.uid or F.uidOf(sc.author)), BorderSizePixel = 0, LayoutOrder = 1 }, authorRow)
+    corner(av, 10)
+    hook(av.MouseButton1Click, function() F.openProfile(sc.author) end)
+    local topR = F.topRole(sc.author)
+    local authStr = F.disp(sc.display or sc.author or "?")
+    local authBtn = mk("TextButton", {
+        Size = UDim2.fromOffset(math.clamp(H.textW(authStr, 12, Enum.Font.GothamBold) + 4, 24, 130), 20),
+        BackgroundTransparency = 1, Text = authStr, Font = Enum.Font.GothamBold, TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd,
+        BorderSizePixel = 0, LayoutOrder = 2,
+    }, authorRow)
+    if topR then authBtn.TextColor3 = H.hex(topR.color) else th(authBtn, "TextColor3", "text") end
+    hook(authBtn.MouseButton1Click, function() F.openProfile(sc.author) end)
+    if topR then F.roleChip(authorRow, topR, 3, false)
+    elseif F.isDev(sc.author) then F.roleChip(authorRow, F.DEVROLE, 3, false) end
+
+    lab(metaCard, "[" .. F.disp(sc.tag or "Universal") .. "]  ·  " .. H.shortTime(sc.ts), { ts = 11, bold = true, key = "accent" })
     if sc.desc and sc.desc ~= "" then
         lab(metaCard, F.disp(sc.desc), { wrap = true, auto = true, ts = 12 })
     end
@@ -2854,10 +2964,10 @@ function F.openScriptDetail(sc)
     corner(codeBox, 8); pad(codeBox, 8, 8, 8, 8)
 
     local act1 = row(scr, 32)
-    local bCopy = rbtn(act1, "📋 " .. T("copy"), { key = "accent", size = UDim2.new(0.34, -3, 1, 0) })
-    hook(bCopy.MouseButton1Click, function() F.copyText(tostring(sc.code or "")) end)
     local bExec = rbtn(act1, "▶ " .. T("script_exec"), { key = "ok", size = UDim2.new(0.34, -3, 1, 0) })
     hook(bExec.MouseButton1Click, function() F.executeScriptCode(sc.code, sc.title) end)
+    local bCopy = rbtn(act1, "📋 " .. T("copy"), { key = "accent", size = UDim2.new(0.34, -3, 1, 0) })
+    hook(bCopy.MouseButton1Click, function() F.copyText(tostring(sc.code or "")) end)
     local bReact = rbtn(act1, "😀+ " .. T("react"), { size = UDim2.new(0.32, -3, 1, 0) })
     hook(bReact.MouseButton1Click, function()
         F.openEmoji({ title = T("react"), onPick = function(e) F.doScriptReact(sc, e) end })
@@ -3057,8 +3167,9 @@ function F.renderScriptForum()
     for i, tg in ipairs(F.SCRIPT_TAGS) do
         local on = (S.scriptTagFilter or "All") == tg
         local dispTag = tg == "All" and T("tag_all") or (tg == "Current Game" and T("tag_cur_game") or tg)
+        local tgW = math.max(44, H.textW(dispTag, 10, Enum.Font.GothamBold) + 18)
         local b = mk("TextButton", {
-            AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 22),
+            Size = UDim2.fromOffset(tgW, 22),
             Text = dispTag,
             Font = Enum.Font.GothamBold, TextSize = 10, BorderSizePixel = 0, LayoutOrder = i,
         }, tagScroll)
@@ -3068,7 +3179,7 @@ function F.renderScriptForum()
         else
             th(b, "TextColor3", "muted")
         end
-        corner(b, 11); pad(b, 10, 0, 10, 0)
+        corner(b, 11)
         hook(b.MouseButton1Click, function()
             S.scriptTagFilter = tg
             F.rebuildFeed(true)
@@ -3116,7 +3227,7 @@ function F.renderScriptForum()
         th(card, "BackgroundColor3", isSel and "mention" or "bg2", true)
         corner(card, 12)
         pad(card, 12, 8, 10, 8)
-        list(card, 4)
+        list(card, 5)
 
         local topR = F.topRole(sc.author)
         local barCol = (topR and H.hex(topR.color)) or (F.isDev(sc.author) and H.hex(F.DEVROLE.color)) or TH.accent
@@ -3127,12 +3238,13 @@ function F.renderScriptForum()
             ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
         }, card)
 
-        local hdr = mk("Frame", { Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, LayoutOrder = 1 }, card)
-        mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, hdr)
+        -- Row 1: Category Tag Pill + Time + Report badge + Multi-select checkbox
+        local metaTop = mk("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, LayoutOrder = 1 }, card)
+        mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, metaTop)
 
         if staff and S.scriptMultiMode then
-            local chkBtn = tbtn(hdr, isSel and "✔" or "○", {
-                size = UDim2.fromOffset(24, 22), ts = 12, key = isSel and "danger" or "bg3", r = 6, layout = 0,
+            local chkBtn = tbtn(metaTop, isSel and "✔" or "○", {
+                size = UDim2.fromOffset(22, 20), ts = 11, key = isSel and "danger" or "bg3", r = 6, layout = 0,
             })
             hook(chkBtn.MouseButton1Click, function()
                 S.scriptSelected[sid] = not S.scriptSelected[sid] or nil
@@ -3140,12 +3252,22 @@ function F.renderScriptForum()
             end)
         end
 
-        local tagPill = mk("Frame", { AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 18), BorderSizePixel = 0, LayoutOrder = 1 }, hdr)
-        th(tagPill, "BackgroundColor3", "bg3"); corner(tagPill, 9); pad(tagPill, 7, 0, 7, 0)
-        lab(tagPill, F.disp(sc.tag or "Universal"), { size = UDim2.fromOffset(0, 18), auto = false, ts = 10, bold = true, key = "accent" }).AutomaticSize = Enum.AutomaticSize.X
+        local tgStr = F.disp(sc.tag or "Universal")
+        local tgPillW = math.clamp(H.textW(tgStr, 10, Enum.Font.GothamBold) + 14, 42, 130)
+        local tagPill = mk("Frame", { Size = UDim2.fromOffset(tgPillW, 18), BorderSizePixel = 0, LayoutOrder = 1 }, metaTop)
+        th(tagPill, "BackgroundColor3", "bg3"); corner(tagPill, 9)
+        lab(tagPill, tgStr, { size = UDim2.fromScale(1, 1), ts = 10, bold = true, key = "accent", align = Enum.TextXAlignment.Center, trunc = true })
 
+        local tmStr = H.shortTime(sc.ts)
+        lab(metaTop, "· " .. tmStr, { size = UDim2.fromOffset(H.textW(tmStr, 10, Enum.Font.Gotham) + 14, 18), ts = 10, key = "muted", layout = 2 })
+
+        if staff and rptCount > 0 then
+            lab(metaTop, "🚩 " .. rptCount, { size = UDim2.fromOffset(38, 18), ts = 10, bold = true, key = "warn", layout = 3 })
+        end
+
+        -- Row 2: Full-width Topic Title
         local titleBtn = mk("TextButton", {
-            Size = UDim2.new(1, -110, 0, 20),
+            Size = UDim2.new(1, 0, 0, 20),
             BackgroundTransparency = 1,
             Text = F.disp(sc.title or "Untitled"),
             Font = Enum.Font.GothamBold,
@@ -3154,30 +3276,33 @@ function F.renderScriptForum()
             TextTruncate = Enum.TextTruncate.AtEnd,
             BorderSizePixel = 0,
             LayoutOrder = 2,
-        }, hdr)
+        }, card)
         th(titleBtn, "TextColor3", "text")
         hook(titleBtn.MouseButton1Click, function() F.openScriptDetail(sc) end)
 
-        local metaRow = mk("Frame", { Size = UDim2.new(1, 0, 0, 18), BackgroundTransparency = 1, LayoutOrder = 2 }, card)
+        -- Row 3: Author Avatar + Author Name (exact width) + Role Chip (with Role Icon)
+        local metaRow = mk("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, LayoutOrder = 3 }, card)
         mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, metaRow)
         local av = mk("ImageButton", { Size = UDim2.fromOffset(18, 18), BackgroundTransparency = 1, Image = F.avatarUrl(sc.uid or F.uidOf(sc.author)), BorderSizePixel = 0, LayoutOrder = 1 }, metaRow)
         corner(av, 9)
         hook(av.MouseButton1Click, function() F.openProfile(sc.author) end)
+        local authStr = F.disp(sc.display or sc.author or "?")
+        local authW = math.clamp(H.textW(authStr, 11, Enum.Font.GothamBold) + 4, 20, 120)
         local authBtn = mk("TextButton", {
-            AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 18),
-            BackgroundTransparency = 1, Text = F.disp(sc.display or sc.author or "?"),
-            Font = Enum.Font.GothamBold, TextSize = 11, BorderSizePixel = 0, LayoutOrder = 2,
+            Size = UDim2.fromOffset(authW, 18),
+            BackgroundTransparency = 1, Text = authStr,
+            Font = Enum.Font.GothamBold, TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd,
+            BorderSizePixel = 0, LayoutOrder = 2,
         }, metaRow)
         if topR then authBtn.TextColor3 = H.hex(topR.color) else th(authBtn, "TextColor3", "text") end
         hook(authBtn.MouseButton1Click, function() F.openProfile(sc.author) end)
-        if topR then F.roleChip(metaRow, topR, 3) elseif F.isDev(sc.author) then F.roleChip(metaRow, F.DEVROLE, 3) end
-        lab(metaRow, "· " .. H.shortTime(sc.ts), { size = UDim2.fromOffset(42, 18), ts = 10, key = "muted", layout = 4 })
-        if staff and rptCount > 0 then
-            lab(metaRow, "🚩 " .. rptCount, { size = UDim2.fromOffset(36, 18), ts = 10, bold = true, key = "warn", layout = 5 })
-        end
+        if topR then F.roleChip(metaRow, topR, 3, false)
+        elseif F.isDev(sc.author) then F.roleChip(metaRow, F.DEVROLE, 3, false) end
 
+        -- Row 4: Description & Code Preview
         if sc.desc and sc.desc ~= "" then
-            lab(card, F.disp(H.clip(sc.desc, 160)), { wrap = true, auto = true, ts = 11, key = "muted", layout = 3 })
+            lab(card, F.disp(H.clip(sc.desc, 160)), { wrap = true, auto = true, ts = 11, key = "muted", layout = 4 })
         end
         local codePv = mk("TextButton", {
             Size = UDim2.new(1, 0, 0, 38),
@@ -3189,17 +3314,18 @@ function F.renderScriptForum()
             TextWrapped = true,
             TextTruncate = Enum.TextTruncate.AtEnd,
             BorderSizePixel = 0,
-            LayoutOrder = 4,
+            LayoutOrder = 5,
         }, card)
         th(codePv, "BackgroundColor3", "bg3"); th(codePv, "TextColor3", "text")
         corner(codePv, 7); pad(codePv, 8, 5, 8, 5)
         hook(codePv.MouseButton1Click, function() F.openScriptDetail(sc) end)
 
+        -- Row 5: Action Buttons (Wrapped cleanly)
         local actRow = mk("Frame", {
             Size = UDim2.new(1, 0, 0, 0),
             AutomaticSize = Enum.AutomaticSize.Y,
             BackgroundTransparency = 1,
-            LayoutOrder = 5,
+            LayoutOrder = 6,
             ZIndex = 8,
         }, card)
         mk("UIListLayout", {
@@ -3242,6 +3368,7 @@ function F.renderScriptForum()
             end)
         end
 
+        -- Row 6: Deterministic Reaction Pills
         local rxMap = type(sc.reactions) == "table" and sc.reactions or {}
         local rxKeys = {}
         for em, usrs in pairs(rxMap) do
@@ -3251,27 +3378,16 @@ function F.renderScriptForum()
         if #rxKeys > 0 then
             local rxHolder = mk("Frame", {
                 Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-                BackgroundTransparency = 1, LayoutOrder = 6,
+                BackgroundTransparency = 1, LayoutOrder = 7,
             }, card)
-            mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, rxHolder)
+            mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center }, rxHolder)
             for rxi, em in ipairs(rxKeys) do
                 local n = 0
                 for _ in pairs(rxMap[em]) do n = n + 1 end
                 local mine = rxMap[em][P.username] == true
-                local rb = mk("TextButton", {
-                    Text = "", Size = UDim2.fromOffset(48, 24), AutomaticSize = Enum.AutomaticSize.X,
-                    BorderSizePixel = 0, AutoButtonColor = false, LayoutOrder = rxi,
-                }, rxHolder)
-                th(rb, "BackgroundColor3", mine and "accent" or "bg3")
-                corner(rb, 12); pad(rb, 7, 2, 7, 2)
-                mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), VerticalAlignment = Enum.VerticalAlignment.Center, HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }, rb)
-                local ic = F.iconBox(rb, em, 16, { layout = 1 })
-                local cl = lab(rb, tostring(n), { size = UDim2.fromOffset(14, 22), ts = 11, bold = true, layout = 2 })
-                cl.AutomaticSize = Enum.AutomaticSize.X
-                if mine then
-                    cl.TextColor3 = H.lum(TH.accent) > 0.55 and Color3.fromRGB(20, 20, 24) or Color3.new(1, 1, 1)
-                end
-                hook(rb.MouseButton1Click, function() F.doScriptReact(sc, em) end)
+                F.makeReactionPill(rxHolder, em, n, mine, rxi, function()
+                    F.doScriptReact(sc, em)
+                end)
             end
         end
     end
@@ -3494,7 +3610,7 @@ function F.openProfile(u)
         }),
         Rotation = 25,
     }, banner)
-    local mask = mk("Frame", { Size = UDim2.new(1, 0, 0, 30), Position = UDim2.new(0, 0, 0, 26), BackgroundColor3 = TH.bg3, BorderSizePixel = 0, ZIndex = 2 }, hd)
+    local mask = mk("Frame", { Size = UDim2.new(1, 0, 0, 30), Position = UDim2.new(0, 0, 0, 26), BorderSizePixel = 0, ZIndex = 2 }, hd); th(mask, "BackgroundColor3", "bg3")
     corner(mask, 12)
 
     local avFrame = mk("Frame", {
@@ -3571,7 +3687,8 @@ function F.openProfile(u)
     -- ROLES
     F.section(scr, T("roles") .. (isDevU and " · DEV" or ""))
     local rolesCard = mk("Frame", {
-        Size = UDim2.new(1, 0, 0, 34),
+        Size = UDim2.new(1, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundTransparency = 1,
     }, scr)
     mk("UIListLayout", {
@@ -3628,14 +3745,49 @@ function F.openProfile(u)
     end
 
     if me then
-        if S.viewAs then
-            local back = tbtn(scr, "◀ " .. T("view_self"), { key = "accent", h = 32 })
-            hook(back.MouseButton1Click, function() S.viewAs = false; F.openProfile(u) end)
-            return
+        -- Built-in Intuitive Profile Editor right inside your Profile!
+        local edCard = mk("Frame", { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BorderSizePixel = 0 }, scr)
+        th(edCard, "BackgroundColor3", "bg3"); corner(edCard, 10); pad(edCard, 10, 8, 10, 10); list(edCard, 5)
+        lab(edCard, "✏  " .. string.upper(T("edit_profile")), { ts = 11, bold = true, key = "accent" })
+
+        local fn = field(edCard, T("name"), P.display)
+        local fs = field(edCard, T("status"), P.status)
+        fs.PlaceholderText = T("status_ph")
+
+        -- Quick status chips
+        lab(edCard, T("quick_status"), { ts = 10, key = "muted", bold = true })
+        local stRow = mk("Frame", { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1 }, edCard)
+        mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, stRow)
+        for idx, preset in ipairs({ "🎮 Gaming", "💻 Coding", "☕ AFK", "🔥 Busy", "✕" }) do
+            local sb = tbtn(stRow, preset, { size = UDim2.fromOffset(preset == "✕" and 28 or 72, 22), ts = 10, key = "bg2", r = 11, layout = idx })
+            hook(sb.MouseButton1Click, function() fs.Text = preset == "✕" and "" or preset end)
         end
+
+        local fb = field(edCard, T("bio"), P.bio, true)
+        fb.PlaceholderText = T("bio_ph")
+
+        local fc = field(edCard, T("country"), P.country)
+        lab(edCard, T("quick_country"), { ts = 10, key = "muted", bold = true })
+        local ccRow = mk("Frame", { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1 }, edCard)
+        mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Wraps = true, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, ccRow)
+        for idx, ccode in ipairs({ "VN", "US", "JP", "KR", "GB", "SG", "??" }) do
+            local cb = tbtn(ccRow, H.flag(ccode) .. " " .. ccode, { size = UDim2.fromOffset(46, 22), ts = 10, key = "bg2", r = 11, layout = idx })
+            hook(cb.MouseButton1Click, function() fc.Text = ccode end)
+        end
+
+        local sv = tbtn(edCard, T("save_profile"), { key = "accent", h = 32, ts = 12 })
+        hook(sv.MouseButton1Click, function()
+            P.display = H.clip(H.trim(fn.Text) ~= "" and H.trim(fn.Text) or LP.DisplayName, 40)
+            P.status, P.bio = H.clip(H.trim(fs.Text), 80), H.clip(H.trim(fb.Text), 180)
+            local c = H.trim(fc.Text):upper():sub(1, 2)
+            P.country = #c == 2 and c or "??"
+            S.isDirty = true; F.heartbeat(false); F.toast(T("saved_ok"), true)
+            F.openProfile(P.username)
+        end)
+
         local r1 = row(scr, 32)
+        local rqB = rbtn(r1, "👑 " .. T("request_title"), { key = "accent" }); hook(rqB.MouseButton1Click, function() F.openRequest() end)
         local eb = rbtn(r1, "⚙ " .. T("settings")); hook(eb.MouseButton1Click, function() F.openSettings() end)
-        local va = rbtn(r1, "👀 " .. T("view_as")); hook(va.MouseButton1Click, function() S.viewAs = true; F.openProfile(u) end)
         return
     end
 
@@ -4342,7 +4494,7 @@ function F.openSettings()
     stroke(av, "accent", 2, 0.2)
     lab(hd, F.disp(P.display or P.username), { size = UDim2.new(1, -140, 0, 20), pos = UDim2.fromOffset(66, 10), bold = true, ts = 15, trunc = true })
     lab(hd, "@" .. P.username .. "  ·  " .. (L == "en" and "EN" or "VI"), { size = UDim2.new(1, -140, 0, 14), pos = UDim2.fromOffset(66, 32), ts = 10, key = "muted", trunc = true })
-    local pv = tbtn(hd, "👤 " .. T("profile"), { key = "accent", ts = 10, size = UDim2.fromOffset(80, 26), r = 13 })
+    local pv = tbtn(hd, T("edit_profile_btn"), { key = "accent", ts = 10, size = UDim2.fromOffset(86, 26), r = 13 })
     pv.Position = UDim2.new(1, -88, 0.5, -13)
     hook(pv.MouseButton1Click, function() F.openProfile(P.username) end)
     local lg = tbtn(hd, L == "en" and "EN" or "VI", { ts = 10, size = UDim2.fromOffset(34, 24), r = 12, key = "bg2" })
@@ -4661,14 +4813,14 @@ function F.bubble(author, text, chan)
                 if seg.kind == "text" then
                     for w in tostring(seg.text):gmatch("%S+") do
                         ord = ord + 1
+                        local wStr = F.disp(w)
                         local wl = Instance.new("TextLabel")
-                        wl.AutomaticSize = Enum.AutomaticSize.XY
-                        wl.Size = UDim2.fromOffset(0, 18)
+                        wl.Size = UDim2.fromOffset(math.max(6, H.textW(wStr, 12, Enum.Font.GothamBold) + 2), 18)
                         wl.BackgroundTransparency = 1
                         wl.TextColor3 = TH.text
                         wl.Font = Enum.Font.GothamBold
                         wl.TextSize = 12
-                        wl.Text = F.disp(w)
+                        wl.Text = wStr
                         wl.LayoutOrder = ord
                         wl.Parent = flow
                     end
@@ -5155,15 +5307,21 @@ function F.updateSuggest()
     for _, c in ipairs(U.suggest:GetChildren()) do if not c:IsA("UIListLayout") then c:Destroy() end end
     local show = #items > 0
     for i, it in ipairs(items) do
-        local b = mk("TextButton", { AutomaticSize = Enum.AutomaticSize.X, Size = UDim2.fromOffset(0, 24), Text = "", BorderSizePixel = 0, LayoutOrder = i }, U.suggest)
-        th(b, "BackgroundColor3", "bg3"); corner(b, 12); pad(b, 8, 0, 10, 0)
-        mk("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), VerticalAlignment = Enum.VerticalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }, b)
-        if it.icon then
-            F.iconBox(b, it.icon, 18, { layout = 1 })
+        local hasIc = it.icon ~= nil
+        local lblW = math.clamp(H.textW(it.label, 11, Enum.Font.GothamBold) + 4, 24, 150)
+        local btnW = 8 + (hasIc and 20 or 0) + lblW + 8
+        local b = mk("TextButton", { Size = UDim2.fromOffset(btnW, 24), Text = "", BorderSizePixel = 0, LayoutOrder = i }, U.suggest)
+        th(b, "BackgroundColor3", "bg3"); corner(b, 12)
+        if hasIc then
+            local ic = F.iconBox(b, it.icon, 16)
+            ic.Position = UDim2.fromOffset(7, 4)
         end
-        local l = lab(b, it.label, { size = UDim2.fromOffset(0, 24), ts = 11, bold = true, key = "accent", layout = 2 })
-        l.AutomaticSize = Enum.AutomaticSize.X
-        hook(b.MouseButton1Click, function() U.input.Text = it.fill; U.input:CaptureFocus() end)
+        lab(b, it.label, {
+            size = UDim2.fromOffset(lblW, 24),
+            pos = UDim2.fromOffset(hasIc and 26 or 8, 0),
+            ts = 11, bold = true, key = "accent",
+        })
+        hook(b.MouseButton1Click, function() U.input.Text = it.fill; F.updateSuggest(); U.input:CaptureFocus() end)
     end
     if U.suggest.Visible ~= show then U.suggest.Visible = show; F.layout() end
 end
@@ -5246,7 +5404,8 @@ hook(U.bFind.MouseButton1Click, function()
     F.layout()
 end)
 hook(U.searchBox:GetPropertyChangedSignal("Text"), function() S.search = U.searchBox.Text; F.rebuildFeed() end)
-hook(U.bMe.MouseButton1Click, F.openOnline)
+hook(U.bUsers.MouseButton1Click, F.openOnline)
+hook(U.bMe.MouseButton1Click, function() F.openProfile(P.username) end)
 hook(U.bSet.MouseButton1Click, F.openSettings)
 for name, b in pairs(U.tabs) do
     hook(b.MouseButton1Click, function()
