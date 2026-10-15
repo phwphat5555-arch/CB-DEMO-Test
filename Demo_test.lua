@@ -1,11 +1,11 @@
 local ENV=(getgenv and getgenv())or _G for _,k in ipairs({"CB42_STOP","CB41_STOP","CB40_STOP","CB39_STOP","CB38_STOP","CB37_STOP"})do if type(ENV[k])=="function"then pcall(ENV[k])end end local CFG={
-PROXY="https://cb-roblox.phwphat5555.workers.dev",PROXIES={"https://cb-roblox.phwphat5555.workers.dev","https://backup.phwphat8888.workers.dev","https://backupv2.sillydumb111.workers.dev",
-"https://backupv3.just-a-blur-000.workers.dev",},DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},LONGPOLL=10,POLL_FAST=0.5,POLL_IDLE=2,LP_RETRY=60,HEARTBEAT=20,PRESENCE_TIMEOUT=130,SWEEP=4,OVERLAP_MS=15000,
-HISTORY=60,MAX_MESSAGES=250,MAX_RENDER=50,MAX_CONTENT=800,TYPING_TIMEOUT=4,TYPING_THROTTLE=1.5,REACT_THRO=0.4,GROUP_SECS=300,MENTION_SOUND="rbxassetid://6042053626",MIN_W=60,MIN_H=60,SEEN_MAX=1500,SAVE_THROTTLE=3,}
-for v=41,19,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end CFG.REACT={"👍","😂","🔥","💀","😭","👀","🙏","💔","😎","💢","🌹","🐧","🤓","🤡","🗿","🎉","✅","❌","😮","😢","🤔","💖","🚨","🤞","😍","😡","🤣","👑","🙄"}CFG.SHORTCODES={
-fire="🔥",heart="❤️",love="😍",skull="💀",joy="😂",laugh="🤣",sob="😭",cry="😢",smile="😄",cool="😎",angry="😡",thinking="🤔",thumbsup="👍",like="👍",thumbsdown="👎",dislike="👎",["100"]="💯",
-sparkles="✨",star="⭐",crown="👑",eyes="👀",check="✅",ok="👌",x="❌",no="❌",warning="⚠️",rocket="🚀",wave="👋",pray="🙏",party="🎉",tada="🎉",clap="👏",gg="🏆",gem="💎",zap="⚡",
-lightning="⚡",rose="🌸",ghost="👻",muscle="💪",brain="🧠",}CFG.EMOJI={
+SCRIPT_URL=(type(ENV.CB42_SCRIPT_URL)=="string"and ENV.CB42_SCRIPT_URL)or"",PROXY="https://cb-roblox.phwphat5555.workers.dev",PROXIES={"https://cb-roblox.phwphat5555.workers.dev",
+"https://backup.phwphat8888.workers.dev","https://backupv2.sillydumb111.workers.dev","https://backupv3.just-a-blur-000.workers.dev",},DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},
+LONGPOLL=10,POLL_FAST=0.5,POLL_IDLE=2,POLL_AFK=4,LP_RETRY=60,HEARTBEAT=45,PRESENCE_TIMEOUT=130,SWEEP=4,OVERLAP_MS=15000,HISTORY=60,MAX_MESSAGES=250,MAX_RENDER=50,MAX_CONTENT=800,
+TYPING_TIMEOUT=4,TYPING_THROTTLE=1.5,REACT_THRO=0.4,GROUP_SECS=300,MENTION_SOUND="rbxassetid://6042053626",MIN_W=60,MIN_H=60,SEEN_MAX=1500,SAVE_THROTTLE=3,}for v=41,19,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end
+CFG.REACT={"👍","😂","🔥","💀","😭","👀","🙏","💔","😎","💢","🌹","🐧","🤓","🤡","🗿","🎉","✅","❌","😮","😢","🤔","💖","🚨","🤞","😍","😡","🤣","👑","🙄"}CFG.SHORTCODES={fire="🔥",heart="❤️",love="😍",skull="💀",joy="😂",laugh="🤣",
+sob="😭",cry="😢",smile="😄",cool="😎",angry="😡",thinking="🤔",thumbsup="👍",like="👍",thumbsdown="👎",dislike="👎",["100"]="💯",sparkles="✨",star="⭐",crown="👑",eyes="👀",check="✅",ok="👌",
+x="❌",no="❌",warning="⚠️",rocket="🚀",wave="👋",pray="🙏",party="🎉",tada="🎉",clap="👏",gg="🏆",gem="💎",zap="⚡",lightning="⚡",rose="🌸",ghost="👻",muscle="💪",brain="🧠",}CFG.EMOJI={
 face={"😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","😘","😋","😛","😜","😝","🤑","🤗","🤔","🤐","😐","😑","😶","😏","😒","🙄","😬","😮","😲","😴","🤤","😵","🤠","😎","🤓","😕","😟","🙁","😨","😰","😢","😭","😱","😖","😞","😓","😩","😫","😤","😡","😠","😈","💀","💩","🤡","👻","👽","🤖"},
 hand={"👍","👎","👌","✌","🤞","🤘","🤙","👈","👉","👆","👇","☝","👋","🤚","🖐","🖖","👏","🙌","🤝","🙏","💪","👀","👑","💋","👅","👂","👃","👣"},
 sym={"🔥","💯","✨","⭐","🌟","💥","💫","🎉","🎊","🎁","🏆","💎","💰","🚨","🔔","🎵","🎮","✅","❌","❓","❗","➕","➖","⚡","❤","💖","💗","💓","💞","💕","💘","💝","💔","💛","💚","💙","💜","🖤","🚀","🔰","🔧","💬","💢","💤"},
@@ -128,8 +128,17 @@ quick_country={"Chọn nhanh quốc gia:","Quick country flag:"},bio_ph={"Giới
 tok_cmd_ok={"✔ Lệnh hợp lệ: ","✔ Valid command: "},tok_cmd_wait={"⚡ Đang gõ lệnh: ","⚡ Typing command: "},tok_cmd_bad={"✕ Lệnh không tồn tại: ","✕ Unknown command: "},
 tok_mention_ok={"🔔 Đã nhận diện: ","🔔 Mention active: "},tok_mention_find={"🔍 Đang tìm người chơi: ","🔍 Matching player: "},tok_mention_bad={"✕ Không tìm thấy: ","✕ User not found: "},
 tok_emoji_ok={"✨ Emoji hoạt động: ","✨ Emoji active: "},tok_emoji_find={"🔍 Đang tìm emoji: ","🔍 Matching emoji: "},tok_emoji_bad={"✕ Chưa có emoji: ","✕ Emoji not found: "},tok_state_ok={"✓ HOẠT ĐỘNG","✓ ACTIVE"},
-tok_state_wait={"⚡ ĐANG GÕ","⚡ TYPING"},tok_state_bad={"✕ CHƯA KHỚP","✕ NO MATCH"},nano_cube={"60×60","60×60"},expand_ui={"Mở rộng","Expand"},}local L=saved.lang=="en"and"en"or"vi"local function T(k)local v=TXT[k]
-if not v then return k end return v[L=="en"and 2 or 1]end local THEMES={
+tok_state_wait={"⚡ ĐANG GÕ","⚡ TYPING"},tok_state_bad={"✕ CHƯA KHỚP","✕ NO MATCH"},tag_saved={"⭐ Đã lưu","⭐ Saved"},pin_msg={"Ghim tin nhắn","Pin message"},unpin_msg={"Bỏ ghim","Unpin"},
+pinned_ok={"📌 Đã cập nhật ghim kênh","📌 Updated channel pin"},announce_prefix={"📢 THÔNG BÁO: ","📢 ANNOUNCEMENT: "},
+proxy_panel={"🌐 HỆ THỐNG MULTI-PROXY & BACKUP (400K REQ/NGÀY)","🌐 MULTI-PROXY & FAILOVER POOL (400K REQ/DAY)"},proxy_ping_all={"⚡ Đo Ping Tất Cả Proxy","⚡ Ping Test All Proxies"},
+proxy_active={"● ĐANG DÙNG","● ACTIVE"},proxy_use={"Chuyển","Use"},c_announce={"Thông báo toàn server (Staff/Dev)","Global broadcast announcement (Staff/Dev)"},
+c_pin={"Ghim thông báo lên đầu kênh (Staff/Dev)","Pin message to current channel (Staff/Dev)"},c_rejoin={"Vào lại server hiện tại ngay lập tức","Rejoin current game server immediately"},
+c_hop={"Chuyển sang server khác của game","Hop to another server of this game"},c_copyjob={"Sao chép JobId / PlaceId server hiện tại","Copy current server JobId / PlaceId"},
+c_clear={"Làm sạch khung nhìn tin nhắn hiện tại","Clear current message view"},c_invite={"Gửi thẻ mời mọi người vào chung server","Send 1-click server invite card to chat"},
+c_fps={"Xem FPS, Ping mạng và thông tin server","Check FPS, Ping and server stats"},auto_rejoin={"Tự chạy lại script khi Rejoin / Đổi server","Auto-execute script on Rejoin / Teleport"},
+join_srv_btn={"🎮 Vào Server Cùng Nhau","🎮 Join This Server"},join_srv_self={"Bạn đang ở trong server này rồi!","You are already in this server!"},
+auto_exec_on={"⚡ Đã bật Tự chạy khi vào game: ","⚡ Enabled Auto-Run on join: "},auto_exec_off={"Đã tắt Tự chạy: ","Disabled Auto-Run: "},nano_cube={"60×60","60×60"},expand_ui={"Mở rộng","Expand"},}
+local L=saved.lang=="en"and"en"or"vi"local function T(k)local v=TXT[k]if not v then return k end return v[L=="en"and 2 or 1]end local THEMES={
 rose={bg="#FFF0F5",bg2="#FFFFFF",bg3="#FFE0EC",title="#FFC8DD",text="#4A1228",muted="#9E4E6E",accent="#FF3E78",danger="#E11D48",ok="#10B981",warn="#F59E0B",own="#FFD4E5",mention="#FFF0B8"},
 sakura={bg="#FFF5F9",bg2="#FFFFFF",bg3="#FCE4EC",title="#F8BBD0",text="#3D1828",muted="#8C546B",accent="#EC407A",danger="#E53935",ok="#00BFA5",warn="#FB8C00",own="#F8D7E4",mention="#FFF8CC"},
 mint={bg="#F0FDF4",bg2="#FFFFFF",bg3="#DCFCE7",title="#BBF7D0",text="#064E3B",muted="#3B7A57",accent="#10B981",danger="#EF4444",ok="#059669",warn="#D97706",own="#D1FAE5",mention="#FEF3C7"},
@@ -162,26 +171,29 @@ P.toastPos=saved.toastPos or"tr"P.miniX,P.miniY=tonumber(saved.miniX),tonumber(s
 S.reactions=type(saved.reactions)=="table"and saved.reactions or{}S.seen,S.seenOld,S.seenN={},{},0 S.typing,S.unread,S.dmUnread={},{general=0,game=0,scripts=0,staff=0},{}
 S.roles=type(saved.roles)=="table"and saved.roles or{}S.sharedEmojis=type(saved.sharedEmojis)=="table"and saved.sharedEmojis or{}S.emojiSeq=0 S.scripts=type(saved.scripts)=="table"and saved.scripts or{}S.scriptSeq=0
 S.scriptTagFilter="All"S.scriptMultiMode=false S.scriptSelected={}S.emojiMultiMode=false S.emojiSelected={}P.customEmojiNames=type(saved.customEmojiNames)=="table"and saved.customEmojiNames or{}
-P.proxies=type(saved.proxies)=="table"and saved.proxies or{}S.assign=type(saved.assign)=="table"and saved.assign or{}S.rolesSeq=0 S.devs={}S.mutes,S.warns={},type(saved.warns)=="table"and saved.warns or{}
-S.reports=type(saved.reports)=="table"and saved.reports or{}S.myRequest=nil S.requests={}S.bannedList={}S.banned=nil S.chan,S.search,S.orderN,S.reactAt="general","",0,0
-S.lastSeq,S.booted,S.lpOn,S.lpFails,S.pollFail=0,false,CFG.LONGPOLL>0,0,0 S.lastPollOk,S.activityAt,S.t0=0,os.clock(),os.clock()S.placeName,S.bubbles,S.isDirty,S.tapAt,S.lastType="?",{},false,{},0
-S.winX,S.winY,S.lastSave=nil,nil,0 S.lastByChan,S.newBelow,S.assetOk,S.assetUrl,S.popN={},0,{},{},0 S.rtt,S.sendOk,S.sendFail=nil,0,0 S.holdState={}if P.mute.on then S.mutes[P.username]=P.mute end
+P.proxies=type(saved.proxies)=="table"and saved.proxies or{}P.savedScripts=type(saved.savedScripts)=="table"and saved.savedScripts or{}P.autoScripts=type(saved.autoScripts)=="table"and saved.autoScripts or{}
+P.autoRejoin=saved.autoRejoin~=false P.scriptUrl=type(saved.scriptUrl)=="string"and saved.scriptUrl or CFG.SCRIPT_URL S.pinned=type(saved.pinned)=="table"and saved.pinned or{}
+S.assign=type(saved.assign)=="table"and saved.assign or{}S.rolesSeq=0 S.devs={}S.mutes,S.warns={},type(saved.warns)=="table"and saved.warns or{}S.reports=type(saved.reports)=="table"and saved.reports or{}
+S.myRequest=nil S.requests={}S.bannedList={}S.banned=nil S.chan,S.search,S.orderN,S.reactAt="general","",0,0 S.lastSeq,S.booted,S.lpOn,S.lpFails,S.pollFail=0,false,CFG.LONGPOLL>0,0,0
+S.lastPollOk,S.activityAt,S.t0=0,os.clock(),os.clock()S.placeName,S.bubbles,S.isDirty,S.tapAt,S.lastType="?",{},false,{},0 S.winX,S.winY,S.lastSave=nil,nil,0
+S.lastByChan,S.newBelow,S.assetOk,S.assetUrl,S.popN={},0,{},{},0 S.rtt,S.sendOk,S.sendFail=nil,0,0 S.holdState={}if P.mute.on then S.mutes[P.username]=P.mute end
 for _,r in ipairs(S.roles)do r.position=tonumber(r.position)or 0 end do local norm,lower={},{}for u,v in pairs(S.assign)do local set={}if type(v)=="string"then set[v]=true elseif type(v)=="table"then if#v>0 then
 for _,rid in ipairs(v)do set[rid]=true end else for k,x in pairs(v)do if x==true then set[k]=true elseif type(x)=="string"then set[x]=true end end end end local lk=tostring(u):lower()local key=lower[lk]or u
 lower[lk]=key norm[key]=norm[key]or{}for rid in pairs(set)do norm[key][rid]=true end end S.assign=norm end local handlers={}function F.on(evt,fn)handlers[evt]=handlers[evt]or{};tinsert(handlers[evt],fn);return fn end
 function F.emit(evt,...)for _,fn in ipairs(handlers[evt]or{})do pcall(fn,...)end end local NET={alive=true,notBefore=0,lanes={send={},other={},fast={}},busy={},idx=1,cooldown={},fails={}}local conns={}
-local function hook(sig,fn)local c=sig:Connect(fn);tinsert(conns,c);return c end function F.proxyPool()local list,seen={},{}local function addUrl(u)u=H.trim(tostring(u or"")):gsub("/+$","")
-if u:match("^https?://")and not seen[u]then seen[u]=true list[#list+1]=u end end for _,u in ipairs(CFG.PROXIES or{})do addUrl(u)end addUrl(CFG.PROXY)for _,u in ipairs(P.proxies or{})do addUrl(u)end return list end
-function F.switchProxy(reason)local pool=F.proxyPool()if#pool<=1 then return CFG.PROXY end local now=os.clock()NET.cooldown[CFG.PROXY]=now+120 for offset=1,#pool do local idx=((NET.idx+offset-1)%#pool)+1
-local cand=pool[idx]if(NET.cooldown[cand]or 0)<=now then NET.idx=idx CFG.PROXY=cand S.forceRoles=true S.scriptSeq=0 if F.updateInfo then pcall(F.updateInfo)end return cand end end NET.idx=(NET.idx%#pool)+1
-CFG.PROXY=pool[NET.idx]S.forceRoles=true return CFG.PROXY end local function rawRequest(method,path,bodyTable)local headers={["Content-Type"]="application/json"}local bodyStr=bodyTable~=nil and H.jenc(bodyTable)or nil
-local pool=F.proxyPool()local maxAttempts=max(3,#pool+1)for attempt=1,maxAttempts do while NET.alive and os.clock()<NET.notBefore do task.wait(0.05)end if not NET.alive then return nil,"stopped"end
-local curUrl=CFG.PROXY local opts={Url=curUrl..path,Method=method,Headers=headers}if bodyStr then opts.Body=bodyStr end local t0=os.clock()local ok,res=pcall(httpFn,opts)if ok and type(res)=="table"then
-local code=tonumber(res.StatusCode or res.Status)or 0 local data=H.jdec(res.Body)if code>=200 and code<300 and type(data)=="table"then NET.fails[curUrl]=0 NET.cooldown[curUrl]=nil if method=="POST"then
-local dt=(os.clock()-t0)*1000 S.rtt=S.rtt and(S.rtt*0.7+dt*0.3)or dt end return data,nil,code elseif code==429 and type(data)=="table"and data.error=="rate"then
-NET.notBefore=os.clock()+(tonumber(data.retry_after)or 1.5)+0.1 elseif code==429 or code==503 or code==502 or code==1027 or code==1015 or code>=500 or code==0 or type(data)~="table"then
-NET.fails[curUrl]=(NET.fails[curUrl]or 0)+1 if#pool>1 and(code==429 or code==503 or code==1027 or NET.fails[curUrl]>=2)then F.switchProxy("HTTP "..tostring(code))else task.wait(0.35*attempt)end else
-return type(data)=="table"and data or{},"HTTP "..tostring(code),code end else NET.fails[curUrl]=(NET.fails[curUrl]or 0)+1 if#pool>1 and NET.fails[curUrl]>=2 then F.switchProxy("timeout")else task.wait(0.25*attempt)end
+local function hook(sig,fn)local c=sig:Connect(fn);tinsert(conns,c);return c end local PROXY_POOL={}for _,u in ipairs(CFG.PROXIES or{CFG.PROXY})do u=H.trim(tostring(u or"")):gsub("/+$","")
+if u:match("^https?://")then PROXY_POOL[#PROXY_POOL+1]=u end end if#PROXY_POOL==0 then PROXY_POOL[1]=CFG.PROXY end local function autoFailoverProxy()if#PROXY_POOL<=1 then return CFG.PROXY end local now=os.clock()
+NET.cooldown[CFG.PROXY]=now+600 for offset=1,#PROXY_POOL do local idx=((NET.idx+offset-1)%#PROXY_POOL)+1 local cand=PROXY_POOL[idx]if(NET.cooldown[cand]or 0)<=now then NET.idx=idx CFG.PROXY=cand S.forceRoles=true
+S.scriptSeq=0 return cand end end NET.idx=(NET.idx%#PROXY_POOL)+1 CFG.PROXY=PROXY_POOL[NET.idx]S.forceRoles=true return CFG.PROXY end local function isQuotaLimitReached(code,bodyRaw,data)
+if code==1027 or code==1015 or code==503 then return true end if code==429 and not(type(data)=="table"and data.error=="rate")then return true end local lb=tostring(bodyRaw or""):lower()
+if lb:find("1027",1,true)or lb:find("limit exceeded",1,true)or lb:find("workers.dev",1,true)and lb:find("error",1,true)then return true end return false end local function rawRequest(method,path,bodyTable)
+local headers={["Content-Type"]="application/json"}local bodyStr=bodyTable~=nil and H.jenc(bodyTable)or nil local maxAttempts=max(3,#PROXY_POOL+1)for attempt=1,maxAttempts do
+while NET.alive and os.clock()<NET.notBefore do task.wait(0.05)end if not NET.alive then return nil,"stopped"end local curUrl=CFG.PROXY local opts={Url=curUrl..path,Method=method,Headers=headers}
+if bodyStr then opts.Body=bodyStr end local t0=os.clock()local ok,res=pcall(httpFn,opts)if ok and type(res)=="table"then local code=tonumber(res.StatusCode or res.Status)or 0 local data=H.jdec(res.Body)
+if code>=200 and code<300 and type(data)=="table"then NET.fails[curUrl]=0 NET.cooldown[curUrl]=nil if method=="POST"then local dt=(os.clock()-t0)*1000 S.rtt=S.rtt and(S.rtt*0.7+dt*0.3)or dt end return data,nil,code
+elseif code==429 and type(data)=="table"and data.error=="rate"then NET.notBefore=os.clock()+(tonumber(data.retry_after)or 1.5)+0.1 elseif isQuotaLimitReached(code,res.Body,data)then autoFailoverProxy()
+elseif code>=500 or code==0 or type(data)~="table"then NET.fails[curUrl]=(NET.fails[curUrl]or 0)+1 if#PROXY_POOL>1 and NET.fails[curUrl]>=3 then autoFailoverProxy()else task.wait(0.35*attempt)end else
+return type(data)=="table"and data or{},"HTTP "..tostring(code),code end else NET.fails[curUrl]=(NET.fails[curUrl]or 0)+1 if#PROXY_POOL>1 and NET.fails[curUrl]>=3 then autoFailoverProxy()else task.wait(0.25*attempt)end
 end end return nil,"network"end local function drain(name)if NET.busy[name]then return end NET.busy[name]=true task.spawn(function()while NET.alive and#NET.lanes[name]>0 do local job=tremove(NET.lanes[name],1)
 local data,err,code=rawRequest(job.method,job.path,job.body)if job.cb then pcall(job.cb,data,err,code)end end NET.busy[name]=false end)end local function enqueue(lane,method,path,body,cb)
 if not NET.alive then return end if lane=="fast"and(NET.busy.fast or#NET.lanes.fast>0)then return end tinsert(NET.lanes[lane],{method=method,path=path,body=body,cb=cb})drain(lane)end function F.markSeen(id)
@@ -557,9 +569,14 @@ Text=wStr,Font=fG,TextSize=P.textSize,TextXAlignment=txL,BorderSizePixel=0,Layou
 local isKnown=(lu=="everyone"or lu=="here"or lu==P.username:lower()or F.userRec(u)~=nil or(u and Players:FindFirstChild(u)~=nil))wl.Font=fGB
 th(wl,"TextColor3",(lu==P.username:lower())and"ok"or(isKnown and"warn"or"accent"))else th(wl,"TextColor3","text")end end elseif seg.kind=="img"then orderIdx=orderIdx+1 local eb=mk("TextButton",{
 Size=uo(inlineSz,inlineSz),BackgroundTransparency=1,Text="",BorderSizePixel=0,LayoutOrder=orderIdx,ZIndex=6,},flow)local ib=F.iconBox(eb,"img:"..seg.id,inlineSz)ib.ZIndex=6
-hook(eb.MouseButton1Click,function()F.openEmojiPreview(seg.id,m,false)end)end end end local rx=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=5,Visible=false,ZIndex=12,},col)
-mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},rx)S.rxHolders[id]=rx F.renderReactions(id)if not grp then local qbar=mk("Frame",{Size=uo(62,20),
-Position=u2(1,-62,0,0),BackgroundTransparency=1,ZIndex=10,},frame)mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,2),HorizontalAlignment=Enum.HorizontalAlignment.Right,VerticalAlignment=vaC,SortOrder=soLO},qbar)
+hook(eb.MouseButton1Click,function()F.openEmojiPreview(seg.id,m,false)end)end end end local jPlace,jJob=tostring(m.content or""):match("%[join:(%d+):([%w_%-]+)%]")if jPlace and jJob then
+local jCard=mk("Frame",{Size=u2(1,0,0,32),BorderSizePixel=0,LayoutOrder=4,ZIndex=6},col)th(jCard,"BackgroundColor3","bg3");corner(jCard,8);stroke(jCard,"ok",1,0.3)
+local isSameSrv=(tonumber(jPlace)==game.PlaceId and jJob==game.JobId)local jBtn=tbtn(jCard,isSameSrv and("✓ "..T("join_srv_self"))or T("join_srv_btn"),{
+size=u2(1,-8,0,24),pos=uo(4,4),key=isSameSrv and"bg2"or"ok",ts=11,r=6,})jBtn.ZIndex=7 hook(jBtn.MouseButton1Click,function()if isSameSrv then F.toast(T("join_srv_self"),true);return end
+if F.armAutoTeleport then F.armAutoTeleport()end F.toast("↻ Teleporting to server...",true)pcall(function()TeleportService:TeleportToPlaceInstance(tonumber(jPlace),jJob,LP)end)end)end local rx=mk("Frame",{
+Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=5,Visible=false,ZIndex=12,},col)mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},rx)
+S.rxHolders[id]=rx F.renderReactions(id)if not grp then local qbar=mk("Frame",{Size=uo(62,20),Position=u2(1,-62,0,0),BackgroundTransparency=1,ZIndex=10,},frame)
+mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,2),HorizontalAlignment=Enum.HorizontalAlignment.Right,VerticalAlignment=vaC,SortOrder=soLO},qbar)
 local qReact=mk("TextButton",{Size=uo(19,19),BackgroundTransparency=1,Text="😀",TextSize=11,Font=fGB,BorderSizePixel=0,LayoutOrder=1,ZIndex=11},qbar)th(qReact,"TextColor3","muted")
 hook(qReact.MouseButton1Click,function()F.openEmoji({title=T("react"),onPick=function(e)F.doReact(m,e)end})end)
 local qReply=mk("TextButton",{Size=uo(19,19),BackgroundTransparency=1,Text="↩",TextSize=12,Font=fGB,BorderSizePixel=0,LayoutOrder=2,ZIndex=11},qbar)th(qReply,"TextColor3","muted")
@@ -578,12 +595,15 @@ clamp(pos.X,4,v.X-228),clamp(pos.Y,4,max(4,v.Y-380)))local hdr=mk("Frame",{Size=
 size=u2(1,0,1,0),ts=11,key="muted",trunc=true,})local qr=row(menu,32);qr.LayoutOrder=1 for _,e in ipairs(F.quickEmoji())do local b=tbtn(qr,"",{size=uo(38,32),r=8})local ic=F.iconBox(b,e,24)
 ic.Position=u2(0.5,-12,0.5,-12)hook(b.MouseButton1Click,function()F.closeCtx();F.doReact(m,e)end)end local more=tbtn(qr,"＋",{size=uo(38,32),r=8,key="accent",ts=16})hook(more.MouseButton1Click,function()F.closeCtx()
 F.openEmoji({title=T("react"),onPick=function(e)F.doReact(m,e)end})end)local function item(icon,text,fn,key)local b=tbtn(menu,icon.."  "..text,{size=u2(1,0,0,30),key=key or"bg3",ts=12})b.TextXAlignment=txL
-pad(b,10,0,10,0)hook(b.MouseButton1Click,function()F.closeCtx();fn()end)end item("↩",T("reply"),function()F.startReply(m)end)item("📋",T("copy"),function()F.copyText(F.plain(m.content))end)if m.author==P.username then
-item("✏",T("edit"),function()F.startEdit(m)end)end if m.author==P.username or F.canAct(P.username,m.author)then item("🗑",T("delete"),function()F.deleteMsg(m)end,"danger")end if m.author~=P.username then
-item("👤",T("profile"),function()F.openProfile(m.author)end)item("🚩",T("report"),function()F.openReport(m.author,m)end,"warn")if F.canAct(P.username,m.author)then item("🔇",T("mute"),function()F.openMute(m.author)end)
-end end end function F.chanName(c)if c=="general"then return T("general")elseif c=="game"then return T("game")elseif c=="scripts"then return T("script_forum")elseif c=="staff"then return T("stafftab")end
-local o=F.dmOther(c)return o and("DM · "..o)or c end function F.updateInfo()local n=0 for _,r in pairs(S.users)do if F.isLive(r)then n=n+1 end end n=max(n,1)
-U.infoLbl.Text="● "..n.." "..T("online").."  ·  "..F.chanName(S.chan)..(S.rtt and("  ·  "..floor(S.rtt).."ms")or"")end function F.cancelCompose()S.reply,S.editing=nil,nil U.replyBar.Visible=false F.layout()end
+pad(b,10,0,10,0)hook(b.MouseButton1Click,function()F.closeCtx();fn()end)end item("↩",T("reply"),function()F.startReply(m)end)item("📋",T("copy"),function()F.copyText(F.plain(m.content))end)if F.isStaff(P.username)then
+local curPin=S.pinned and S.pinned[m.chan]local isPinnedThis=curPin and curPin.id==m.packetId item("📌",isPinnedThis and T("unpin_msg")or T("pin_msg"),function()F.publish({type="pin",packetId="pin-"..H.uuid(),
+chan=m.chan,by=P.username,target=isPinnedThis and""or m.packetId,author=m.author,text=isPinnedThis and""or H.clip(F.plain(m.content),140),ts=H.now(),},"send")F.toast(T("pinned_ok"),true)end,"accent")end
+if m.author==P.username then item("✏",T("edit"),function()F.startEdit(m)end)end if m.author==P.username or F.canAct(P.username,m.author)then item("🗑",T("delete"),function()F.deleteMsg(m)end,"danger")end
+if m.author~=P.username then item("👤",T("profile"),function()F.openProfile(m.author)end)item("🚩",T("report"),function()F.openReport(m.author,m)end,"warn")if F.canAct(P.username,m.author)then
+item("🔇",T("mute"),function()F.openMute(m.author)end)end end end function F.chanName(c)if c=="general"then return T("general")elseif c=="game"then return T("game")elseif c=="scripts"then return T("script_forum")
+elseif c=="staff"then return T("stafftab")end local o=F.dmOther(c)return o and("DM · "..o)or c end function F.updateInfo()local n=0 for _,r in pairs(S.users)do if F.isLive(r)then n=n+1 end end n=max(n,1)
+local pIdx=NET.idx or 1 local pin=S.pinned and S.pinned[S.chan]local pinStr=(pin and pin.text and pin.text~="")and("  ·  📌 "..F.disp(H.clip(pin.text,42)))or""
+U.infoLbl.Text="● "..n.." "..T("online").."  ·  "..F.chanName(S.chan)..(S.rtt and("  ·  "..floor(S.rtt).."ms")or"")..pinStr end function F.cancelCompose()S.reply,S.editing=nil,nil U.replyBar.Visible=false F.layout()end
 function F.startReply(m)S.editing=nil S.reply={id=m.packetId,author=m.author,snippet=H.clip(F.plain(m.content),80)}U.replyLbl.Text=T("reply_to")..F.disp(m.author)..": "..F.disp(S.reply.snippet)
 U.replyBar.Visible=true;F.layout();U.input:CaptureFocus()end function F.startEdit(m)S.reply=nil S.editing=m.packetId U.replyLbl.Text=T("editing")U.replyBar.Visible=true;F.layout()U.input.Text=m.content
 U.input:CaptureFocus()end function F.deleteMsg(m)m.deleted=true F.dropFrame(m.packetId)F.onDeleted(m)F.publish({type="delete",target=m.packetId,author=P.username,chan=m.chan})end function F.resend(m)m.failed=false
@@ -592,7 +612,7 @@ local pkt={type="msg",packetId=m.packetId,chan=m.chan,author=m.author,display=m.
 F.publish(pkt,"send",function(ok)if not ok then m.failed=true;F.dropFrame(m.packetId);F.renderMessage(m)end end)end function F.selectChannel(chan)
 if chan=="staff"and not F.isStaff(P.username)then F.toast(T("staff_only"),true);return end S.chan=chan if S.unread[chan]then S.unread[chan]=0 end S.dmUnread[chan]=nil S.newBelow=0;U.jump.Visible=false
 S.search="";U.searchBox.Text="";U.searchBox.Visible=false F.cancelCompose();F.layout()F.rebuildFeed();F.paintTabs();F.updateInfo()U.typing.Text=""end
-F.SCRIPT_TAGS={"All","Universal","Current Game","Hub / GUI","PVP / Combat","Fun / Misc"}function F.fetchUrlBody(url)local ok,body=pcall(function()return game:HttpGet(url,true)end)
+F.SCRIPT_TAGS={"All","Saved","Universal","Current Game","Hub / GUI","PVP / Combat","Fun / Misc"}function F.fetchUrlBody(url)local ok,body=pcall(function()return game:HttpGet(url,true)end)
 if ok and type(body)=="string"and body~=""then return body end local ok2,res=pcall(httpFn,{Url=url,Method="GET"})if ok2 and type(res)=="table"and type(res.Body)=="string"and res.Body~=""then return res.Body end
 return nil end function F.cleanScriptSource(raw)local s=tostring(raw or"")s=s:gsub("^%s*```[%w_%-]*%s+",""):gsub("%s*```%s*$","")s=s:gsub("“",'"'):gsub("”",'"'):gsub("‘","'"):gsub("’","'")s=s:gsub("…$","")
 return H.trim(s)end function F.executeScriptCode(rawCode,title)local src=F.cleanScriptSource(rawCode)if src==""then F.toast(T("script_need_fields"),true)return end local label=H.clip(tostring(title or"Script"),28)
@@ -660,18 +680,18 @@ local bDel=rbtn(bulkRow,"🗑 "..T("script_del_sel").." ("..selCount..")",{size=
 for id in pairs(S.scriptSelected)do ids[#ids+1]=id end if#ids==0 then return end F.deleteScriptTopics(ids,function(ok)if ok then S.scriptSelected={};S.scriptMultiMode=false end end)end)end
 local tagScroll=mk("ScrollingFrame",{Size=u2(1,0,0,24),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=0,CanvasSize=u2(),AutomaticCanvasSize=asX,
 ScrollingDirection=Enum.ScrollingDirection.X,LayoutOrder=3,},topBar)mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},tagScroll)for i,tg in ipairs(F.SCRIPT_TAGS)do
-local on=(S.scriptTagFilter or"All")==tg local dispTag=tg=="All"and T("tag_all")or(tg=="Current Game"and T("tag_cur_game")or tg)local tgW=max(44,H.textW(dispTag,10,fGB)+18)local b=mk("TextButton",{Size=uo(tgW,22),
-Text=dispTag,Font=fGB,TextSize=10,BorderSizePixel=0,LayoutOrder=i,},tagScroll)th(b,"BackgroundColor3",on and"accent"or"bg3")if on then
+local on=(S.scriptTagFilter or"All")==tg local dispTag=tg=="All"and T("tag_all")or(tg=="Saved"and T("tag_saved")or(tg=="Current Game"and T("tag_cur_game")or tg))local tgW=max(44,H.textW(dispTag,10,fGB)+18)
+local b=mk("TextButton",{Size=uo(tgW,22),Text=dispTag,Font=fGB,TextSize=10,BorderSizePixel=0,LayoutOrder=i,},tagScroll)th(b,"BackgroundColor3",on and"accent"or"bg3")if on then
 themed(b,function(x)x.TextColor3=H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1)end)else th(b,"TextColor3","muted")end corner(b,11)hook(b.MouseButton1Click,function()S.scriptTagFilter=tg F.rebuildFeed(true)end)
 end local q=H.trim(S.search or""):lower()local filtered={}for i=#(S.scripts or{}),1,-1 do local sc=S.scripts[i]if type(sc)=="table"and sc.id then local tagOk=(S.scriptTagFilter=="All"or not S.scriptTagFilter)
-or(S.scriptTagFilter=="Current Game"and tonumber(sc.placeId)==game.PlaceId)or(tostring(sc.tag or""):lower()==tostring(S.scriptTagFilter):lower())local searchOk=q==""
-or tostring(sc.title or""):lower():find(q,1,true)~=nil or tostring(sc.desc or""):lower():find(q,1,true)~=nil or tostring(sc.author or""):lower():find(q,1,true)~=nil or tostring(sc.tag or""):lower():find(q,1,true)~=nil
-if tagOk and searchOk then filtered[#filtered+1]=sc end end end if#filtered==0 then local emptyCard=F.card(U.scroll,64);emptyCard.LayoutOrder=2 pad(emptyCard,12,10,12,10)
-lab(emptyCard,T("script_empty"),{wrap=true,auto=true,ts=11,key="muted",align=txC})return end for idx,sc in ipairs(filtered)do local sid=tostring(sc.id)local isSel=S.scriptSelected[sid]==true
-local canDel=staff or(tostring(sc.author or""):lower()==P.username:lower())local rptCount=type(sc.reports)=="table"and#sc.reports or 0 local card=mk("Frame",{Size=u2(1,-4,0,0),AutomaticSize=asY,BorderSizePixel=0,
-LayoutOrder=idx+10,},U.scroll)th(card,"BackgroundColor3",isSel and"mention"or"bg2",true)corner(card,12)pad(card,12,8,10,8)list(card,5)local topR=F.topRole(sc.author)
-local barCol=(topR and H.hex(topR.color))or(F.isDev(sc.author)and H.hex(F.DEVROLE.color))or TH.accent mk("UIStroke",{Color=isSel and TH.danger or barCol,Thickness=isSel and 2 or 1,Transparency=isSel and 0.15 or 0.65,
-ApplyStrokeMode=smBorder,},card)local metaTop=mk("Frame",{Size=u2(1,0,0,20),BackgroundTransparency=1,LayoutOrder=1},card)
+or(S.scriptTagFilter=="Saved"and P.savedScripts and P.savedScripts[tostring(sc.id)]==true)or(S.scriptTagFilter=="Current Game"and tonumber(sc.placeId)==game.PlaceId)
+or(tostring(sc.tag or""):lower()==tostring(S.scriptTagFilter):lower())local searchOk=q==""or tostring(sc.title or""):lower():find(q,1,true)~=nil or tostring(sc.desc or""):lower():find(q,1,true)~=nil
+or tostring(sc.author or""):lower():find(q,1,true)~=nil or tostring(sc.tag or""):lower():find(q,1,true)~=nil if tagOk and searchOk then filtered[#filtered+1]=sc end end end if#filtered==0 then
+local emptyCard=F.card(U.scroll,64);emptyCard.LayoutOrder=2 pad(emptyCard,12,10,12,10)lab(emptyCard,T("script_empty"),{wrap=true,auto=true,ts=11,key="muted",align=txC})return end for idx,sc in ipairs(filtered)do
+local sid=tostring(sc.id)local isSel=S.scriptSelected[sid]==true local canDel=staff or(tostring(sc.author or""):lower()==P.username:lower())local rptCount=type(sc.reports)=="table"and#sc.reports or 0
+local card=mk("Frame",{Size=u2(1,-4,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=idx+10,},U.scroll)th(card,"BackgroundColor3",isSel and"mention"or"bg2",true)corner(card,12)pad(card,12,8,10,8)list(card,5)
+local topR=F.topRole(sc.author)local barCol=(topR and H.hex(topR.color))or(F.isDev(sc.author)and H.hex(F.DEVROLE.color))or TH.accent mk("UIStroke",{Color=isSel and TH.danger or barCol,Thickness=isSel and 2 or 1,
+Transparency=isSel and 0.15 or 0.65,ApplyStrokeMode=smBorder,},card)local metaTop=mk("Frame",{Size=u2(1,0,0,20),BackgroundTransparency=1,LayoutOrder=1},card)
 mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,5),SortOrder=soLO,VerticalAlignment=vaC},metaTop)if staff and S.scriptMultiMode then local chkBtn=tbtn(metaTop,isSel and"✔"or"○",{
 size=uo(22,20),ts=11,key=isSel and"danger"or"bg3",r=6,layout=0,})hook(chkBtn.MouseButton1Click,function()S.scriptSelected[sid]=not S.scriptSelected[sid]or nil F.rebuildFeed(true)end)end
 local tgStr=F.disp(sc.tag or"Universal")local tgPillW=clamp(H.textW(tgStr,10,fGB)+14,42,130)local tagPill=mk("Frame",{Size=uo(tgPillW,18),BorderSizePixel=0,LayoutOrder=1},metaTop)
@@ -691,11 +711,16 @@ local actRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparen
 VerticalAlignment=vaC,},actRow)local bRun=tbtn(actRow,"▶ "..T("script_exec"),{size=uo(62,26),ts=11,key="ok",r=6,layout=1})bRun.ZIndex=10 hook(bRun.MouseButton1Click,function()F.executeScriptCode(sc.code,sc.title)
 end)local bCopy=tbtn(actRow,"📋 "..T("copy"),{size=uo(62,26),ts=11,key="accent",r=6,layout=2})bCopy.ZIndex=10 hook(bCopy.MouseButton1Click,function()F.copyText(tostring(sc.code or""))end)
 local bView=tbtn(actRow,"📄 "..T("script_view"),{size=uo(58,26),ts=11,key="bg3",r=6,layout=3})bView.ZIndex=10 hook(bView.MouseButton1Click,function()F.openScriptDetail(sc)end)
-local bEmo=tbtn(actRow,"😀+",{size=uo(36,26),ts=11,key="bg3",r=6,layout=4})bEmo.ZIndex=10 hook(bEmo.MouseButton1Click,function()
-F.openEmoji({title=T("react").." · "..H.clip(sc.title,20),onPick=function(e)F.doScriptReact(sc,e)end})end)local bRep=tbtn(actRow,"🚩",{size=uo(28,26),ts=11,key="warn",r=6,layout=5})bRep.ZIndex=10
-hook(bRep.MouseButton1Click,function()F.openScriptReport(sc)end)if canDel then local bDel=tbtn(actRow,"🗑",{size=uo(28,26),ts=11,key="danger",r=6,layout=6})bDel.ZIndex=10 hook(bDel.MouseButton1Click,function()
-F.deleteScriptTopics({sid})end)end local rxMap=type(sc.reactions)=="table"and sc.reactions or{}local rxKeys={}for em,usrs in pairs(rxMap)do if type(usrs)=="table"and next(usrs)then rxKeys[#rxKeys+1]=em end end
-tsort(rxKeys)if#rxKeys>0 then local rxHolder=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=7,},card)
+local isSaved=P.savedScripts and P.savedScripts[sid]==true local bSave=tbtn(actRow,isSaved and"⭐"or"☆",{size=uo(30,26),ts=12,key=isSaved and"warn"or"bg3",r=6,layout=4})bSave.ZIndex=10
+hook(bSave.MouseButton1Click,function()P.savedScripts=P.savedScripts or{}if P.savedScripts[sid]then P.savedScripts[sid]=nil else P.savedScripts[sid]=true end S.isDirty=true F.rebuildFeed(true)end)
+local isAuto=P.autoScripts and P.autoScripts[sid]==true local bAuto=tbtn(actRow,"⚡",{size=uo(28,26),ts=11,key=isAuto and"ok"or"bg3",r=6,layout=4})bAuto.ZIndex=10 hook(bAuto.MouseButton1Click,function()
+P.autoScripts=P.autoScripts or{}if P.autoScripts[sid]then P.autoScripts[sid]=nil F.toast(T("auto_exec_off")..H.clip(sc.title,24),true)else P.autoScripts[sid]=true P.savedScripts=P.savedScripts or{}
+P.savedScripts[sid]=true F.toast(T("auto_exec_on")..H.clip(sc.title,24),true)end S.isDirty=true F.rebuildFeed(true)end)local bEmo=tbtn(actRow,"😀+",{size=uo(36,26),ts=11,key="bg3",r=6,layout=5})bEmo.ZIndex=10
+hook(bEmo.MouseButton1Click,function()F.openEmoji({title=T("react").." · "..H.clip(sc.title,20),onPick=function(e)F.doScriptReact(sc,e)end})end)
+local bRep=tbtn(actRow,"🚩",{size=uo(28,26),ts=11,key="warn",r=6,layout=5})bRep.ZIndex=10 hook(bRep.MouseButton1Click,function()F.openScriptReport(sc)end)if canDel then
+local bDel=tbtn(actRow,"🗑",{size=uo(28,26),ts=11,key="danger",r=6,layout=6})bDel.ZIndex=10 hook(bDel.MouseButton1Click,function()F.deleteScriptTopics({sid})end)end
+local rxMap=type(sc.reactions)=="table"and sc.reactions or{}local rxKeys={}for em,usrs in pairs(rxMap)do if type(usrs)=="table"and next(usrs)then rxKeys[#rxKeys+1]=em end end tsort(rxKeys)if#rxKeys>0 then
+local rxHolder=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=7,},card)
 mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},rxHolder)for rxi,em in ipairs(rxKeys)do local n=0 for _ in pairs(rxMap[em])do n=n+1 end
 local mine=rxMap[em][P.username]==true F.makeReactionPill(rxHolder,em,n,mine,rxi,function()F.doScriptReact(sc,em)end)end end end end function F.rebuildFeed(keepScroll)
 local savedCanvas=keepScroll and U.scroll.CanvasPosition or nil for _,c in ipairs(U.scroll:GetChildren())do if c:IsA("GuiObject")then pcall(function()c:Destroy()end)end end
@@ -946,8 +971,8 @@ local sv=tbtn(prof,"💾 "..T("save"),{key="accent",h=30})hook(sv.MouseButton1Cl
 P.status,P.bio=H.clip(H.trim(fs.Text),80),H.clip(H.trim(fb.Text),180)local c=H.trim(fc.Text):upper():sub(1,2)P.country=#c==2 and c or"??"S.isDirty=true;F.heartbeat(false);F.toast(T("saved_ok"),true)end)
 local gen=sectionCard("⚙",T("sec_general"))local function sw(key,tk,cb)F.switch(gen,T(tk),function()return P[key]end,function(v)P[key]=v;S.isDirty=true;if cb then cb()end end)end
 sw("notify","notify");sw("sound","sound");sw("bubble","bubble")sw("safeEmoji","safe_emoji",F.rebuildFeed)sw("showGame","share",function()F.heartbeat(false)end)sw("group","group_msgs",F.rebuildFeed)
-sw("preview","preview");sw("compact","compact",F.layout)sw("sameUser","same_user")local app=sectionCard("🎨",T("sec_appear"))lab(app,T("quick_theme"),{ts=10,bold=true,key="muted"})local qThemes={
-{"rose",T("rose_bright")},{"sakura","🌹 Sakura"},{"mint","🍀 Mint"},{"sky","☁ Sky"},{"lavender","💜 Lavender"},{"midnight","🌙 Midnight"},}
+sw("preview","preview");sw("compact","compact",F.layout);sw("autoRejoin","auto_rejoin")sw("sameUser","same_user")local app=sectionCard("🎨",T("sec_appear"))lab(app,T("quick_theme"),{ts=10,bold=true,key="muted"})
+local qThemes={{"rose",T("rose_bright")},{"sakura","🌹 Sakura"},{"mint","🍀 Mint"},{"sky","☁ Sky"},{"lavender","💜 Lavender"},{"midnight","🌙 Midnight"},}
 local qGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},app)mk("UIGridLayout",{CellSize=u2(1/3,-4,0,28),CellPadding=uo(4,4),SortOrder=soLO},qGrid)for i,qt in ipairs(qThemes)do
 local t=THEMES[qt[1]]local b=mk("TextButton",{Text=qt[2],Font=fGB,TextSize=10,BackgroundColor3=H.hex(t.bg2),TextColor3=H.hex(t.text),BorderSizePixel=0,LayoutOrder=i,},qGrid)corner(b,7)
 mk("UIStroke",{Color=H.hex(t.accent),Thickness=P.themeName==qt[1]and 2 or 1,Transparency=P.themeName==qt[1]and 0 or 0.5,ApplyStrokeMode=smBorder},b)hook(b.MouseButton1Click,function()
@@ -976,12 +1001,15 @@ hook(b.MouseButton1Click,function()F.closeModal();U.input.Text="/"..c.name.." ";
 for _ in pairs(S.frames)do nF=nF+1 end return tconcat({"CB42.4 · "..EXEC.." · "..(IS_MOBILE and"mobile"or"pc"),"user: "..P.username.." ("..P.userId..")","worker: "..CFG.PROXY,
 "mode: "..(S.lpOn and"long-poll"or"poll").." · fails "..S.pollFail.." · lastOk "..string.format("%.1f",os.clock()-S.lastPollOk).."s ago",
 "rtt: "..(S.rtt and(floor(S.rtt).."ms")or"n/a").." · sent ok/fail: "..S.sendOk.."/"..S.sendFail,"seq: "..H.num(S.lastSeq).." · rolesSeq: "..H.num(S.rolesSeq),
-"queue send/other/fast: "..#NET.lanes.send.."/"..#NET.lanes.other.."/"..#NET.lanes.fast,"msgs "..nM.." · frames "..nF.." · theme-reg "..#reg,},"\n")end function F.openDiag()local scr=F.modalBox(T("diag"),380,520)
+"queue send/other/fast: "..#NET.lanes.send.."/"..#NET.lanes.other.."/"..#NET.lanes.fast,"msgs "..nM.." · frames "..nF.." · theme-reg "..#reg,},"\n")end function F.openDiag()local scr=F.modalBox(T("diag"),400,540)
 local info=lab(scr,F.diagText(),{wrap=true,auto=true,ts=11})info.Font=fCode local hl=lab(scr,"worker: …",{wrap=true,auto=true,ts=11,key="muted"})hl.Font=fCode local function health()
 enqueue("other","GET","/api/health",nil,function(d,err)if not hl.Parent then return end if d and d.ok then
-hl.Text=string.format("worker %s · store=%s · online=%s · items=%s · pending=%s · banned=%s · uptime=%ss",tostring(d.build),tostring(d.store),tostring(d.online),tostring(d.items),tostring(d.pending),tostring(d.banned),tostring(d.uptime))
-else hl.Text="worker: ✕ "..tostring(err)end end)end health()local r1=row(scr,30)local pg=rbtn(r1,T("ping"),{key="accent"})hook(pg.MouseButton1Click,function()local t0=os.clock()
-enqueue("other","GET","/api/ping",nil,function(d)F.toast(d and d.ok and string.format("%d ms",floor((os.clock()-t0)*1000))or"✕",true)end)end)local rs=rbtn(r1,T("resync"))
+hl.Text=string.format("worker %s · store=%s · online=%s · items=%s · emojis=%s · scripts=%s · up=%ss",tostring(d.build),tostring(d.store),tostring(d.online),tostring(d.items),tostring(d.emojis or 0),tostring(d.scripts or 0),tostring(d.uptime))
+else hl.Text="worker: ✕ "..tostring(err)end end)end health()if F.isDev(P.username)then F.section(scr,T("proxy_panel"))for idx,u in ipairs(PROXY_POOL)do local isCur=(u==CFG.PROXY)
+local cd=NET.cooldown[u]and max(0,math.ceil(NET.cooldown[u]-os.clock()))or 0 local c=F.card(scr,28)if isCur then stroke(c,"ok",1,0.25)end local tag=idx==1 and"Main"or("Backup "..(idx-1))
+lab(c,string.format("#%d [%s] %s",idx,tag,isCur and T("proxy_active")or(cd>0 and("Quota Cooldown "..cd.."s")or"Standby")),{
+size=u2(1,-16,1,0),pos=uo(8,0),ts=10,bold=isCur,key=isCur and"ok"or(cd>0 and"danger"or"muted"),trunc=true,})end end local r1=row(scr,30)local pg=rbtn(r1,T("ping"),{key="accent"})hook(pg.MouseButton1Click,function()
+local t0=os.clock()enqueue("other","GET","/api/ping",nil,function(d)F.toast(d and d.ok and string.format("%d ms",floor((os.clock()-t0)*1000))or"✕",true)end)end)local rs=rbtn(r1,T("resync"))
 hook(rs.MouseButton1Click,function()S.lastSeq=0;S.pollFail=0;S.lpOn=CFG.LONGPOLL>0;F.toast(T("resync"),true);F.closeModal()end)local cp=tbtn(scr,T("diag_copy"),{h=30})
 hook(cp.MouseButton1Click,function()F.copyText(F.diagText())end)local rf=tbtn(scr,"↻",{h=28})hook(rf.MouseButton1Click,function()info.Text=F.diagText();health()end)end function F.pingSound()
 if not P.sound then return end pcall(function()local s=Instance.new("Sound")s.SoundId=CFG.MENTION_SOUND;s.Volume=0.6;s.Parent=SoundService s:Play();Debris:AddItem(s,3)end)end function F.findPlayerHead(author)
@@ -1049,17 +1077,21 @@ F.toast("⛔ "..T("ban"),true)end end elseif t=="roles"then F.applyRoles(pkt,pkt
 local total=tonumber(pkt.parts)or 0 local part=tonumber(pkt.part)or 0 if seq>0 and total>0 and part>0 then S.roleParts[seq]=S.roleParts[seq]or{by=pkt.by,total=total,got={},roles={},assign={}}local buf=S.roleParts[seq]
 if buf.total==total and not buf.got[part]then buf.got[part]=true for _,it in ipairs(type(pkt.items)=="table"and pkt.items or{})do if type(it)=="table"then if it.k=="r"and type(it.v)=="table"then tinsert(buf.roles,it.v)
 elseif it.k=="a"and type(it.u)=="string"and type(it.v)=="table"then buf.assign[it.u]=it.v end end end local gotN=0 for _ in pairs(buf.got)do gotN=gotN+1 end if gotN==buf.total then
-F.applyRoles({type="roles",by=buf.by,seq=seq,roles=buf.roles,assign=buf.assign},seq,false)S.roleParts[seq]=nil end end end elseif t=="req_presence"then if pkt.author~=me and not stale then
-task.delay(0.4+math.random()*1.4,function()if NET.alive then F.heartbeat(false)end end)end end end function F.ingest(data,first)
-if type(data.devs)=="table"then for _,n in ipairs(data.devs)do S.devs[tostring(n):lower()]=true end end S.strong=data.strong==true local nowMs=tonumber(data.nowMs)or 0 if type(data.emojis)=="table"then
-S.sharedEmojis=data.emojis S.emojiSeq=tonumber(data.emojiSeq)or 0 end if type(data.roles)=="table"then F.applyRoles(data.roles,data.rolesSeq,true)S.forceRoles=false end local srv=tonumber(data.rolesSeq)or 0
-if srv==0 and data.ready==true and F.isDev(P.username)and#S.roles>0 and os.clock()-(S.rolesRepub or-999)>60 then S.rolesRepub=os.clock();F.publishRoles(true)end local now=H.now()for _,m in ipairs(data.messages or{})do
-local seq=tonumber(m.seq)or 0 if seq>S.lastSeq then S.lastSeq=seq end local pkt=F.decode(m.c)if pkt then local stale if nowMs>0 and seq>0 then stale=first or(nowMs-seq>30000)
-else stale=first or(tonumber(pkt.ts)~=nil and now-pkt.ts>30)end local ok,err=pcall(F.process,pkt,stale)if not ok then warn("[CB42] process: "..tostring(err))end end end if S.lastSeq==0 then S.lastSeq=1 end end
-function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then return end if rawInput:sub(1,1)=="/"and F.slash(rawInput)then U.input.Text="";F.updateSuggest();return end if S.chan=="scripts"then
-F.openScriptComposer()return end local text=F.expandShortcodes(rawInput)if#text>CFG.MAX_CONTENT then F.toast(T("too_long"),true);return end if F.muted(P.username)then F.toast(T("muted"),true);return end
-if S.banned then F.toast(T("banned_you"),true);return end local lt=text:lower()if(lt:find("@everyone",1,true)or lt:find("@here",1,true))and not F.canMentionAll(P.username)then F.toast(T("no_ping"),true);return end
-if S.editing then local m=S.msgs[S.editing]if m and m.author==P.username then m.content=text;m.edited=true if S.frames[m.packetId]then F.dropFrame(m.packetId);F.renderMessage(m)end F.bubble(P.username,text,m.chan)
+F.applyRoles({type="roles",by=buf.by,seq=seq,roles=buf.roles,assign=buf.assign},seq,false)S.roleParts[seq]=nil end end end elseif t=="pin"then if F.isStaff(pkt.by)then local ch=tostring(pkt.chan or"general")
+S.pinned=S.pinned or{}if pkt.text and pkt.text~=""then S.pinned[ch]={id=pkt.target,author=pkt.author or pkt.by,text=tostring(pkt.text),ts=tonumber(pkt.ts)or H.now()}else S.pinned[ch]=nil end S.isDirty=true
+F.updateInfo()end elseif t=="announce"then if F.isStaff(pkt.by)then local txt=tostring(pkt.text or"")if txt~=""then local ch=tostring(pkt.chan or"general")S.pinned=S.pinned or{}
+S.pinned[ch]={id=id,author=pkt.by,text="📢 "..txt,ts=tonumber(pkt.ts)or H.now()}F.updateInfo()if not stale then F.toast(T("announce_prefix")..F.disp(H.clip(txt,90)),true)F.pingSound()end end end
+elseif t=="req_presence"then if pkt.author~=me and not stale then task.delay(0.4+math.random()*1.4,function()if NET.alive then F.heartbeat(false)end end)end end end function F.ingest(data,first)
+if type(data.devs)=="table"then for _,n in ipairs(data.devs)do S.devs[tostring(n):lower()]=true end end S.strong=data.strong==true local nowMs=tonumber(data.nowMs)or 0 if type(data.users)=="table"then
+pcall(F.ingestPresence,{ok=true,now=data.now,users=data.users})end if type(data.emojis)=="table"then S.sharedEmojis=data.emojis S.emojiSeq=tonumber(data.emojiSeq)or 0 end if type(data.roles)=="table"then
+F.applyRoles(data.roles,data.rolesSeq,true)S.forceRoles=false end local srv=tonumber(data.rolesSeq)or 0 if srv==0 and data.ready==true and F.isDev(P.username)and#S.roles>0 and os.clock()-(S.rolesRepub or-999)>60 then
+S.rolesRepub=os.clock();F.publishRoles(true)end local now=H.now()for _,m in ipairs(data.messages or{})do local seq=tonumber(m.seq)or 0 if seq>S.lastSeq then S.lastSeq=seq end local pkt=F.decode(m.c)if pkt then
+local stale if nowMs>0 and seq>0 then stale=first or(nowMs-seq>30000)else stale=first or(tonumber(pkt.ts)~=nil and now-pkt.ts>30)end local ok,err=pcall(F.process,pkt,stale)
+if not ok then warn("[CB42] process: "..tostring(err))end end end if S.lastSeq==0 then S.lastSeq=1 end end function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then return end
+if rawInput:sub(1,1)=="/"and F.slash(rawInput)then U.input.Text="";F.updateSuggest();return end if S.chan=="scripts"then F.openScriptComposer()return end local text=F.expandShortcodes(rawInput)
+if#text>CFG.MAX_CONTENT then F.toast(T("too_long"),true);return end if F.muted(P.username)then F.toast(T("muted"),true);return end if S.banned then F.toast(T("banned_you"),true);return end local lt=text:lower()
+if(lt:find("@everyone",1,true)or lt:find("@here",1,true))and not F.canMentionAll(P.username)then F.toast(T("no_ping"),true);return end if S.editing then local m=S.msgs[S.editing]if m and m.author==P.username then
+m.content=text;m.edited=true if S.frames[m.packetId]then F.dropFrame(m.packetId);F.renderMessage(m)end F.bubble(P.username,text,m.chan)
 F.publish({type="edit",target=m.packetId,author=P.username,content=text,chan=m.chan})end F.cancelCompose();U.input.Text="";return end local id=H.uuid()
 local m={type="msg",packetId=id,chan=S.chan,author=P.username,display=P.display,uid=P.userId,content=text,ts=H.now(),place=S.chan=="game"and game.PlaceId or nil}
 if S.reply then m.replyTo,m.replyAuthor,m.replySnippet=S.reply.id,S.reply.author,S.reply.snippet end F.addMsg(m)local other=F.dmOther(S.chan)if other then P.dmList[other]=H.now()end F.renderMessage(m);F.scrollBottom()
@@ -1091,11 +1123,51 @@ if u and F.canAct(P.username,u)then F.publish({type="clear_warn",by=P.username,t
 end)end,{staff=true,alias={"clearwarn"},arg="<name>"})F.command("react","c_react",function(a)local m=S.reply and S.msgs[S.reply.id];if m and a~=""then F.doReact(m,a)end end,{arg="<emoji>"})
 F.command("request","c_request",function()F.openRequest()end,{alias={"xin"}})
 F.command("status","c_status",function(a)P.status=H.clip(a,80);S.isDirty=true;F.heartbeat(false);F.toast(T("status_set"),true)end,{arg="<text>"})F.command("diag","c_diag",function()F.openDiag()end,{alias={"debug"}})
-F.command("proxy","c_diag",function(a)local sub,u=tostring(a or""):match("^(%S+)%s*(.*)$")if sub=="add"and u and u:match("^https?://")then u=H.trim(u):gsub("/+$","")P.proxies=P.proxies or{}tinsert(P.proxies,u)
-S.isDirty=true F.toast("✓ Added Backup Proxy: "..u,true)elseif sub=="next"or sub=="switch"then local nxt=F.switchProxy("manual")F.toast("⇄ Switched Proxy: "..tostring(nxt),true)else F.openDiag()end
-end,{alias={"proxies","failover"},arg="[add <url> | next]"})F.command("back","c_back",function()F.selectChannel("general")end)local TOK_COLORS={cmd_ok=rgb(34,197,94),cmd_wait=rgb(56,189,248),cmd_bad=rgb(239,68,68),
-men_ok=rgb(34,197,94),men_wait=rgb(245,158,11),men_bad=rgb(239,68,68),emo_ok=rgb(236,72,153),emo_wait=rgb(168,85,247),emo_bad=rgb(239,68,68),}function F.resolveCmdToken(rawCmd)
-local lc=tostring(rawCmd or""):lower()if lc==""then return{status="wait",col=TOK_COLORS.cmd_wait,label="/ (help, dm, scripts, emoji, poll...)"}end local exact=F.cmds[lc]if exact then
+local queueTp=(type(queue_on_teleport)=="function"and queue_on_teleport)or(type(queueonteleport)=="function"and queueonteleport)or(type(syn)=="table"and type(syn.queue_on_teleport)=="function"and syn.queue_on_teleport)
+or(type(fluxus)=="table"and type(fluxus.queue_on_teleport)=="function"and fluxus.queue_on_teleport)pcall(function()local info=debug and debug.getinfo and debug.getinfo(1,"S")
+local srcPath=info and type(info.source)=="string"and info.source:match("^@(.+)$")if srcPath and type(readfile)=="function"and type(writefile)=="function"then local okR,rawCode=pcall(readfile,srcPath)
+if okR and type(rawCode)=="string"and#rawCode>1000 then pcall(writefile,"cb42_autorun.lua",rawCode)end elseif type(ENV.CB42_RAW_SOURCE)=="string"and#ENV.CB42_RAW_SOURCE>1000 and type(writefile)=="function"then
+pcall(writefile,"cb42_autorun.lua",ENV.CB42_RAW_SOURCE)end end)function F.armAutoTeleport()if not P.autoRejoin or S.tpArmed or not queueTp then return end S.tpArmed=true
+local loaderCode= [[
+task.spawn(function()
+    if not game:IsLoaded() then game.Loaded:Wait() end
+    task.wait(1.2)
+    local env = (getgenv and getgenv()) or _G
+    local url = (type(env.CB42_SCRIPT_URL) == "string" and env.CB42_SCRIPT_URL ~= "") and env.CB42_SCRIPT_URL or "]]..tostring(P.scriptUrl or CFG.SCRIPT_URL or"")..[["
+    if url ~= "" then
+        local ok, s = pcall(game.HttpGet, game, url)
+        if ok and type(s) == "string" and #s > 500 then
+            local fn = loadstring(s)
+            if fn then pcall(fn); return end
+        end
+    end
+    if type(isfile) == "function" and type(readfile) == "function" then
+        for _, f in ipairs({ "cb42_autorun.lua", "Chat_bridge_v42_7.lua", "Chat_bridge.lua" }) do
+            local okF, ex = pcall(isfile, f)
+            if okF and ex then
+                local okR, code = pcall(readfile, f)
+                if okR and type(code) == "string" and #code > 500 then
+                    local fn = loadstring(code)
+                    if fn then pcall(fn); return end
+                end
+            end
+        end
+    end
+end)
+]]
+pcall(queueTp,loaderCode)end hook(LP.OnTeleport,function()F.save(true)F.armAutoTeleport()end)F.command("invite","c_invite",function(a)local note=H.trim(a)
+local msg=(note~=""and(note.." ")or("🎮 "..F.disp(S.placeName or"Server").." "))..string.format("[join:%s:%s]",tostring(game.PlaceId),tostring(game.JobId))U.input.Text=msg F.sendNow()
+end,{alias={"joinme","party"},arg="[note]"})F.command("fps","c_fps",function()local fps=floor(1/max(0.001,game:GetService("RunService").RenderStepped:Wait()))local rtt=S.rtt and(floor(S.rtt).."ms")or"—"
+F.toast(string.format("⚡ FPS: %d · Ping: %s · Players: %d/%d",fps,rtt,#Players:GetPlayers(),Players.MaxPlayers),true)end,{alias={"stats"}})F.command("back","c_back",function()F.selectChannel("general")end)
+F.command("announce","c_announce",function(a)if not F.isStaff(P.username)then F.toast(T("hier"),true);return end local txt=H.trim(a)if txt==""then return end
+F.publish({type="announce",packetId="ann-"..H.uuid(),by=P.username,text=H.clip(txt,240),chan=S.chan,ts=H.now()},"send")end,{staff=true,alias={"bc","broadcast"},arg="<text>"})F.command("pin","c_pin",function(a)
+if not F.isStaff(P.username)then F.toast(T("hier"),true);return end local txt=H.trim(a)F.publish({type="pin",packetId="pin-"..H.uuid(),by=P.username,author=P.username,text=H.clip(txt,140),chan=S.chan,ts=H.now()},"send")
+F.toast(T("pinned_ok"),true)end,{staff=true,alias={"unpin"},arg="[text]"})F.command("clear","c_clear",function()for id in pairs(S.frames)do F.dropFrame(id)end F.toast("🧹 Cleared view",true)end,{alias={"cls"}})
+F.command("copyjob","c_copyjob",function()F.copyText(string.format("PlaceId: %s | JobId: %s",tostring(game.PlaceId),tostring(game.JobId)))end,{alias={"jobid","server"}})F.command("rejoin","c_rejoin",function()
+F.save(true);F.armAutoTeleport()F.toast("↻ Rejoining server...",true)pcall(function()TeleportService:TeleportToPlaceInstance(game.PlaceId,game.JobId,LP)end)end,{alias={"rj"}})F.command("hop","c_hop",function()
+F.save(true);F.armAutoTeleport()F.toast("⇄ Hopping to another server...",true)pcall(function()TeleportService:Teleport(game.PlaceId,LP)end)end,{alias={"serverhop"}})local TOK_COLORS={cmd_ok=rgb(34,197,94),
+cmd_wait=rgb(56,189,248),cmd_bad=rgb(239,68,68),men_ok=rgb(34,197,94),men_wait=rgb(245,158,11),men_bad=rgb(239,68,68),emo_ok=rgb(236,72,153),emo_wait=rgb(168,85,247),emo_bad=rgb(239,68,68),}
+function F.resolveCmdToken(rawCmd)local lc=tostring(rawCmd or""):lower()if lc==""then return{status="wait",col=TOK_COLORS.cmd_wait,label="/ (help, dm, scripts, emoji, poll...)"}end local exact=F.cmds[lc]if exact then
 local allowed=(not exact.staff or F.isStaff(P.username))and(not exact.dev or F.isDev(P.username))if allowed then return{status="ok",col=TOK_COLORS.cmd_ok,cmd=exact,
 label="/"..exact.name..(exact.arg and(" "..exact.arg)or"").." — "..T(exact.desc),}else return{status="bad",col=TOK_COLORS.cmd_bad,label="/"..rawCmd.." (🔒 Staff/Dev)"}end end for _,c in ipairs(F.cmdList)do
 if(not c.staff or F.isStaff(P.username))and(not c.dev or F.isDev(P.username))and c.name:sub(1,#lc)==lc then return{status="wait",col=TOK_COLORS.cmd_wait,cmd=c,label="/"..rawCmd.." → /"..c.name.." ("..T(c.desc)..")",
@@ -1176,8 +1248,8 @@ local polls,n={},0 for id,p in pairs(S.polls)do n=n+1;if n<=60 then polls[id]=p 
 dmList=P.dmList,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,recentColors=P.recentColors,themeName=P.themeName,custom=P.custom,alpha=P.alpha,mute=P.mute,W=P.W,H=P.H,
 notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,textSize=P.textSize,toastPos=P.toastPos,
 miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,warns=S.warns,reports=S.reports,reactions=rx,polls=polls,
-customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,proxies=P.proxies,}local s=H.jenc(d)if s then pcall(writefile,FILE,s)end end local drag,md
-local function isPress(i)return i.UserInputType==mb1 or i.UserInputType==utTouch end
+customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,proxies=P.proxies,savedScripts=P.savedScripts,autoScripts=P.autoScripts,autoRejoin=P.autoRejoin,scriptUrl=P.scriptUrl,pinned=S.pinned,}
+local s=H.jenc(d)if s then pcall(writefile,FILE,s)end end local drag,md local function isPress(i)return i.UserInputType==mb1 or i.UserInputType==utTouch end
 local function isMove(i,ref)return(ref.UserInputType==utTouch and i==ref)or(ref.UserInputType==mb1 and i.UserInputType==Enum.UserInputType.MouseMovement)end
 hook(U.titleBar.InputBegan,function(i)if isPress(i)then drag={kind="move",start=i.Position,ox=S.winX,oy=S.winY,input=i}end end)
 hook(U.resize.InputBegan,function(i)if isPress(i)then drag={kind="size",start=i.Position,w=P.W,h=P.H,input=i}end end)hook(U.mini.InputBegan,function(i)
@@ -1198,8 +1270,9 @@ if t~=""and t:sub(1,1)~="/"and os.clock()-S.lastType>CFG.TYPING_THROTTLE and not
 hook(U.emojiBtn.MouseButton1Click,function()F.insertEmoji()end)hook(U.pollBtn.MouseButton1Click,F.openPoll)hook(U.replyX.MouseButton1Click,function()F.cancelCompose();U.input.Text=""end)
 hook(U.jump.MouseButton1Click,function()F.scrollBottom()end)hook(U.scroll:GetPropertyChangedSignal("CanvasPosition"),function()if F.nearBottom()then S.newBelow=0 end F.updateJump()end)
 hook(U.scroll:GetPropertyChangedSignal("AbsoluteCanvasSize"),function()if S.stickUntil and os.clock()<S.stickUntil then F.snapBottom()end end)local vcam=workspace.CurrentCamera
-if vcam then hook(vcam:GetPropertyChangedSignal("ViewportSize"),F.layout)end local function pollDelay()return(os.clock()-S.activityAt<30 and U.main.Visible)and CFG.POLL_FAST or CFG.POLL_IDLE end local function pollLoop()
-while NET.alive do local lp=S.lpOn and S.lastSeq>0 local since,wait,sweep=S.lastSeq,(lp and CFG.LONGPOLL or 0),false if S.lastSeq>0 and not S.strong and os.clock()-(S.sweepAt or 0)>=CFG.SWEEP then sweep=true
+if vcam then hook(vcam:GetPropertyChangedSignal("ViewportSize"),F.layout)end local function pollDelay()local idleSec=os.clock()-S.activityAt if not U.main.Visible or(P.W<115 or P.H<95)then
+return idleSec>60 and(CFG.POLL_AFK or 4)or CFG.POLL_IDLE end return idleSec<30 and CFG.POLL_FAST or(idleSec>120 and(CFG.POLL_AFK or 4)or CFG.POLL_IDLE)end local function pollLoop()while NET.alive do
+local lp=S.lpOn and S.lastSeq>0 local since,wait,sweep=S.lastSeq,(lp and CFG.LONGPOLL or 0),false if S.lastSeq>0 and not S.strong and os.clock()-(S.sweepAt or 0)>=CFG.SWEEP then sweep=true
 since,wait=max(1,S.lastSeq-CFG.OVERLAP_MS),0 end local rs=S.forceRoles and 0 or S.rolesSeq
 local path=string.format("/api/feed?since=%s&limit=%d&rs=%s&ss=%s&u=%s&wait=%d",H.num(since),S.lastSeq==0 and CFG.HISTORY or 100,H.num(rs),H.num(S.scriptSeq or 0),H.url(P.username),wait)local t0=os.clock()
 local data,err=rawRequest("GET",path)if not NET.alive then break end if data and data.ok then if sweep then S.sweepAt=os.clock()end local first=S.lastSeq==0 S.pollFail,S.lpFails,S.lastPollOk=0,0,os.clock()
@@ -1219,12 +1292,17 @@ bb.StudsOffset=Vector3.new(0,2.5,0)bb.AlwaysOnTop=true bb.MaxDistance=160 bb.Lig
 pill.BackgroundTransparency=0.15 pill.BorderSizePixel=0 pill.Parent=bb corner(pill,10)mk("UIStroke",{Color=TH.accent,Thickness=1.2,Transparency=0.25},pill)local l=Instance.new("TextLabel")l.Size=us(1,1)
 l.BackgroundTransparency=1 l.Text="💬 CB"l.TextColor3=TH.accent l.TextSize=11 l.Font=fGB l.Parent=pill S.sameBb[name]=bb end for _,pl in ipairs(Players:GetPlayers())do if pl~=LP and F.isScriptUser(pl.Name)then
 local h=headOf(pl)if h then pin(pl.Name,h)end end end for u,bb in pairs(S.sameBb)do if not alive[u]then pcall(function()bb:Destroy()end);S.sameBb[u]=nil end end end function F.afterBoot()if S.booted then return end
-S.booted=true F.layoutTabs();F.selectChannel(S.chan)F.toast(T("ready"),false)F.emit("ready")end function F.stop()if S.stopped then return end S.stopped=true F.save(true)
-task.spawn(function()pcall(rawRequest,"POST","/api/presence",{u=P.username,off=true})end)task.delay(0.5,function()NET.alive=false end)F.emit("stop")for _,c in ipairs(conns)do pcall(function()c:Disconnect()end)end
-for _,b in pairs(S.bubbles)do pcall(function()b:Destroy()end)end for _,b in pairs(S.sameBb or{})do pcall(function()b:Destroy()end)end pcall(function()U.gui:Destroy()end)
-ENV.CB42_STOP=nil;ENV.CB41_STOP=nil;ENV.CB42=nil;ENV.CB41=nil end ENV.CB42_STOP=F.stop ENV.CB41_STOP=F.stop ENV.CB42={version="42.7",cfg=CFG,F=F,S=S,P=P,U=U,H=H,command=F.command,on=F.on,toast=F.toast,
-send=function(text,chan)if chan then F.selectChannel(chan)end U.input.Text=tostring(text);F.sendNow()end,request=F.openRequest,admin=F.openAdmin,roles=F.openRoles,}
-F.layout();F.paintTheme();F.layoutTabs();F.paintTabs();F.updateInfo()task.spawn(function()local ok,info=pcall(function()return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)end)
-S.placeName=(ok and info and info.Name)or tostring(game.Name or"?")F.heartbeat(false)task.delay(4,function()if NET.alive then F.heartbeat(false)end end)end)task.spawn(pollLoop)task.spawn(heartbeatLoop)
-task.spawn(tickLoop)task.spawn(function()task.wait(30)while NET.alive do task.wait(300)if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0
-warn("[CB42] Watchdog: resync")end end end)if saved.W==nil and IS_MOBILE then P.W,P.H=340,480 end print("[CB42] Chat Bridge v42.7 · "..EXEC.." · Dừng: getgenv().CB42_STOP()")
+S.booted=true F.armAutoTeleport()F.layoutTabs();F.selectChannel(S.chan)F.toast(T("ready"),false)F.emit("ready")task.delay(2,function()if not NET.alive or type(P.autoScripts)~="table"then return end
+for _,sc in ipairs(S.scripts or{})do if sc.id and P.autoScripts[tostring(sc.id)]and sc.code and sc.code~=""then task.spawn(function()pcall(F.executeScriptCode,sc.code,sc.title)end)end end end)end function F.stop()
+if S.stopped then return end S.stopped=true F.save(true)task.spawn(function()pcall(rawRequest,"POST","/api/presence",{u=P.username,off=true})end)task.delay(0.5,function()NET.alive=false end)F.emit("stop")
+for _,c in ipairs(conns)do pcall(function()c:Disconnect()end)end for _,b in pairs(S.bubbles)do pcall(function()b:Destroy()end)end for _,b in pairs(S.sameBb or{})do pcall(function()b:Destroy()end)end
+pcall(function()U.gui:Destroy()end)ENV.CB42_STOP=nil;ENV.CB41_STOP=nil;ENV.CB42=nil;ENV.CB41=nil end ENV.CB42_STOP=F.stop ENV.CB41_STOP=F.stop ENV.CB42={version="42.7",cfg=CFG,F=F,S=S,P=P,U=U,H=H,
+command=F.command,on=F.on,toast=F.toast,send=function(text,chan)if chan then F.selectChannel(chan)end U.input.Text=tostring(text);F.sendNow()end,
+announce=function(text,chan)F.publish({type="announce",packetId="ann-"..H.uuid(),by=P.username,text=tostring(text or""),chan=chan or S.chan,ts=H.now()},"send")end,
+pin=function(text,chan)F.publish({type="pin",packetId="pin-"..H.uuid(),by=P.username,author=P.username,text=tostring(text or""),chan=chan or S.chan,ts=H.now()},"send")end,
+execScript=F.executeScriptCode,setScriptUrl=function(u)P.scriptUrl=tostring(u or"");CFG.SCRIPT_URL=P.scriptUrl;S.isDirty=true;S.tpArmed=false;F.armAutoTeleport()end,
+request=F.openRequest,admin=F.openAdmin,roles=F.openRoles,diag=F.openDiag,}F.layout();F.paintTheme();F.layoutTabs();F.paintTabs();F.updateInfo()task.spawn(function()
+local ok,info=pcall(function()return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)end)S.placeName=(ok and info and info.Name)or tostring(game.Name or"?")F.heartbeat(false)
+task.delay(4,function()if NET.alive then F.heartbeat(false)end end)end)task.spawn(pollLoop)task.spawn(heartbeatLoop)task.spawn(tickLoop)task.spawn(function()task.wait(30)while NET.alive do task.wait(300)
+if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0 warn("[CB42] Watchdog: resync")end end end)if saved.W==nil and IS_MOBILE then P.W,P.H=340,480 end
+print("[CB42] Chat Bridge v42.7 · "..EXEC.." · Dừng: getgenv().CB42_STOP()")
