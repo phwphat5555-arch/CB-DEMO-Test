@@ -1,5 +1,6 @@
 local ENV=(getgenv and getgenv())or _G for _,k in ipairs({"CB42_STOP","CB41_STOP","CB40_STOP","CB39_STOP","CB38_STOP","CB37_STOP"})do if type(ENV[k])=="function"then pcall(ENV[k])end end local CFG={
-PROXY="https://cb-roblox.phwphat5555.workers.dev",DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},LONGPOLL=10,POLL_FAST=0.5,POLL_IDLE=2,LP_RETRY=60,HEARTBEAT=20,PRESENCE_TIMEOUT=130,SWEEP=4,OVERLAP_MS=15000,
+PROXY="https://cb-roblox.phwphat5555.workers.dev",PROXIES={"https://cb-roblox.phwphat5555.workers.dev","https://backup.phwphat8888.workers.dev","https://backupv2.sillydumb111.workers.dev",
+"https://backupv3.just-a-blur-000.workers.dev",},DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},LONGPOLL=10,POLL_FAST=0.5,POLL_IDLE=2,LP_RETRY=60,HEARTBEAT=20,PRESENCE_TIMEOUT=130,SWEEP=4,OVERLAP_MS=15000,
 HISTORY=60,MAX_MESSAGES=250,MAX_RENDER=50,MAX_CONTENT=800,TYPING_TIMEOUT=4,TYPING_THROTTLE=1.5,REACT_THRO=0.4,GROUP_SECS=300,MENTION_SOUND="rbxassetid://6042053626",MIN_W=60,MIN_H=60,SEEN_MAX=1500,SAVE_THROTTLE=3,}
 for v=41,19,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end CFG.REACT={"👍","😂","🔥","💀","😭","👀","🙏","💔","😎","💢","🌹","🐧","🤓","🤡","🗿","🎉","✅","❌","😮","😢","🤔","💖","🚨","🤞","😍","😡","🤣","👑","🙄"}CFG.SHORTCODES={
 fire="🔥",heart="❤️",love="😍",skull="💀",joy="😂",laugh="🤣",sob="😭",cry="😢",smile="😄",cool="😎",angry="😡",thinking="🤔",thumbsup="👍",like="👍",thumbsdown="👎",dislike="👎",["100"]="💯",
@@ -161,28 +162,35 @@ P.toastPos=saved.toastPos or"tr"P.miniX,P.miniY=tonumber(saved.miniX),tonumber(s
 S.reactions=type(saved.reactions)=="table"and saved.reactions or{}S.seen,S.seenOld,S.seenN={},{},0 S.typing,S.unread,S.dmUnread={},{general=0,game=0,scripts=0,staff=0},{}
 S.roles=type(saved.roles)=="table"and saved.roles or{}S.sharedEmojis=type(saved.sharedEmojis)=="table"and saved.sharedEmojis or{}S.emojiSeq=0 S.scripts=type(saved.scripts)=="table"and saved.scripts or{}S.scriptSeq=0
 S.scriptTagFilter="All"S.scriptMultiMode=false S.scriptSelected={}S.emojiMultiMode=false S.emojiSelected={}P.customEmojiNames=type(saved.customEmojiNames)=="table"and saved.customEmojiNames or{}
-S.assign=type(saved.assign)=="table"and saved.assign or{}S.rolesSeq=0 S.devs={}S.mutes,S.warns={},type(saved.warns)=="table"and saved.warns or{}S.reports=type(saved.reports)=="table"and saved.reports or{}
-S.myRequest=nil S.requests={}S.bannedList={}S.banned=nil S.chan,S.search,S.orderN,S.reactAt="general","",0,0 S.lastSeq,S.booted,S.lpOn,S.lpFails,S.pollFail=0,false,CFG.LONGPOLL>0,0,0
-S.lastPollOk,S.activityAt,S.t0=0,os.clock(),os.clock()S.placeName,S.bubbles,S.isDirty,S.tapAt,S.lastType="?",{},false,{},0 S.winX,S.winY,S.lastSave=nil,nil,0
-S.lastByChan,S.newBelow,S.assetOk,S.assetUrl,S.popN={},0,{},{},0 S.rtt,S.sendOk,S.sendFail=nil,0,0 S.holdState={}if P.mute.on then S.mutes[P.username]=P.mute end
+P.proxies=type(saved.proxies)=="table"and saved.proxies or{}S.assign=type(saved.assign)=="table"and saved.assign or{}S.rolesSeq=0 S.devs={}S.mutes,S.warns={},type(saved.warns)=="table"and saved.warns or{}
+S.reports=type(saved.reports)=="table"and saved.reports or{}S.myRequest=nil S.requests={}S.bannedList={}S.banned=nil S.chan,S.search,S.orderN,S.reactAt="general","",0,0
+S.lastSeq,S.booted,S.lpOn,S.lpFails,S.pollFail=0,false,CFG.LONGPOLL>0,0,0 S.lastPollOk,S.activityAt,S.t0=0,os.clock(),os.clock()S.placeName,S.bubbles,S.isDirty,S.tapAt,S.lastType="?",{},false,{},0
+S.winX,S.winY,S.lastSave=nil,nil,0 S.lastByChan,S.newBelow,S.assetOk,S.assetUrl,S.popN={},0,{},{},0 S.rtt,S.sendOk,S.sendFail=nil,0,0 S.holdState={}if P.mute.on then S.mutes[P.username]=P.mute end
 for _,r in ipairs(S.roles)do r.position=tonumber(r.position)or 0 end do local norm,lower={},{}for u,v in pairs(S.assign)do local set={}if type(v)=="string"then set[v]=true elseif type(v)=="table"then if#v>0 then
 for _,rid in ipairs(v)do set[rid]=true end else for k,x in pairs(v)do if x==true then set[k]=true elseif type(x)=="string"then set[x]=true end end end end local lk=tostring(u):lower()local key=lower[lk]or u
 lower[lk]=key norm[key]=norm[key]or{}for rid in pairs(set)do norm[key][rid]=true end end S.assign=norm end local handlers={}function F.on(evt,fn)handlers[evt]=handlers[evt]or{};tinsert(handlers[evt],fn);return fn end
-function F.emit(evt,...)for _,fn in ipairs(handlers[evt]or{})do pcall(fn,...)end end local NET={alive=true,notBefore=0,lanes={send={},other={},fast={}},busy={}}local conns={}local function hook(sig,fn)
-local c=sig:Connect(fn);tinsert(conns,c);return c end local function rawRequest(method,path,bodyTable)local headers={["Content-Type"]="application/json"}local bodyStr=bodyTable~=nil and H.jenc(bodyTable)or nil
-for attempt=1,3 do while NET.alive and os.clock()<NET.notBefore do task.wait(0.05)end if not NET.alive then return nil,"stopped"end local opts={Url=CFG.PROXY..path,Method=method,Headers=headers}
-if bodyStr then opts.Body=bodyStr end local t0=os.clock()local ok,res=pcall(httpFn,opts)if ok and type(res)=="table"then local code=tonumber(res.StatusCode or res.Status)or 0 local data=H.jdec(res.Body)
-if code==429 then NET.notBefore=os.clock()+(type(data)=="table"and tonumber(data.retry_after)or 1.5)+0.1 elseif code>=200 and code<300 then if method=="POST"then local dt=(os.clock()-t0)*1000
-S.rtt=S.rtt and(S.rtt*0.7+dt*0.3)or dt end return type(data)=="table"and data or{},nil,code elseif code>=500 or code==0 then task.wait(0.4*attempt)else
-return type(data)=="table"and data or{},"HTTP "..tostring(code),code end else task.wait(0.3*attempt)end end return nil,"network"end local function drain(name)if NET.busy[name]then return end NET.busy[name]=true
-task.spawn(function()while NET.alive and#NET.lanes[name]>0 do local job=tremove(NET.lanes[name],1)local data,err,code=rawRequest(job.method,job.path,job.body)if job.cb then pcall(job.cb,data,err,code)end end
-NET.busy[name]=false end)end local function enqueue(lane,method,path,body,cb)if not NET.alive then return end if lane=="fast"and(NET.busy.fast or#NET.lanes.fast>0)then return end
-tinsert(NET.lanes[lane],{method=method,path=path,body=body,cb=cb})drain(lane)end function F.markSeen(id)if S.seen[id]or S.seenOld[id]then return true end S.seen[id]=true S.seenN=S.seenN+1
-if S.seenN>CFG.SEEN_MAX then S.seenOld=S.seen;S.seen={};S.seenN=0 end return false end function F.decode(content)if type(content)~="string"then return nil end local body
-if content:sub(1,#CFG.PREFIX)==CFG.PREFIX then body=content:sub(#CFG.PREFIX+1)else for _,p in ipairs(CFG.LEGACY)do if content:sub(1,#p)==p then body=content:sub(#p+1);break end end end return body and H.jdec(body)or nil
-end function F.netError(e)F.toast("⚠ "..tostring(e or"network"),true)end function F.publish(pkt,lane,cb)pkt.clientId=P.clientId pkt.packetId=pkt.packetId or H.uuid()pkt.ts=pkt.ts or H.now()F.markSeen(pkt.packetId)
-local raw=H.jenc(pkt)if not raw then if cb then cb(false,"encode")end return end local content=CFG.PREFIX..raw if#content>1900 then if cb then cb(false,"big")end return end
-enqueue(lane or"send","POST","/api/send",{content=content},function(data,err)if data and data.ok then S.sendOk=S.sendOk+1;if cb then cb(true)end return end S.sendFail=S.sendFail+1 local e=(data and data.error)or err
+function F.emit(evt,...)for _,fn in ipairs(handlers[evt]or{})do pcall(fn,...)end end local NET={alive=true,notBefore=0,lanes={send={},other={},fast={}},busy={},idx=1,cooldown={},fails={}}local conns={}
+local function hook(sig,fn)local c=sig:Connect(fn);tinsert(conns,c);return c end function F.proxyPool()local list,seen={},{}local function addUrl(u)u=H.trim(tostring(u or"")):gsub("/+$","")
+if u:match("^https?://")and not seen[u]then seen[u]=true list[#list+1]=u end end for _,u in ipairs(CFG.PROXIES or{})do addUrl(u)end addUrl(CFG.PROXY)for _,u in ipairs(P.proxies or{})do addUrl(u)end return list end
+function F.switchProxy(reason)local pool=F.proxyPool()if#pool<=1 then return CFG.PROXY end local now=os.clock()NET.cooldown[CFG.PROXY]=now+120 for offset=1,#pool do local idx=((NET.idx+offset-1)%#pool)+1
+local cand=pool[idx]if(NET.cooldown[cand]or 0)<=now then NET.idx=idx CFG.PROXY=cand S.forceRoles=true S.scriptSeq=0 if F.updateInfo then pcall(F.updateInfo)end return cand end end NET.idx=(NET.idx%#pool)+1
+CFG.PROXY=pool[NET.idx]S.forceRoles=true return CFG.PROXY end local function rawRequest(method,path,bodyTable)local headers={["Content-Type"]="application/json"}local bodyStr=bodyTable~=nil and H.jenc(bodyTable)or nil
+local pool=F.proxyPool()local maxAttempts=max(3,#pool+1)for attempt=1,maxAttempts do while NET.alive and os.clock()<NET.notBefore do task.wait(0.05)end if not NET.alive then return nil,"stopped"end
+local curUrl=CFG.PROXY local opts={Url=curUrl..path,Method=method,Headers=headers}if bodyStr then opts.Body=bodyStr end local t0=os.clock()local ok,res=pcall(httpFn,opts)if ok and type(res)=="table"then
+local code=tonumber(res.StatusCode or res.Status)or 0 local data=H.jdec(res.Body)if code>=200 and code<300 and type(data)=="table"then NET.fails[curUrl]=0 NET.cooldown[curUrl]=nil if method=="POST"then
+local dt=(os.clock()-t0)*1000 S.rtt=S.rtt and(S.rtt*0.7+dt*0.3)or dt end return data,nil,code elseif code==429 and type(data)=="table"and data.error=="rate"then
+NET.notBefore=os.clock()+(tonumber(data.retry_after)or 1.5)+0.1 elseif code==429 or code==503 or code==502 or code==1027 or code==1015 or code>=500 or code==0 or type(data)~="table"then
+NET.fails[curUrl]=(NET.fails[curUrl]or 0)+1 if#pool>1 and(code==429 or code==503 or code==1027 or NET.fails[curUrl]>=2)then F.switchProxy("HTTP "..tostring(code))else task.wait(0.35*attempt)end else
+return type(data)=="table"and data or{},"HTTP "..tostring(code),code end else NET.fails[curUrl]=(NET.fails[curUrl]or 0)+1 if#pool>1 and NET.fails[curUrl]>=2 then F.switchProxy("timeout")else task.wait(0.25*attempt)end
+end end return nil,"network"end local function drain(name)if NET.busy[name]then return end NET.busy[name]=true task.spawn(function()while NET.alive and#NET.lanes[name]>0 do local job=tremove(NET.lanes[name],1)
+local data,err,code=rawRequest(job.method,job.path,job.body)if job.cb then pcall(job.cb,data,err,code)end end NET.busy[name]=false end)end local function enqueue(lane,method,path,body,cb)
+if not NET.alive then return end if lane=="fast"and(NET.busy.fast or#NET.lanes.fast>0)then return end tinsert(NET.lanes[lane],{method=method,path=path,body=body,cb=cb})drain(lane)end function F.markSeen(id)
+if S.seen[id]or S.seenOld[id]then return true end S.seen[id]=true S.seenN=S.seenN+1 if S.seenN>CFG.SEEN_MAX then S.seenOld=S.seen;S.seen={};S.seenN=0 end return false end function F.decode(content)
+if type(content)~="string"then return nil end local body if content:sub(1,#CFG.PREFIX)==CFG.PREFIX then body=content:sub(#CFG.PREFIX+1)else for _,p in ipairs(CFG.LEGACY)do
+if content:sub(1,#p)==p then body=content:sub(#p+1);break end end end return body and H.jdec(body)or nil end function F.netError(e)F.toast("⚠ "..tostring(e or"network"),true)end function F.publish(pkt,lane,cb)
+pkt.clientId=P.clientId pkt.packetId=pkt.packetId or H.uuid()pkt.ts=pkt.ts or H.now()F.markSeen(pkt.packetId)local raw=H.jenc(pkt)if not raw then if cb then cb(false,"encode")end return end
+local content=CFG.PREFIX..raw if#content>1900 then if cb then cb(false,"big")end return end enqueue(lane or"send","POST","/api/send",{content=content},function(data,err)
+if data and data.ok then S.sendOk=S.sendOk+1;if cb then cb(true)end return end S.sendFail=S.sendFail+1 local e=(data and data.error)or err
 if e=="muted"then F.applyMute(P.username,{on=true,reason=data.reason or"",exp=tonumber(data.exp)or 0,by=""})elseif e=="banned"then S.banned={reason=data.reason or"",exp=tonumber(data.exp)or 0}
 F.toast(T("banned_you"),true)elseif pkt.type~="typing"then F.netError(e)end if cb then cb(false,e)end end)F.emit("send",pkt)end local function themed(o,fn)reg[#reg+1]={o=o,fn=fn};pcall(fn,o)end
 local function th(o,prop,key,isBg)reg[#reg+1]={o=o,p=prop,k=key,a=isBg}pcall(function()o[prop]=TH[key]end)if isBg then pcall(function()o.BackgroundTransparency=P.alpha end)end end function F.computeTheme()
@@ -1083,9 +1091,11 @@ if u and F.canAct(P.username,u)then F.publish({type="clear_warn",by=P.username,t
 end)end,{staff=true,alias={"clearwarn"},arg="<name>"})F.command("react","c_react",function(a)local m=S.reply and S.msgs[S.reply.id];if m and a~=""then F.doReact(m,a)end end,{arg="<emoji>"})
 F.command("request","c_request",function()F.openRequest()end,{alias={"xin"}})
 F.command("status","c_status",function(a)P.status=H.clip(a,80);S.isDirty=true;F.heartbeat(false);F.toast(T("status_set"),true)end,{arg="<text>"})F.command("diag","c_diag",function()F.openDiag()end,{alias={"debug"}})
-F.command("back","c_back",function()F.selectChannel("general")end)local TOK_COLORS={cmd_ok=rgb(34,197,94),cmd_wait=rgb(56,189,248),cmd_bad=rgb(239,68,68),men_ok=rgb(34,197,94),men_wait=rgb(245,158,11),
-men_bad=rgb(239,68,68),emo_ok=rgb(236,72,153),emo_wait=rgb(168,85,247),emo_bad=rgb(239,68,68),}function F.resolveCmdToken(rawCmd)local lc=tostring(rawCmd or""):lower()if lc==""then
-return{status="wait",col=TOK_COLORS.cmd_wait,label="/ (help, dm, scripts, emoji, poll...)"}end local exact=F.cmds[lc]if exact then
+F.command("proxy","c_diag",function(a)local sub,u=tostring(a or""):match("^(%S+)%s*(.*)$")if sub=="add"and u and u:match("^https?://")then u=H.trim(u):gsub("/+$","")P.proxies=P.proxies or{}tinsert(P.proxies,u)
+S.isDirty=true F.toast("✓ Added Backup Proxy: "..u,true)elseif sub=="next"or sub=="switch"then local nxt=F.switchProxy("manual")F.toast("⇄ Switched Proxy: "..tostring(nxt),true)else F.openDiag()end
+end,{alias={"proxies","failover"},arg="[add <url> | next]"})F.command("back","c_back",function()F.selectChannel("general")end)local TOK_COLORS={cmd_ok=rgb(34,197,94),cmd_wait=rgb(56,189,248),cmd_bad=rgb(239,68,68),
+men_ok=rgb(34,197,94),men_wait=rgb(245,158,11),men_bad=rgb(239,68,68),emo_ok=rgb(236,72,153),emo_wait=rgb(168,85,247),emo_bad=rgb(239,68,68),}function F.resolveCmdToken(rawCmd)
+local lc=tostring(rawCmd or""):lower()if lc==""then return{status="wait",col=TOK_COLORS.cmd_wait,label="/ (help, dm, scripts, emoji, poll...)"}end local exact=F.cmds[lc]if exact then
 local allowed=(not exact.staff or F.isStaff(P.username))and(not exact.dev or F.isDev(P.username))if allowed then return{status="ok",col=TOK_COLORS.cmd_ok,cmd=exact,
 label="/"..exact.name..(exact.arg and(" "..exact.arg)or"").." — "..T(exact.desc),}else return{status="bad",col=TOK_COLORS.cmd_bad,label="/"..rawCmd.." (🔒 Staff/Dev)"}end end for _,c in ipairs(F.cmdList)do
 if(not c.staff or F.isStaff(P.username))and(not c.dev or F.isDev(P.username))and c.name:sub(1,#lc)==lc then return{status="wait",col=TOK_COLORS.cmd_wait,cmd=c,label="/"..rawCmd.." → /"..c.name.." ("..T(c.desc)..")",
@@ -1165,8 +1175,9 @@ if not force and(not S.isDirty or os.clock()-S.lastSave<CFG.SAVE_THROTTLE)then r
 local polls,n={},0 for id,p in pairs(S.polls)do n=n+1;if n<=60 then polls[id]=p end end local d={clientId=P.clientId,lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,
 dmList=P.dmList,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,recentColors=P.recentColors,themeName=P.themeName,custom=P.custom,alpha=P.alpha,mute=P.mute,W=P.W,H=P.H,
 notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,textSize=P.textSize,toastPos=P.toastPos,
-miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,warns=S.warns,reports=S.reports,reactions=rx,polls=polls,customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,
-}local s=H.jenc(d)if s then pcall(writefile,FILE,s)end end local drag,md local function isPress(i)return i.UserInputType==mb1 or i.UserInputType==utTouch end
+miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,warns=S.warns,reports=S.reports,reactions=rx,polls=polls,
+customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,proxies=P.proxies,}local s=H.jenc(d)if s then pcall(writefile,FILE,s)end end local drag,md
+local function isPress(i)return i.UserInputType==mb1 or i.UserInputType==utTouch end
 local function isMove(i,ref)return(ref.UserInputType==utTouch and i==ref)or(ref.UserInputType==mb1 and i.UserInputType==Enum.UserInputType.MouseMovement)end
 hook(U.titleBar.InputBegan,function(i)if isPress(i)then drag={kind="move",start=i.Position,ox=S.winX,oy=S.winY,input=i}end end)
 hook(U.resize.InputBegan,function(i)if isPress(i)then drag={kind="size",start=i.Position,w=P.W,h=P.H,input=i}end end)hook(U.mini.InputBegan,function(i)
