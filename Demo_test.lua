@@ -127,8 +127,8 @@ local ROBLOX_EMOJI_FALLBACK={[0x1F309]="💬",[0x1F6E1]="👑",[0x1F9F9]="",[0x1
   [0x1F975]="🔥",[0x1F97A]="😢",[0x1F973]="🎉",[0x1F971]="😴",[0x1F92A]="😜",[0x1F92D]="😅",[0x1F92B]="😶",[0x1F92F]="😱",[0x1F92C]="😡",[0x1F929]="😍",[0x1F9E1]="💖",[0x1F90D]="💖",[0x1F90E]="💖",
   [0x2764]="💖",[0x2665]="💖",[0x1F5A4]="💖",[0x1F5FF]="😎",[0x1F923]="😂",[0x1F921]="👻",[0x1F913]="😎",[0x1F914]="😮",[0x1F910]="😶",[0x1F911]="😎",[0x1F916]="👽",[0x1F917]="😊",[0x1F920]="😎",[0x1F924]="😋",
   [0x1F918]="👌",[0x1F919]="👌",[0x1F91A]="👋",[0x1F91D]="👏",[0x1F91E]="🙏",[0x1F590]="👋",[0x1F596]="👋",[0x1F9E0]="💡",[0x1F9EA]="💎",[0x2705]="👍",[0x274C]="💢",[0x2728]="💫",[0x2B50]="🌟",[0x26A1]="💥",
-  [0x26A0]="🚨",[0x2600]="🌟",[0x2601]="",[0x2744]="",[0x2615]="🍺",[0x270C]="👌",[0x261D]="👆",[0x2709]="",[0x270F]="",[0x2699]="⚙️",[0x26D4]="",[0x23F3]="",[0x2713]="👍",[0x2714]="👍",[0x2715]="×",[0x2716]="×",
-  [0x27A4]=">",[0x2922]="",[0x25C9]="•",[0x25E2]="//",[0x2696]="🚨",[0x26D4]="🚨",[0x2705]="👍",}
+  [0x26A0]="🚨",[0x2600]="🌟",[0x2601]="",[0x2744]="",[0x2615]="🍺",[0x270C]="👌",[0x261D]="👆",[0x2709]="",[0x270F]="",[0x2699]="⚙️",[0x26D4]="🚨",[0x23F3]="⏳",[0x2713]="✓",[0x2714]="✓",[0x2715]="×",[0x2716]="×",
+  [0x27A4]=">",[0x2922]="",[0x25C9]="•",[0x25E2]="//",[0x2696]="🚨",[0x2705]="👍",[0x270D]="✍️",}
 --- [emojiWalk] Duyệt từng mã Unicode (codepoint) trong chuỗi để thay thế các emoji bị lỗi hiển thị trên Roblox bằng emoji tương đương
 local function emojiWalk(s,stopZwj)s=tostring(s or"")local out,buf={},{}
   local function flush()if#buf==2 then out[#out+1]=utf8.char(buf[1],buf[2])elseif#buf==1 then out[#out+1]=utf8.char(buf[1])end buf={}end
@@ -317,6 +317,12 @@ local TXT={title={"Chat Bridge","Chat Bridge"},send={"Gửi","Send"},
   qr_forgive={"Đã hết thời hạn phạt / Cam kết không tái phạm","Completed penalty / Promised not to repeat"},
   qr_mistake={"Gỡ phạt do nhầm lẫn từ Quản trị viên","Removed penalty due to Staff mistake"},
   qr_appeal={"Kháng cáo thành công / Được Dev/Admin ân xá","Appeal accepted / Pardoned by Dev/Admin"},
+  show_typing={"Chia sẻ trạng thái đang nhập","Share typing indicator"},
+  show_seen={"Chia sẻ trạng thái đã xem tin nhắn","Send read receipts (Seen)"},
+  st_sending={"⏳ Đang gửi…","⏳ Sending…"},
+  st_sent={"✓ Đã gửi","✓ Sent"},
+  st_seen={"✓✓ Đã xem","✓✓ Seen"},
+  st_seen_by={"✓✓ Đã xem bởi ","✓✓ Seen by "},
   nano_cube={"60×60","60×60"},expand_ui={"Mở rộng","Expand"},}local L=saved.lang=="en"and"en"or"vi"
 --- [T] Hàm dịch đa ngôn ngữ: trả về chuỗi văn bản theo ngôn ngữ hiện tại (Tiếng Việt = 1, Tiếng Anh = 2)
 local function T(k)local v=TXT[k]if not v then return k end return v[L=="en"and 2 or 1]end
@@ -365,7 +371,7 @@ if P.backgroundMode=="image"and P.backgroundImage==""then P.backgroundMode="soli
 P.backgroundOpacity=clamp(tonumber(saved.backgroundOpacity)or 0.82,0.15,1)
 P.backgroundDim=clamp(tonumber(saved.backgroundDim)or 0.25,0,0.75)
 P.H=tonumber(saved.H or saved.height)or(IS_MOBILE and 380 or 320)P.notify=saved.notify~=false P.sound=saved.sound~=false P.bubble=saved.bubble~=false P.safeEmoji=saved.safeEmoji~=false P.showGame=saved.showGame~=false
-P.preview=saved.preview~=false P.compact=saved.compact==true P.sameUser=saved.sameUser~=false P.group=saved.group~=false S.viewAs=false S.tapLock={}S.sameBb={}P.textSize=clamp(tonumber(saved.textSize)or 13,11,20)
+P.preview=saved.preview~=false P.compact=saved.compact==true P.sameUser=saved.sameUser~=false P.group=saved.group~=false P.showTyping=saved.showTyping~=false P.showSeen=saved.showSeen~=false S.viewAs=false S.tapLock={}S.sameBb={}P.textSize=clamp(tonumber(saved.textSize)or 13,11,20)
 -- Khởi tạo bảng trạng thái phiên chạy S (danh sách người dùng, tin nhắn, cảm xúc, bình chọn, role, script, vị trí cửa sổ)
 P.toastPos=saved.toastPos or"tr"P.miniX,P.miniY=tonumber(saved.miniX),tonumber(saved.miniY)
 P.winX,P.winY=tonumber(saved.winX),tonumber(saved.winY)P.minimized=saved.minimized==true
@@ -374,6 +380,7 @@ S.prevW=tonumber(saved.prevW)or((P.W>=240 and P.W)or(IS_MOBILE and 330 or 400))
 S.prevH=tonumber(saved.prevH)or((P.H>=220 and P.H)or(IS_MOBILE and 380 or 320))
 S.users,S.msgs,S.order,S.frames,S.frameQ={},{},{},{},{}S.polls=type(saved.polls)=="table"and saved.polls or{}
 S.reactions=type(saved.reactions)=="table"and saved.reactions or{}S.seen,S.seenOld,S.seenN={},{},0 S.typing,S.unread,S.dmUnread={},{game=0,general=0,announce=0,punish=0,scripts=0,staff=0},{}
+S.seenBy=type(saved.seenBy)=="table"and saved.seenBy or{}S.seenSeq=0 S.mySentSeen={}S.statusLabels={}S.wasTyping=false
 S.roles=type(saved.roles)=="table"and saved.roles or{}S.sharedEmojis=type(saved.sharedEmojis)=="table"and saved.sharedEmojis or{}S.emojiSeq=0 S.scripts=type(saved.scripts)=="table"and saved.scripts or{}S.scriptSeq=0
 S.announceSeq=0 S.modSeq=0 S.punishFilter="all"S.punishments=type(saved.punishments)=="table"and saved.punishments or{}S.bannedMap=type(saved.bannedMap)=="table"and saved.bannedMap or{}
 S.scriptTagFilter="All"S.scriptMultiMode=false S.scriptSelected={}S.emojiMultiMode=false S.emojiSelected={}P.customEmojiNames=type(saved.customEmojiNames)=="table"and saved.customEmojiNames or{}
@@ -964,6 +971,91 @@ function F.getUserPunishments(u)if not u or u==""then return{}end
     if p and tostring(p.target or""):lower()==ln then out[#out+1]=p end
   end
   return out end
+--- [F.refreshTypingLabel] Cập nhật nhãn hiển thị danh sách người chơi khác đang nhập tin nhắn (`U.typing`)
+function F.refreshTypingLabel()
+  if not U.typing then return end
+  local now=os.clock()local names={}
+  for u,t in pairs(S.typing[S.chan]or{})do
+    if u~=P.username and now-t<CFG.TYPING_TIMEOUT then names[#names+1]=u else S.typing[S.chan][u]=nil end
+  end
+  tsort(names)
+  U.typing.Text=#names>0 and(F.disp(tconcat(names,", ",1,min(#names,3)))..T("typing").."…")or""
+end
+--- [F.msgSeenUsers] Lấy danh sách người dùng khác đã xem tin nhắn `id` (loại trừ tác giả `author`)
+function F.msgSeenUsers(id,author)
+  local map=id and S.seenBy and S.seenBy[tostring(id)]
+  if type(map)~="table"then return{}end
+  local out={}local seenLower={}
+  local authLow=tostring(author or""):lower()
+  for u,ts in pairs(map)do
+    local ul=tostring(u or""):lower()
+    if ts and ul~=""and ul~=authLow and not seenLower[ul]then
+      seenLower[ul]=true
+      out[#out+1]=tostring(u)
+    end
+  end
+  tsort(out,function(a,b)return(tonumber(map[a])or 0)<(tonumber(map[b])or 0)end)
+  return out end
+--- [F.formatMsgStatus] Định dạng chuỗi trạng thái tin nhắn của bản thân (Đang gửi / Đã gửi / Đã xem / Gửi lỗi) và khóa màu sắc
+function F.formatMsgStatus(m)
+  if not m then return"","muted"end
+  if m.failed then return"! "..T("failed"),"danger"end
+  if m.sending then return T("st_sending"),"warn"end
+  local viewers=F.msgSeenUsers(m.packetId,m.author)
+  if #viewers>0 then
+    if tostring(m.chan or""):sub(1,3)=="dm:"then
+      return T("st_seen"),"ok"
+    end
+    local shown={}
+    for i=1,min(#viewers,3)do shown[#shown+1]="@"..F.disp(viewers[i])end
+    local extra=#viewers>3 and(" +"..(#viewers-3))or""
+    return T("st_seen_by")..tconcat(shown,", ")..extra,"ok"
+  end
+  return T("st_sent"),"muted"
+end
+--- [F.updateMsgStatus] Cập nhật trực tiếp nhãn trạng thái (Đang gửi / Đã gửi / Đã xem) của tin nhắn `id` trên giao diện
+function F.updateMsgStatus(id)
+  id=tostring(id or"")
+  local lbl=S.statusLabels and S.statusLabels[id]
+  local m=S.msgs and S.msgs[id]
+  if not lbl or not lbl.Parent or not m then return end
+  local txt,colKey=F.formatMsgStatus(m)
+  lbl.Text=txt
+  lbl.TextColor3=TH[colKey]or TH.muted
+end
+--- [F.markChannelSeen] Đánh dấu đã xem các tin nhắn trong kênh `chan` và gửi gói tin `seen` (nếu người dùng bật `P.showSeen`)
+function F.markChannelSeen(chan)
+  chan=tostring(chan or S.chan or"general")
+  if not P.showSeen or not U.main or not U.main.Visible then return end
+  if chan=="scripts"or chan=="punish"then return end
+  if chan=="staff"and not F.isStaff(P.username)then return end
+  local meLow=P.username:lower()
+  local unseen={}
+  for i=#S.order,1,-1 do
+    local id=S.order[i]
+    local m=S.msgs[id]
+    if m and not m.deleted and not m.cleared and F.visibleIn(m,chan)then
+      if tostring(m.author or""):lower()~=meLow then
+        local map=S.seenBy[id]
+        local already=(S.mySentSeen and S.mySentSeen[id])or(type(map)=="table"and(map[P.username]~=nil or map[meLow]~=nil))
+        if not already then
+          unseen[#unseen+1]=id
+          if #unseen>=15 then break end
+        end
+      end
+    end
+  end
+  if #unseen==0 then return end
+  local now=H.now()
+  for _,id in ipairs(unseen)do
+    S.mySentSeen[id]=true
+    S.seenBy[id]=type(S.seenBy[id])=="table"and S.seenBy[id]or{}
+    S.seenBy[id][P.username]=now
+    F.updateMsgStatus(id)
+  end
+  S.isDirty=true
+  F.publish({type="seen",by=P.username,author=P.username,ids=unseen,target=unseen[1],chan=chan,ts=now},"fast")
+end
 --- [F.disp] Chuyển đổi văn bản sang chuỗi hiển thị an toàn (áp dụng `H.safeText` nếu bật chế độ sửa lỗi Emoji)
 function F.disp(t)t=tostring(t or"");return P.safeEmoji and H.safeText(t)or t end
 
@@ -1233,7 +1325,7 @@ function F.updateJump()local show=not F.nearBottom()and S.newBelow>0 U.jump.Visi
 --- [F.dropFrame] Xóa triệt để phần tử giao diện (`Frame`) của một tin nhắn khỏi khung cuộn, tránh lỗi bóng ma (ghost message) trên UI
 function F.dropFrame(id)local f=S.frames[id]if f then pcall(function()f.Visible=false;f.Size=uo(0,0);f.Parent=nil;f:Destroy()end)end
   if U.scroll and U.scroll.Parent then local ghost=U.scroll:FindFirstChild("Item_"..tostring(id))if ghost then pcall(function()ghost.Visible=false;ghost.Parent=nil;ghost:Destroy()end)end end
-  S.frames[id]=nil if S.rxHolders then S.rxHolders[id]=nil end if S.holdState then S.holdState[id]=nil end
+  S.frames[id]=nil if S.rxHolders then S.rxHolders[id]=nil end if S.statusLabels then S.statusLabels[id]=nil end if S.holdState then S.holdState[id]=nil end
   if S.tapAt then S.tapAt[id]=nil end for i=#S.frameQ,1,-1 do if S.frameQ[i]==id then tremove(S.frameQ,i)end end end
 --- [F.sweepGhostFrames] Quét và dọn sạch các khung tin nhắn cũ bị kẹt trong nền `U.scroll` hoặc không khớp kênh hiện tại
 function F.sweepGhostFrames()if not U.scroll or not U.scroll.Parent or S.chan=="scripts"or S.chan=="punish"then return end
@@ -1309,7 +1401,15 @@ function F.renderMessage(m)if not m or m.deleted or m.cleared or m.type~="msg"th
       F.toast(T("delta_tp_note"),true)
       pcall(function()TeleportService:TeleportToPlaceInstance(tonumber(jPlace),jJob,LP)end)end)end
   local rx=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=5,Visible=false,ZIndex=12,
-  },col)mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},rx)S.rxHolders[id]=rx F.renderReactions(id)if not grp then local qbar=mk("Frame",{Size=uo(64,20),
+  },col)mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},rx)S.rxHolders[id]=rx F.renderReactions(id)
+  if mine then
+    S.statusLabels=S.statusLabels or{}
+    local stTxt,stKey=F.formatMsgStatus(m)
+    local stLbl=mk("TextLabel",{Name="MsgStatus",Size=u2(1,0,0,14),BackgroundTransparency=1,Text=stTxt,Font=fGB,TextSize=10,TextXAlignment=txR,TextTruncate=trEnd,LayoutOrder=6,BorderSizePixel=0,ZIndex=5},col)
+    themed(stLbl,function(x)local _,k=F.formatMsgStatus(m)x.TextColor3=TH[k]or TH.muted end)
+    S.statusLabels[id]=stLbl
+  end
+  if not grp then local qbar=mk("Frame",{Size=uo(64,20),
       Position=u2(1,-64,0,0),BackgroundTransparency=1,ZIndex=10,},frame)mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,2),HorizontalAlignment=Enum.HorizontalAlignment.Right,VerticalAlignment=vaC,SortOrder=soLO},qbar)
     local qReact=mk("TextButton",{Size=uo(20,19),BackgroundTransparency=1,Text="😀",TextSize=11,Font=fGB,BorderSizePixel=0,LayoutOrder=1,ZIndex=11},qbar)th(qReact,"TextColor3","muted")
     hook(qReact.MouseButton1Click,function()F.openEmoji({title=T("react"),onPick=function(e)F.doReact(m,e)end})end)
@@ -1339,6 +1439,12 @@ function F.openCtx(m,pos)F.closeCtx()
     ic.Position=u2(0.5,-12,0.5,-12)hook(b.MouseButton1Click,function()F.closeCtx();F.doReact(m,e)end)end
   local more=tbtn(qr,"+",{size=uo(38,32),r=8,key="accent",ts=16})hook(more.MouseButton1Click,function()F.closeCtx()
     F.openEmoji({title=T("react"),onPick=function(e)F.doReact(m,e)end})end)
+  local viewers=F.msgSeenUsers(m.packetId,m.author)
+  if #viewers>0 then
+    local vShown={}for i=1,min(#viewers,4)do vShown[#vShown+1]="@"..F.disp(viewers[i])end
+    local vExtra=#viewers>4 and(" +"..(#viewers-4))or""
+    lab(menu,T("st_seen_by")..tconcat(vShown,", ")..vExtra,{wrap=true,auto=true,ts=10,bold=true,key="ok",layout=1})
+  end
   local function item(text,fn,key)local b=tbtn(menu,text,{size=u2(1,0,0,28),key=key or"btnBg",ts=12})b.TextXAlignment=txL
     pad(b,12,0,10,0)hook(b.MouseButton1Click,function()F.closeCtx();fn()end)end item("↩  "..T("reply"),function()F.startReply(m)end)item(T("copy"),function()F.copyText(F.plain(m.content))end)if m.author==P.username then item(T("edit"),function()F.startEdit(m)end)end
   local canDelMsg=(m.chan=="announce"and F.isStaff(P.username))or(m.chan~="announce"and(m.author==P.username or F.canAct(P.username,m.author)or F.isStaff(P.username)))
@@ -1367,11 +1473,14 @@ function F.deleteMsg(m)if not m then return end
   if m.chan=="announce"and not F.isStaff(P.username)then F.toast(T("staff_only"),true);return end
   m.deleted=true F.dropFrame(m.packetId)F.onDeleted(m)S.isDirty=true
   F.publish({type="delete",target=m.packetId,author=P.username,by=P.username,chan=m.chan})end
---- [F.resend] Thử gửi lại một tin nhắn `m` bị lỗi mạng trước đó
-function F.resend(m)m.failed=false F.dropFrame(m.packetId);F.renderMessage(m)
+--- [F.resend] Thử gửi lại một tin nhắn `m` bị lỗi mạng trước đó (hiển thị trạng thái Đang gửi -> Đã gửi)
+function F.resend(m)m.failed=false;m.sending=true;m.sent=false F.dropFrame(m.packetId);F.renderMessage(m)
   local pkt={type="msg",packetId=m.packetId,chan=m.chan,author=m.author,display=m.display,uid=m.uid,content=m.content,ts=m.ts,replyTo=m.replyTo,replyAuthor=m.replyAuthor,replySnippet=m.replySnippet,place=m.place,job=m.job}
-  F.publish(pkt,"send",function(ok)if not ok then m.failed=true;F.dropFrame(m.packetId);F.renderMessage(m)end end)end
---- [F.selectChannel] Chuyển sang kênh chat `chan`, đặt lại bộ đếm chưa đọc và vẽ lại danh sách tin nhắn
+  F.publish(pkt,"send",function(ok)
+    m.sending=false
+    if ok then m.sent=true;m.failed=false;F.updateMsgStatus(m.packetId)
+    else m.failed=true;F.dropFrame(m.packetId);F.renderMessage(m)end end)end
+--- [F.selectChannel] Chuyển sang kênh chat `chan`, đặt lại bộ đếm chưa đọc, đánh dấu đã xem và vẽ lại danh sách tin nhắn
 function F.selectChannel(chan)
   if chan=="staff"and not F.isStaff(P.username)then F.toast(T("staff_only"),true);return end
   S.chan=chan if S.unread[chan]then S.unread[chan]=0 end
@@ -1383,7 +1492,8 @@ function F.selectChannel(chan)
       U.input.PlaceholderText=isSt and T("punish_ph")or T("punish_ro")
     else pcall(function()U.input.TextEditable=true end)U.input.PlaceholderText=T("input")end end
   F.cancelCompose();F.layout()
-  F.rebuildFeed();F.paintTabs();F.updateInfo()U.typing.Text=""end
+  F.rebuildFeed();F.paintTabs();F.updateInfo();F.refreshTypingLabel()
+  if S.booted then F.markChannelSeen(chan)end end
 
 -- =============================================================================
 -- 17. DIỄN ĐÀN CHIA SẺ SCRIPT (SCRIPT FORUM: ĐĂNG BÀI, XEM CODE, LỌC & BÁO CÁO)
@@ -1682,7 +1792,7 @@ function F.rebuildFeed(keepScroll)
   S.feedGen=(S.feedGen or 0)+1 local myGen=S.feedGen
   local savedCanvas=keepScroll and U.scroll.CanvasPosition or nil
   for _,c in ipairs(U.scroll:GetChildren())do if c:IsA("GuiObject")then pcall(function()c.Visible=false;c.Size=uo(0,0);c.Parent=nil;c:Destroy()end)end end
-  S.frames,S.frameQ,S.rxHolders,S.holdState,S.tapAt={},{},{},{},{}F.pruneThemeReg()
+  S.frames,S.frameQ,S.rxHolders,S.statusLabels,S.holdState,S.tapAt={},{},{},{},{},{}F.pruneThemeReg()
   if S.chan=="scripts"then F.renderScriptForum()if savedCanvas then
       task.defer(function()if U.scroll.Parent then U.scroll.CanvasPosition=savedCanvas end end)end return end
   if S.chan=="punish"then F.renderPunishChannel()if savedCanvas then
@@ -2222,11 +2332,11 @@ function F.openRequest()
       elseif d and d.error=="pending"then F.toast(T("request_pending"),true)else F.netError(d and d.error or e)end end)end)end
 --- [F.exportSettings] Xuất toàn bộ cài đặt cá nhân, Theme và danh sách Emoji cục bộ ra chuỗi mã sao lưu (`CBS1:...`)
 function F.exportSettings()
-  local t={lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,themeName=P.themeName,custom=P.custom,alpha=P.alpha,backgroundMode=P.backgroundMode,backgroundImage=P.backgroundImage,backgroundOpacity=P.backgroundOpacity,backgroundDim=P.backgroundDim,notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,textSize=P.textSize,toastPos=P.toastPos,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,dmList=P.dmList}
+  local t={lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,themeName=P.themeName,custom=P.custom,alpha=P.alpha,backgroundMode=P.backgroundMode,backgroundImage=P.backgroundImage,backgroundOpacity=P.backgroundOpacity,backgroundDim=P.backgroundDim,notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,showTyping=P.showTyping,showSeen=P.showSeen,textSize=P.textSize,toastPos=P.toastPos,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,dmList=P.dmList}
   return"CBS1:"..H.jenc(t)end
 --- [F.importSettings] Khôi phục cài đặt cá nhân từ chuỗi mã sao lưu (`CBS1:...`)
 function F.importSettings(code)local j=H.trim(code):match("^CBS1:(.+)$")local d=j and H.jdec(j)if type(d)~="table"then return false end
-  for _,k in ipairs({"display","status","bio","country","themeName","alpha","backgroundMode","backgroundOpacity","backgroundDim","notify","sound","bubble","safeEmoji","showGame","preview","compact","sameUser","group","textSize","toastPos"})do if d[k]~=nil then P[k]=d[k]end
+  for _,k in ipairs({"display","status","bio","country","themeName","alpha","backgroundMode","backgroundOpacity","backgroundDim","notify","sound","bubble","safeEmoji","showGame","preview","compact","sameUser","group","showTyping","showSeen","textSize","toastPos"})do if d[k]~=nil then P[k]=d[k]end
   end if not THEMES[P.themeName]then P.themeName="midnight"end for _,k in ipairs({"custom","customEmojis","recentEmoji","dmList"})do if type(d[k])=="table"then P[k]=d[k]end end
   P.backgroundImage=H.assetId(d.backgroundImage or P.backgroundImage or"")or""
   if P.backgroundMode~="image"and P.backgroundMode~="gradient"then P.backgroundMode="solid"end
@@ -2260,7 +2370,16 @@ function F.openSettings()local scr=F.modalBox(T("settings"),420,640)
   local gen=sectionCard("",T("sec_general"))
   local function sw(key,tk,cb)F.switch(gen,T(tk),function()return P[key]end,function(v)P[key]=v;S.isDirty=true;if cb then cb()end end)end
   sw("notify","notify");sw("sound","sound");sw("bubble","bubble")sw("safeEmoji","safe_emoji",F.rebuildFeed)sw("showGame","share",function()F.heartbeat(false)end)sw("group","group_msgs",F.rebuildFeed)
-  sw("preview","preview");sw("compact","compact",F.layout)sw("sameUser","same_user")local app=sectionCard("",T("sec_appear"))lab(app,T("quick_theme"),{ts=10,bold=true,key="muted"})
+  sw("preview","preview");sw("compact","compact",F.layout)sw("sameUser","same_user")
+  sw("showTyping","show_typing",function()
+    if not P.showTyping and S.wasTyping then
+      S.wasTyping=false;S.lastType=0
+      F.publish({type="typing",author=P.username,chan=S.chan,stop=true},"fast")
+    end
+  end)
+  sw("showSeen","show_seen",function()
+    if P.showSeen and S.booted then F.markChannelSeen(S.chan)end
+  end)local app=sectionCard("",T("sec_appear"))lab(app,T("quick_theme"),{ts=10,bold=true,key="muted"})
   local qThemes={{"rose",T("rose_bright")},{"sakura","Sakura"},{"mint","Mint"},{"sky","Sky"},{"lavender","Lavender"},{"midnight","Midnight"},}
   local qGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},app)mk("UIGridLayout",{CellSize=u2(1/3,-4,0,28),CellPadding=uo(4,4),SortOrder=soLO},qGrid)for i,qt in ipairs(qThemes)do
     local t=THEMES[qt[1]]local b=mk("TextButton",{Text=qt[2],Font=fGB,TextSize=10,BackgroundColor3=H.hex(t.bg2),TextColor3=H.hex(t.text),BorderSizePixel=0,LayoutOrder=i,},qGrid)corner(b,6)
@@ -2565,7 +2684,12 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
   if id and F.markSeen(id)then return end
   local me=P.username if t=="msg"then local chan=tostring(pkt.chan or"general")if chan=="staff"and not F.isStaff(me)then return end
     local other=F.dmOther(chan)
-    if chan:sub(1,3)=="dm:"and not other then return end if not id or S.msgs[id]then return end
+    if chan:sub(1,3)=="dm:"and not other then return end
+    if not id then return end
+    if S.msgs[id]then
+      if S.msgs[id].sending then S.msgs[id].sending=false;S.msgs[id].sent=true;S.msgs[id].failed=false;F.updateMsgStatus(id)end
+      return
+    end
     local pktPlace=tonumber(pkt.place)
     local pktJob=pkt.job and tostring(pkt.job)or nil
     local pktTs=tonumber(pkt.ts)or H.now()
@@ -2574,19 +2698,21 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
       if pktJob and pktJob~=""and tostring(game.JobId)~=""and pktJob~=tostring(game.JobId)then return end
       if stale and not S.gameSessionIds[id]and pktTs<(S.joinTs-120)then return end
     end
-    local m={type="msg",packetId=id,chan=chan,author=tostring(pkt.author or"?"),display=pkt.display,uid=tonumber(pkt.uid),content=tostring(pkt.content or""),ts=pktTs,replyTo=pkt.replyTo,replyAuthor=pkt.replyAuthor,replySnippet=pkt.replySnippet,place=pktPlace,job=pktJob}
+    local m={type="msg",packetId=id,chan=chan,author=tostring(pkt.author or"?"),display=pkt.display,uid=tonumber(pkt.uid),content=tostring(pkt.content or""),ts=pktTs,sending=false,sent=true,failed=false,replyTo=pkt.replyTo,replyAuthor=pkt.replyAuthor,replySnippet=pkt.replySnippet,place=pktPlace,job=pktJob}
     if m.uid then S.uidCache=S.uidCache or{};S.uidCache[m.author]=m.uid end
     F.addMsg(m)if other then P.dmList[other]=P.dmList[other]or H.now()end
     if chan=="game"then S.isDirty=true end
     local mine=m.author==me
     if S.booted and chan==S.chan and F.visibleIn(m,S.chan)and F.matchSearch(m)and U.main.Visible then local was=F.nearBottom()F.renderMessage(m)
-      if was or mine then F.scrollBottom()else S.newBelow=S.newBelow+1;task.defer(F.updateJump)end elseif not mine and not stale then if other then S.dmUnread[chan]=(S.dmUnread[chan]or 0)+1
+      if was or mine then F.scrollBottom()else S.newBelow=S.newBelow+1;task.defer(F.updateJump)end
+      if not mine then F.markChannelSeen(chan)end
+    elseif not mine and not stale then if other then S.dmUnread[chan]=(S.dmUnread[chan]or 0)+1
       elseif S.unread[chan]~=nil then S.unread[chan]=S.unread[chan]+1 end
       F.paintTabs()end if not mine and not stale then F.touchUser(m.author,m.uid,m.display)local ping=F.mentions(m.content)if ping or other then
         local head=F.disp(m.display or m.author)local body=P.preview and(": "..F.disp(H.clip(F.plain(m.content),70)))or""
         F.toast((ping and"@ "or"DM ")..head..body,false,function()U.main.Visible=true;U.mini.Visible=false;F.selectChannel(chan)end)F.pingSound()end
       F.bubble(m.author,m.content,chan)if not U.main.Visible then
-        S.miniUnread=(S.miniUnread or 0)+1 U.miniBadge.Text=tostring(min(S.miniUnread,9));U.miniBadge.Visible=true end if S.typing[chan]then S.typing[chan][m.author]=nil end end
+        S.miniUnread=(S.miniUnread or 0)+1 U.miniBadge.Text=tostring(min(S.miniUnread,9));U.miniBadge.Visible=true end if S.typing[chan]then S.typing[chan][m.author]=nil;if chan==S.chan then F.refreshTypingLabel()end end end
     F.emit("message",m,stale)elseif t=="edit"then
     local m=S.msgs[pkt.target]if m and m.author==pkt.author then m.content=tostring(pkt.content or"");m.edited=true if S.frames[m.packetId]then F.dropFrame(m.packetId);F.renderMessage(m)end end elseif t=="delete"then
     local m=S.msgs[pkt.target]local p=S.polls[pkt.target]
@@ -2613,7 +2739,31 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
     local keep={}for _,sc in ipairs(S.scripts or{})do if not delSet[tostring(sc.id)]then keep[#keep+1]=sc end end
     S.scripts=keep S.isDirty=true
     if S.chan=="scripts"and U.main.Visible then F.rebuildFeed(true)end elseif t=="typing"then local chan=tostring(pkt.chan or"general")
-    if pkt.author~=me and not stale then F.touchUser(pkt.author);S.typing[chan]=S.typing[chan]or{};S.typing[chan][pkt.author]=os.clock()end elseif t=="poll"then local pid=tostring(pkt.pollId or id)
+    if pkt.author and pkt.author~=me and not stale then
+      F.touchUser(pkt.author)
+      S.typing[chan]=S.typing[chan]or{}
+      if pkt.stop==true then S.typing[chan][pkt.author]=nil else S.typing[chan][pkt.author]=os.clock()end
+      if chan==S.chan then F.refreshTypingLabel()end
+    end
+  elseif t=="seen"then
+    local viewer=tostring(pkt.by or pkt.author or"")
+    if viewer~=""then
+      local rawIds=type(pkt.ids)=="table"and pkt.ids or(pkt.target and{pkt.target}or{})
+      local ts=tonumber(pkt.ts)or H.now()
+      for _,rawId in ipairs(rawIds)do
+        local mid=tostring(rawId or"")
+        if mid~=""then
+          S.seenBy[mid]=type(S.seenBy[mid])=="table"and S.seenBy[mid]or{}
+          local m=S.msgs[mid]
+          if not m or tostring(m.author or""):lower()~=viewer:lower()then
+            S.seenBy[mid][viewer]=ts
+            F.updateMsgStatus(mid)
+          end
+        end
+      end
+      S.isDirty=true
+    end
+  elseif t=="poll"then local pid=tostring(pkt.pollId or id)
     local chan=tostring(pkt.chan or"general")if S.polls[pid]or chan:sub(1,3)=="dm:"then return end if chan=="staff"and not F.isStaff(me)then return end
     S.orderN=S.orderN+1
     local p={id=pid,isPoll=true,q=tostring(pkt.question or""),o=type(pkt.options)=="table"and pkt.options or{},multi=pkt.multi==true,author=tostring(pkt.author or"?"),chan=chan,votes={},order=S.orderN,ts=tonumber(pkt.ts)or H.now(),exp=tonumber(pkt.expires_at)or 0}
@@ -2695,10 +2845,11 @@ function F.ingest(data,first)
         else
           local exM=S.msgs[pid]
           if not exM then
-            local m={type="msg",packetId=pid,chan="announce",author=tostring(am.author or"?"),display=am.display,uid=tonumber(am.uid),content=tostring(am.content or""),ts=tonumber(am.ts)or H.now(),replyTo=am.replyTo,replyAuthor=am.replyAuthor,replySnippet=am.replySnippet,edited=am.edited==true}
+            local m={type="msg",packetId=pid,chan="announce",author=tostring(am.author or"?"),display=am.display,uid=tonumber(am.uid),content=tostring(am.content or""),ts=tonumber(am.ts)or H.now(),sending=false,sent=true,failed=false,replyTo=am.replyTo,replyAuthor=am.replyAuthor,replySnippet=am.replySnippet,edited=am.edited==true}
             if type(am.reactions)=="table"then S.reactions[pid]=am.reactions end
             F.addMsg(m);changedAnn=true
           else
+            exM.sending=false;exM.sent=true
             if am.content and exM.content~=am.content then exM.content=tostring(am.content);exM.edited=am.edited==true;changedAnn=true end
             if type(am.reactions)=="table"then S.reactions[pid]=am.reactions end
           end
@@ -2753,6 +2904,20 @@ function F.ingest(data,first)
     S.punishments=data.punishments
     if S.modSeq~=oldMs then S.isDirty=true if S.chan=="punish"and S.booted and U.main.Visible then pcall(F.rebuildFeed,true)end end
   end
+  if type(data.seenBy)=="table"then
+    S.seenSeq=tonumber(data.seenSeq)or S.seenSeq
+    for mid,vmap in pairs(data.seenBy)do
+      if type(vmap)=="table"then
+        local smid=tostring(mid)
+        S.seenBy[smid]=type(S.seenBy[smid])=="table"and S.seenBy[smid]or{}
+        for viewer,ts in pairs(vmap)do
+          S.seenBy[smid][tostring(viewer)]=tonumber(ts)or H.now()
+        end
+        F.updateMsgStatus(smid)
+      end
+    end
+    S.isDirty=true
+  end
   if type(data.roles)=="table"then
     F.applyRoles(data.roles,data.rolesSeq,true)S.forceRoles=false end
   local srv=tonumber(data.rolesSeq)or 0 if srv==0 and data.ready==true and F.isDev(P.username)and#S.roles>0 and os.clock()-(S.rolesRepub or-999)>60 then
@@ -2761,7 +2926,9 @@ function F.ingest(data,first)
     local pkt=F.decode(m.c)if pkt then
       local stale if nowMs>0 and seq>0 then stale=first or(nowMs-seq>30000)else stale=first or(tonumber(pkt.ts)~=nil and now-pkt.ts>30)end
       local ok,err=pcall(F.process,pkt,stale)
-      if not ok then warn("[CB44] process: "..tostring(err))end end end if S.lastSeq==0 then S.lastSeq=1 end end
+      if not ok then warn("[CB44] process: "..tostring(err))end end end
+  if S.lastSeq==0 then S.lastSeq=1 end
+  if S.booted and U.main and U.main.Visible then F.markChannelSeen(S.chan)end end
 --- [F.sendNow] Xử lý gửi nội dung trong ô nhập chat (thực thi lệnh `/slash`, lưu nội dung sửa, hoặc gửi tin nhắn mới)
 function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then return end
   if rawInput:sub(1,1)=="/"and F.slash(rawInput)then U.input.Text="";F.updateSuggest();return end if S.chan=="scripts"then F.openScriptComposer()return end if S.chan=="punish"then
@@ -2777,14 +2944,22 @@ function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then retur
   local id=H.uuid()
   local isGame=(S.chan=="game")
   if isGame then S.hasChattedInGame=true end
-  local m={type="msg",packetId=id,chan=S.chan,author=P.username,display=P.display,uid=P.userId,content=text,ts=H.now(),place=isGame and game.PlaceId or nil,job=isGame and tostring(game.JobId or"")or nil}
+  S.wasTyping=false;S.lastType=0
+  local m={type="msg",packetId=id,chan=S.chan,author=P.username,display=P.display,uid=P.userId,content=text,ts=H.now(),sending=true,sent=false,failed=false,place=isGame and game.PlaceId or nil,job=isGame and tostring(game.JobId or"")or nil}
   if S.reply then m.replyTo,m.replyAuthor,m.replySnippet=S.reply.id,S.reply.author,S.reply.snippet end
   F.addMsg(m)local other=F.dmOther(S.chan)if other then P.dmList[other]=H.now()end
   F.renderMessage(m);F.scrollBottom()
   F.bubble(P.username,text,m.chan)U.input.Text="";F.cancelCompose();F.updateSuggest()S.activityAt=os.clock()
   if isGame then S.isDirty=true;F.save(true)end
   F.publish({type="msg",packetId=id,chan=m.chan,author=m.author,display=m.display,uid=m.uid,content=text,ts=m.ts,replyTo=m.replyTo,replyAuthor=m.replyAuthor,replySnippet=m.replySnippet,place=m.place,job=m.job},"send",function(ok)
-    if not ok then m.failed=true;F.dropFrame(id);F.renderMessage(m);F.toast(T("send_fail"),true)end end)S.isDirty=true end
+    m.sending=false
+    if ok then
+      m.sent=true;m.failed=false
+      F.updateMsgStatus(id)
+    else
+      m.sent=false;m.failed=true
+      F.dropFrame(id);F.renderMessage(m);F.toast(T("send_fail"),true)
+    end end)S.isDirty=true end
 --- [F.insertEmoji] Chèn mã shortcode `:name:` hoặc ký tự Emoji vào vị trí con trỏ trong ô nhập tin nhắn
 function F.insertEmoji()F.openEmoji({title=T("emoji_pick"),onPick=function(e)e=tostring(e or"")
       if e==""then return end
@@ -3175,13 +3350,15 @@ function F.save(force)
       end
     end
   end
+  local seenOut={}
+  for id,vmap in pairs(S.seenBy or{})do if S.msgs[id]and type(vmap)=="table"and next(vmap)then seenOut[id]=vmap end end
   local gameChat=(not S.quitting and #gameMsgs>0)and{placeId=game.PlaceId,jobId=tostring(game.JobId or""),savedAt=os.time(),joinTs=S.joinTs,msgs=gameMsgs}or nil
   local d={clientId=P.clientId,lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,
     dmList=P.dmList,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,recentColors=P.recentColors,themeName=P.themeName,custom=P.custom,alpha=P.alpha,
     backgroundMode=P.backgroundMode,backgroundImage=P.backgroundImage,backgroundOpacity=P.backgroundOpacity,backgroundDim=P.backgroundDim,mute=P.mute,
     W=P.W,H=P.H,prevW=P.prevW,prevH=P.prevH,winX=P.winX,winY=P.winY,minimized=P.minimized,
-    notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,textSize=P.textSize,toastPos=P.toastPos,
-    miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,mutes=S.mutes,warns=S.warns,bannedMap=S.bannedMap,punishments=S.punishments,reports=S.reports,reactions=rx,polls=polls,
+    notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,showTyping=P.showTyping,showSeen=P.showSeen,textSize=P.textSize,toastPos=P.toastPos,
+    miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,mutes=S.mutes,warns=S.warns,bannedMap=S.bannedMap,punishments=S.punishments,reports=S.reports,reactions=rx,seenBy=seenOut,polls=polls,
     customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,proxies=P.proxies,savedScripts=P.savedScripts,gameChat=gameChat}local s=H.jenc(d)
   if s then pcall(writefile,FILE,s)end
   local ls=H.jenc(layoutData)
@@ -3215,7 +3392,17 @@ hook(U.sendBtn.MouseButton1Click,F.sendNow)
 hook(U.input.Focused,function()S.inputFocused=true;if U.inputRich then U.inputRich.Visible=false;U.inputRich.Text=""end;U.input.TextTransparency=0;F.updateTokenFeedback(U.input.Text)end)
 hook(U.input.FocusLost,function(enter)S.inputFocused=false;if enter then F.sendNow()else F.updateTokenFeedback(U.input.Text)end end)
 hook(U.input:GetPropertyChangedSignal("Text"),function()F.updateSuggest()local t=U.input.Text
-  if t~=""and t:sub(1,1)~="/"and os.clock()-S.lastType>CFG.TYPING_THROTTLE and not F.muted(P.username)then S.lastType=os.clock()F.publish({type="typing",author=P.username,chan=S.chan},"fast")end end)
+  if t~=""and t:sub(1,1)~="/"and S.chan~="scripts"and S.chan~="punish"then
+    if P.showTyping and os.clock()-S.lastType>CFG.TYPING_THROTTLE and not F.muted(P.username)then
+      S.lastType=os.clock();S.wasTyping=true
+      F.publish({type="typing",author=P.username,chan=S.chan},"fast")
+    end
+  elseif S.wasTyping then
+    S.wasTyping=false;S.lastType=0
+    if P.showTyping and not F.muted(P.username)then
+      F.publish({type="typing",author=P.username,chan=S.chan,stop=true},"fast")
+    end
+  end end)
 hook(U.emojiBtn.MouseButton1Click,function()F.insertEmoji()end)hook(U.pollBtn.MouseButton1Click,F.openPoll)hook(U.replyX.MouseButton1Click,function()F.cancelCompose();U.input.Text=""end)
 hook(U.jump.MouseButton1Click,function()F.scrollBottom()end)hook(U.scroll:GetPropertyChangedSignal("CanvasPosition"),function()if F.nearBottom()then S.newBelow=0 end F.updateJump()end)
 hook(U.scroll:GetPropertyChangedSignal("AbsoluteCanvasSize"),function()if S.stickUntil and os.clock()<S.stickUntil then F.snapBottom()end end)local vcam=workspace.CurrentCamera
@@ -3230,7 +3417,7 @@ local function pollLoop()while NET.alive do
     local rs=S.forceRoles and 0 or S.rolesSeq
     local pQuery=(S.lastSeq==0 or os.clock()-(S.lastPresPiggy or 0)>40)and string.format("&d=%s&id=%d&st=%s&c=%s&sg=%d&pl=%d&gn=%s&jb=%s",H.url(P.display),P.userId,H.url(P.status),H.url(P.country),P.showGame and 1 or 0,P.showGame and game.PlaceId or 0,H.url(P.showGame and S.placeName or""),H.url(P.showGame and game.JobId or""))or""
     if pQuery~=""then S.lastPresPiggy=os.clock()end
-    local path=string.format("/api/feed?since=%s&limit=%d&rs=%s&ss=%s&es=%s&as=%s&ms=%s&u=%s&gpl=%d&gjb=%s&wait=%d%s",H.num(since),S.lastSeq==0 and CFG.HISTORY or 100,H.num(rs),H.num(S.scriptSeq or 0),H.num(S.emojiSeq or 0),H.num(S.announceSeq or 0),H.num(S.modSeq or 0),H.url(P.username),tonumber(game.PlaceId)or 0,H.url(tostring(game.JobId or"")),wait,pQuery)local t0=os.clock()
+    local path=string.format("/api/feed?since=%s&limit=%d&rs=%s&ss=%s&es=%s&as=%s&ms=%s&vws=%s&u=%s&gpl=%d&gjb=%s&wait=%d%s",H.num(since),S.lastSeq==0 and CFG.HISTORY or 100,H.num(rs),H.num(S.scriptSeq or 0),H.num(S.emojiSeq or 0),H.num(S.announceSeq or 0),H.num(S.modSeq or 0),H.num(S.seenSeq or 0),H.url(P.username),tonumber(game.PlaceId)or 0,H.url(tostring(game.JobId or"")),wait,pQuery)local t0=os.clock()
     local data,err=rawRequest("GET",path)if not NET.alive then break end if data and data.ok then if sweep then S.sweepAt=os.clock()end
       local first=S.lastSeq==0 S.pollFail,S.lpFails,S.lastPollOk=0,0,os.clock()
       local ok,e=pcall(F.ingest,data,first)if not ok then warn("[CB44] ingest: "..tostring(e))end if first and not S.booted then F.afterBoot()end
