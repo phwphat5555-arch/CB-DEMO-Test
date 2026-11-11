@@ -16,8 +16,16 @@
 local ENV=(getgenv and getgenv())or _G for _,k in ipairs({"CB45_STOP","CB44_STOP","CB43_STOP","CB42_STOP","CB41_STOP","CB40_STOP","CB39_STOP","CB38_STOP","CB37_STOP"})do if type(ENV[k])=="function"then pcall(ENV[k])end end
 local CFG={
   -- Khởi tạo bảng cấu hình trung tâm CFG (URL Proxy chính, danh sách Proxy dự phòng, ngưỡng thời gian và giới hạn)
-  SCRIPT_URL=(type(ENV.CB45_SCRIPT_URL)=="string"and ENV.CB45_SCRIPT_URL)or(type(ENV.CB44_SCRIPT_URL)=="string"and ENV.CB44_SCRIPT_URL)or(type(ENV.CB43_SCRIPT_URL)=="string"and ENV.CB43_SCRIPT_URL)or(type(ENV.CB42_SCRIPT_URL)=="string"and ENV.CB42_SCRIPT_URL)or"",PROXY="https://cb-roblox.phwphat5555.workers.dev",PROXIES={"https://cb-roblox.phwphat5555.workers.dev",
-    "https://backup.phwphat8888.workers.dev","https://backupv2.sillydumb111.workers.dev","https://backupv3.just-a-blur-000.workers.dev",},DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},
+  SCRIPT_URL=(type(ENV.CB45_SCRIPT_URL)=="string"and ENV.CB45_SCRIPT_URL)or(type(ENV.CB44_SCRIPT_URL)=="string"and ENV.CB44_SCRIPT_URL)or(type(ENV.CB43_SCRIPT_URL)=="string"and ENV.CB43_SCRIPT_URL)or(type(ENV.CB42_SCRIPT_URL)=="string"and ENV.CB42_SCRIPT_URL)or"",
+  BOSS_URL=(type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com",
+  PROXY=(type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com",
+  PROXIES={
+    (type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com", -- [BOSS - RENDER] Máy chủ chính ưu tiên số 1
+    "https://cb-roblox.phwphat5555.workers.dev",       -- [BACKUP - CLOUDFLARE #1]
+    "https://backup.phwphat8888.workers.dev",          -- [BACKUP - CLOUDFLARE #2]
+    "https://backupv2.sillydumb111.workers.dev",       -- [BACKUP - CLOUDFLARE #3]
+    "https://backupv3.just-a-blur-000.workers.dev",    -- [BACKUP - CLOUDFLARE #4]
+  },DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},
   VERSION="45.0",SUGGEST_WEBHOOK="https://discord.com/api/webhooks/1568617557253034088/0KYh9iHsjtuYEnR_rS5H-uv9q--V45SXJ0OEQDeSDMAemr9_LOAuqJkeY8qatxd0VDZl",
   BUG_WEBHOOK="https://discord.com/api/webhooks/1568617762371412090/bh_C8jdRsA91WKguiKryM48BpXX1cC7jOAT5C0RenJ9NnlTUnkf8RBtYZF4kCpru29sz",
   LONGPOLL=12,POLL_FAST=0.35,POLL_IDLE=1.5,POLL_AFK=3.5,LP_RETRY=30,HEARTBEAT=90,PRESENCE_TIMEOUT=150,SWEEP=12,OVERLAP_MS=15000,HISTORY=60,MAX_MESSAGES=250,MAX_RENDER=50,MAX_CONTENT=800,
@@ -387,7 +395,7 @@ local TXT={title={"Chat Bridge","Chat Bridge"},send={"Gửi","Send"},
   tok_mention_ok={"Đã nhận diện: ","Mention active: "},tok_mention_find={"Đang tìm người chơi: ","Matching player: "},tok_mention_bad={"Không tìm thấy: ","User not found: "},
   tok_emoji_ok={"Emoji hoạt động: ","Emoji active: "},tok_emoji_find={"Đang tìm emoji: ","Matching emoji: "},tok_emoji_bad={"Chưa có emoji: ","Emoji not found: "},tok_state_ok={"HOẠT ĐỘNG","ACTIVE"},
   tok_state_wait={"ĐANG GÕ","TYPING"},tok_state_bad={"CHƯA KHỚP","NO MATCH"},tag_saved={"Đã lưu","Saved"},
-  proxy_panel={"HỆ THỐNG MULTI-PROXY & BACKUP (400K REQ/NGÀY)","MULTI-PROXY & FAILOVER POOL (400K REQ/DAY)"},proxy_ping_all={"Đo Ping Tất Cả Proxy","Ping Test All Proxies"},
+  proxy_panel={"HỆ THỐNG MÁY CHỦ [BOSS - RENDER] & [BACKUP - CLOUDFLARE]","[BOSS - RENDER] & [BACKUP - CLOUDFLARE] SERVER POOL"},proxy_ping_all={"Đo Ping Boss & Backup","Ping Test Boss & Backups"},
   proxy_active={"[ĐANG DÙNG]","[ACTIVE]"},proxy_use={"Chuyển","Use"},c_rejoin={"Vào lại server hiện tại ngay lập tức","Rejoin current game server immediately"},
   c_hop={"Chuyển sang server khác của game","Hop to another server of this game"},c_copyjob={"Sao chép JobId / PlaceId server hiện tại","Copy current server JobId / PlaceId"},
   c_clear={"Làm sạch khung nhìn tin nhắn hiện tại","Clear current message view"},c_invite={"Gửi thẻ mời mọi người vào chung server","Send 1-click server invite card to chat"},
@@ -666,11 +674,46 @@ local NET={alive=true,notBefore=0,lanes={send={},other={},fast={}},busy={},idx=1
 local function hook(sig,fn)local c=sig:Connect(fn);tinsert(conns,c);return c end
 local PROXY_POOL={}for _,u in ipairs(CFG.PROXIES or{CFG.PROXY})do u=H.trim(tostring(u or"")):gsub("/+$","")
   if u:match("^https?://")then PROXY_POOL[#PROXY_POOL+1]=u end end if#PROXY_POOL==0 then PROXY_POOL[1]=CFG.PROXY end
---- [autoFailoverProxy] Tự động chuyển sang máy chủ Proxy dự phòng tiếp theo khi Proxy hiện tại bị lỗi hoặc hết hạn mức (Quota)
+--- [H.isBossUrl] Kiểm tra một URL có phải là Máy chủ Boss (Render.com) hay không
+function H.isBossUrl(u,idx)
+  local s=tostring(u or""):lower()
+  if s:find("onrender%.com")or s:find("hf%.space")or s:find("huggingface")or idx==1 then return true end
+  return false
+end
+--- [H.proxyRoleLabel] Trả về nhãn hiển thị rõ ràng [BOSS - RENDER] hoặc [BACKUP - CLOUDFLARE]
+function H.proxyRoleLabel(u,idx)
+  local s=tostring(u or""):lower()
+  if s:find("onrender%.com")then
+    return "[BOSS - RENDER]"
+  elseif H.isBossUrl(u,idx)then
+    return "[BOSS - RENDER]"
+  end
+  local bIdx=(idx and idx>1)and(idx-1)or 1
+  return string.format("[BACKUP - CLOUDFLARE #%d]",bIdx)
+end
+--- [autoFailoverProxy] Tự động chuyển sang máy chủ Backup Cloudflare tiếp theo khi máy chủ hiện tại đang khởi động lại hoặc mạng chậm
 local function autoFailoverProxy()if#PROXY_POOL<=1 then return CFG.PROXY end
   local now=os.clock()
-  NET.cooldown[CFG.PROXY]=now+600 for offset=1,#PROXY_POOL do local idx=((NET.idx+offset-1)%#PROXY_POOL)+1 local cand=PROXY_POOL[idx]if(NET.cooldown[cand]or 0)<=now then NET.idx=idx CFG.PROXY=cand S.forceRoles=true
-      S.scriptSeq=0 S.lastSeq=0 return cand end end NET.idx=(NET.idx%#PROXY_POOL)+1 CFG.PROXY=PROXY_POOL[NET.idx]S.forceRoles=true S.lastSeq=0 return CFG.PROXY end
+  local isBoss=H.isBossUrl(CFG.PROXY,NET.idx)
+  NET.cooldown[CFG.PROXY]=now+(isBoss and 90 or 600)
+  for offset=1,#PROXY_POOL do
+    local idx=((NET.idx+offset-1)%#PROXY_POOL)+1
+    local cand=PROXY_POOL[idx]
+    if(NET.cooldown[cand]or 0)<=now then
+      NET.idx=idx
+      CFG.PROXY=cand
+      S.forceRoles=true
+      S.scriptSeq=0
+      S.lastSeq=0
+      return cand
+    end
+  end
+  NET.idx=(NET.idx%#PROXY_POOL)+1
+  CFG.PROXY=PROXY_POOL[NET.idx]
+  S.forceRoles=true
+  S.lastSeq=0
+  return CFG.PROXY
+end
 --- [isQuotaLimitReached] Kiểm tra phản hồi HTTP có phải lỗi hết hạn mức Cloudflare Workers (Error 1027 / limit exceeded) hay không
 local function isQuotaLimitReached(code,bodyRaw,data)
   if code==1027 or code==1015 or code==503 then return true end if code==429 and not(type(data)=="table"and data.error=="rate")then return true end
@@ -5478,7 +5521,7 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
     hook(b.MouseButton1Click,function()fnc();S.winX=nil;P.winX=nil;P.winY=nil;F.layout();S.isDirty=true;F.save(true);F.closeModal()end)end wb(T("nano_cube"),function()P.W,P.H=60,60 end)wb(T("small"),function()P.W,P.H=300,400 end)
   wb(T("mid"),function()P.W,P.H=IS_MOBILE and 340 or 520,IS_MOBILE and 480 or 560 end)wb(T("fit_screen"),function()local v=viewNow();P.W,P.H=v.X-12,v.Y-12 end)
   local tp=tbtn(app,T("toast_pos")..": "..P.toastPos,{h=28,ts=11})hook(tp.MouseButton1Click,function()local nx={tl="tr",tr="br",br="bl",bl="tl"}P.toastPos=nx[P.toastPos]or"tr"tp.Text=T("toast_pos")..": "..P.toastPos
-    F.layout();S.isDirty=true end)local dat=sectionCard("",T("sec_data"))local dr=row(dat,28)local ex=rbtn(dr,T("backup_copy"),{ts=11})hook(ex.MouseButton1Click,function()F.copyText(F.exportSettings())end)
+    F.layout();S.isDirty=true end)local pxSec=sectionCard("🌐",T("proxy_panel"))F.renderProxyPoolSection(pxSec,F.openSettings)local dat=sectionCard("",T("sec_data"))local dr=row(dat,28)local ex=rbtn(dr,T("backup_copy"),{ts=11})hook(ex.MouseButton1Click,function()F.copyText(F.exportSettings())end)
   local cc=rbtn(dr,T("clear_cache"),{ts=11})hook(cc.MouseButton1Click,function()S.reactions,S.polls,S.warns,S.reports={},{},{},{}S.isDirty=true;F.toast(T("cache_cleared"),true)end)
   local im=field(dat,"","");im.PlaceholderText=T("backup_paste")local ib=tbtn(dat,T("backup_import"),{h=28,ts=11})hook(ib.MouseButton1Click,function()
     if F.importSettings(im.Text)then F.toast(T("backup_ok"),true);F.openSettings()else F.toast(T("backup_bad"),true)end end)if F.isStaff(P.username)then local dev=sectionCard("",T("dev_hub"))local r1=row(dev,30)
@@ -5495,71 +5538,77 @@ function F.openHelp()S.reopenModal=F.openHelp local scr=F.modalBox(T("help_title
       local b=mk("TextButton",{Size=u2(1,0,0,40),Text="",BorderSizePixel=0,LayoutOrder=i},scr)th(b,"BackgroundColor3","cardBg");corner(b,8);stroke(b,"border",1,0.5)
       lab(b,"/"..c.name..(c.arg and(" "..c.arg)or""),{size=u2(1,-12,0,18),pos=uo(10,3),bold=true,key="accent"})lab(b,T(c.desc),{size=u2(1,-12,0,16),pos=uo(10,21),ts=10,key="muted",trunc=true})
       hook(b.MouseButton1Click,function()F.closeModal();U.input.Text="/"..c.name.." ";U.input:CaptureFocus()end)end end end
---- [F.diagText] Tạo báo cáo văn bản chẩn đoán chi tiết về trạng thái mạng, Proxy, độ trễ RTT và bộ nhớ
+--- [F.diagText] Tạo báo cáo văn bản chẩn đoán chi tiết về trạng thái mạng, Máy chủ Boss/Backup, độ trễ RTT và bộ nhớ
 function F.diagText()local nM,nF=0,0 for _ in pairs(S.msgs)do nM=nM+1 end
-  for _ in pairs(S.frames)do nF=nF+1 end return tconcat({"CB45.0 · "..EXEC.." · "..(IS_MOBILE and"mobile"or"pc"),"user: "..P.username.." ("..P.userId..")","worker: "..CFG.PROXY,
+  for _ in pairs(S.frames)do nF=nF+1 end
+  local roleTag=H.proxyRoleLabel(CFG.PROXY,NET.idx)
+  return tconcat({
+    "CB45.0 · "..EXEC.." · "..(IS_MOBILE and"mobile"or"pc"),
+    "user: "..P.username.." ("..P.userId..")",
+    "server: "..roleTag.." · "..CFG.PROXY,
     "mode: "..(S.lpOn and"long-poll"or"poll").." · fails "..S.pollFail.." · lastOk "..string.format("%.1f",os.clock()-S.lastPollOk).."s ago",
-    "rtt: "..(S.rtt and(floor(S.rtt).."ms")or"n/a").." · sent ok/fail: "..S.sendOk.."/"..S.sendFail,"seq: "..H.num(S.lastSeq).." · rolesSeq: "..H.num(S.rolesSeq),
-    "queue send/other/fast: "..#NET.lanes.send.."/"..#NET.lanes.other.."/"..#NET.lanes.fast,"msgs "..nM.." · frames "..nF.." · theme-reg "..#reg,},"\n")end
---- [F.openDiag] Mở hộp thoại Chẩn đoán kết nối (Diagnostics) kèm kiểm tra `/api/health` trực tiếp
-function F.openDiag()
-  S.reopenModal=F.openDiag
-  local scr=F.modalBox(T("diag"),400,560)
-  local info=lab(scr,F.diagText(),{wrap=true,auto=true,ts=11})
-  info.Font=fCode
-  local hl=lab(scr,"worker: …",{wrap=true,auto=true,ts=11,key="muted"})
-  hl.Font=fCode
-  local function health()
-    enqueue("other","GET","/api/health",nil,function(d,err)
-      if not hl.Parent then return end
-      if d and d.ok then
-        hl.Text=string.format("worker %s · store=%s · online=%s · items=%s · emojis=%s · scripts=%s · up=%ss",tostring(d.build),tostring(d.store),tostring(d.online),tostring(d.items),tostring(d.emojis or 0),tostring(d.scripts or 0),tostring(d.uptime))
-      else
-        hl.Text="worker: error "..tostring(err)
-      end
-    end)
-  end
-  health()
-
-  F.section(scr,T("proxy_panel"))
-  local pingAllBtn=tbtn(scr,"⚡ "..T("proxy_ping_all"),{key="accent",h=28,ts=11})
+    "rtt: "..(S.rtt and(floor(S.rtt).."ms")or"n/a").." · sent ok/fail: "..S.sendOk.."/"..S.sendFail,
+    "seq: "..H.num(S.lastSeq).." · rolesSeq: "..H.num(S.rolesSeq),
+    "queue send/other/fast: "..#NET.lanes.send.."/"..#NET.lanes.other.."/"..#NET.lanes.fast,
+    "msgs "..nM.." · frames "..nF.." · theme-reg "..#reg,
+  },"\n")
+end
+--- [F.renderProxyPoolSection] Hiển thị bảng danh sách Máy chủ [BOSS - RENDER] & [BACKUP - CLOUDFLARE] kèm đo Ping trực tiếp
+function F.renderProxyPoolSection(parent,reopenFn)
+  local pingAllBtn=tbtn(parent,"⚡ "..T("proxy_ping_all"),{key="accent",h=28,ts=11})
   local pingLabels={}
+  NET.lastPings=NET.lastPings or{}
   for idx,u in ipairs(PROXY_POOL)do
     local isCur=(u==CFG.PROXY)
+    local isBoss=H.isBossUrl(u,idx)
+    local roleText=H.proxyRoleLabel(u,idx)
     local cd=NET.cooldown[u]and max(0,math.ceil(NET.cooldown[u]-os.clock()))or 0
-    local c=F.card(scr,34)
-    if isCur then stroke(c,"ok",1,0.25)end
-    local tag=idx==1 and"Main"or("Backup "..(idx-1))
-    local pName=string.format("#%d [%s] %s",idx,tag,isCur and T("proxy_active")or(cd>0 and("Cooldown "..cd.."s")or"Standby"))
+    local c=F.card(parent,42)
+    if isCur then stroke(c,"ok",1.2,0.15)elseif isBoss then stroke(c,"accent",1,0.35)end
+    local statusTxt=isCur and T("proxy_active")or(cd>0 and("Cooldown "..cd.."s")or"Standby")
+    local pName=string.format("#%d %s %s",idx,roleText,statusTxt)
     lab(c,pName,{
-      size=u2(1,-125,1,0),
-      pos=uo(8,0),
+      size=u2(1,-130,0,20),
+      pos=uo(8,3),
       ts=10,
-      bold=isCur,
-      key=isCur and"ok"or(cd>0 and"danger"or"muted"),
+      bold=true,
+      key=isCur and"ok"or(cd>0 and"danger"or(isBoss and"accent"or"text")),
       trunc=true
     })
-    local pPing=lab(c,"— ms",{size=uo(55,24),pos=u2(1,-115,0,5),ts=10,align=txR,key="muted"})
+    lab(c,u,{
+      size=u2(1,-130,0,16),
+      pos=uo(8,22),
+      ts=9,
+      key="muted",
+      trunc=true
+    })
+    local cachedPing=NET.lastPings[u]
+    local pPing=lab(c,cachedPing and(cachedPing.." ms")or"— ms",{size=uo(58,28),pos=u2(1,-118,0,7),ts=10,bold=true,align=txR,key="muted"})
     pingLabels[idx]=pPing
 
     if not isCur then
-      local useBtn=tbtn(c,T("proxy_use"),{size=uo(52,22),pos=u2(1,-56,0,6),key="accent",ts=10,r=5})
+      local useBtn=tbtn(c,T("proxy_use"),{size=uo(52,26),pos=u2(1,-56,0,8),key="accent",ts=10,r=6})
       hook(useBtn.MouseButton1Click,function()
         CFG.PROXY=u
         NET.idx=idx
+        NET.manualPin=(not isBoss)
+        NET.cooldown[u]=nil
         S.lastSeq=0
         S.pollFail=0
-        F.toast(string.format("Proxy #%d [%s] %s",idx,tag,T("proxy_active")),true)
-        F.closeModal()
-        F.openDiag()
+        F.toast(string.format("#%d %s %s",idx,roleText,T("proxy_active")),true)
+        if reopenFn then
+          F.closeModal()
+          reopenFn()
+        end
       end)
     else
-      local curTag=lab(c,"✓",{size=uo(52,22),pos=u2(1,-56,0,6),ts=12,bold=true,key="ok",align=txC})
+      lab(c,"✓",{size=uo(52,26),pos=u2(1,-56,0,8),ts=13,bold=true,key="ok",align=txC})
     end
   end
 
-  hook(pingAllBtn.MouseButton1Click,function()
-    pingAllBtn.Text="⏳ Testing..."
+  local function runPingAll()
+    if not pingAllBtn.Parent then return end
+    pingAllBtn.Text="⏳ Đang đo Ping [BOSS] & [BACKUP]..."
     for idx,u in ipairs(PROXY_POOL)do
       if pingLabels[idx]then pingLabels[idx].Text="..."end
       task.spawn(function()
@@ -5569,21 +5618,49 @@ function F.openDiag()
         local pl=pingLabels[idx]
         if pl and pl.Parent then
           if ok and type(res)=="table"and(tonumber(res.StatusCode or res.Status)or 0)==200 then
+            NET.lastPings[u]=ms
             pl.Text=ms.." ms"
             pl.TextColor3=ms<300 and TH.ok or(ms<800 and TH.warn or TH.danger)
           else
-            pl.Text="ERR"
+            NET.lastPings[u]=nil
+            pl.Text="OFF"
             pl.TextColor3=TH.danger
           end
         end
       end)
     end
-    task.delay(1.5,function()
+    task.delay(1.2,function()
       if pingAllBtn.Parent then
         pingAllBtn.Text="⚡ "..T("proxy_ping_all")
       end
     end)
-  end)
+  end
+
+  hook(pingAllBtn.MouseButton1Click,runPingAll)
+  task.defer(runPingAll)
+end
+--- [F.openDiag] Mở hộp thoại Chẩn đoán kết nối (Diagnostics) kèm kiểm tra `/api/health` và bảng [BOSS - RENDER] / [BACKUP - CLOUDFLARE]
+function F.openDiag()
+  S.reopenModal=F.openDiag
+  local scr=F.modalBox(T("diag"),420,580)
+  local info=lab(scr,F.diagText(),{wrap=true,auto=true,ts=11})
+  info.Font=fCode
+  local hl=lab(scr,"server: …",{wrap=true,auto=true,ts=11,key="muted"})
+  hl.Font=fCode
+  local function health()
+    enqueue("other","GET","/api/health",nil,function(d,err)
+      if not hl.Parent then return end
+      if d and d.ok then
+        hl.Text=string.format("%s · %s · store=%s · online=%s · items=%s · emojis=%s · scripts=%s · up=%ss",H.proxyRoleLabel(CFG.PROXY,NET.idx),tostring(d.build),tostring(d.store),tostring(d.online),tostring(d.items),tostring(d.emojis or 0),tostring(d.scripts or 0),tostring(d.uptime))
+      else
+        hl.Text="server: error "..tostring(err)
+      end
+    end)
+  end
+  health()
+
+  F.section(scr,T("proxy_panel"))
+  F.renderProxyPoolSection(scr,F.openDiag)
 
   local r1=row(scr,30)
   local pg=rbtn(r1,T("ping"),{key="accent"})
@@ -6909,6 +6986,12 @@ local CB_API={version="45.0",cfg=CFG,F=F,S=S,P=P,U=U,H=H,command=F.command,on=F.
 ENV.CB45=CB_API ENV.CB44=CB_API ENV.CB43=CB_API ENV.CB42=CB_API ENV.CB41=CB_API
 F.armAutoTeleport()F.layout();F.paintTheme();F.layoutTabs();F.paintTabs();F.updateInfo()task.spawn(function()
   local ok,info=pcall(function()return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)end)S.placeName=(ok and info and info.Name)or tostring(game.Name or"?")S.lastPresPiggy=0
-end)task.spawn(pollLoop)task.spawn(heartbeatLoop)task.spawn(tickLoop)task.spawn(function()task.wait(30)while NET.alive do task.wait(300)
+end)task.spawn(pollLoop)task.spawn(heartbeatLoop)task.spawn(tickLoop)task.spawn(function()task.wait(30)while NET.alive do task.wait(60)
+    if NET.idx>1 and not NET.manualPin and PROXY_POOL[1] and (NET.cooldown[PROXY_POOL[1]]or 0)<=os.clock() then
+      local ok,res=pcall(httpFn,{Url=PROXY_POOL[1].."/api/ping",Method="GET"})
+      if ok and type(res)=="table"and(tonumber(res.StatusCode or res.Status)or 0)==200 then
+        NET.idx=1;CFG.PROXY=PROXY_POOL[1];NET.cooldown[PROXY_POOL[1]]=nil;S.lastSeq=0;S.pollFail=0
+      end
+    end
     if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0 warn("[CB45] Watchdog: resync")end end end)if saved.W==nil and IS_MOBILE then P.W,P.H=340,480 end
 print("[CB45] Chat Bridge v45.0 · "..EXEC.." · "..(L=="en"and"Stop: getgenv().CB45_STOP()"or"Dừng: getgenv().CB45_STOP()"))
