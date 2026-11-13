@@ -17,14 +17,15 @@ local ENV=(getgenv and getgenv())or _G for _,k in ipairs({"CB45_STOP","CB44_STOP
 local CFG={
   -- Khởi tạo bảng cấu hình trung tâm CFG (URL Proxy chính, danh sách Proxy dự phòng, ngưỡng thời gian và giới hạn)
   SCRIPT_URL=(type(ENV.CB45_SCRIPT_URL)=="string"and ENV.CB45_SCRIPT_URL)or(type(ENV.CB44_SCRIPT_URL)=="string"and ENV.CB44_SCRIPT_URL)or(type(ENV.CB43_SCRIPT_URL)=="string"and ENV.CB43_SCRIPT_URL)or(type(ENV.CB42_SCRIPT_URL)=="string"and ENV.CB42_SCRIPT_URL)or"",
+  -- BOSS_URL: Server Boss (Render.com) chỉ dùng để quản lý các server & host Bot Discord 24/7 (không chứa dữ liệu player)
   BOSS_URL=(type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com",
-  PROXY=(type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com",
+  -- PROXY & PROXIES: 4 Server Backup (Cloudflare Workers) — Nơi player trò chuyện và mọi server liên kết Mesh với nhau
+  PROXY=(type(ENV.CB45_BACKUP_URL)=="string"and ENV.CB45_BACKUP_URL~=""and ENV.CB45_BACKUP_URL)or"https://cb-roblox.phwphat5555.workers.dev",
   PROXIES={
-    (type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com", -- [BOSS - RENDER] Máy chủ chính ưu tiên số 1
-    "https://cb-roblox.phwphat5555.workers.dev",       -- [BACKUP - CLOUDFLARE #1]
-    "https://backup.phwphat8888.workers.dev",          -- [BACKUP - CLOUDFLARE #2]
-    "https://backupv2.sillydumb111.workers.dev",       -- [BACKUP - CLOUDFLARE #3]
-    "https://backupv3.just-a-blur-000.workers.dev",    -- [BACKUP - CLOUDFLARE #4]
+    "https://cb-roblox.phwphat5555.workers.dev",       -- [BACKUP #1 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
+    "https://backup.phwphat8888.workers.dev",          -- [BACKUP #2 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
+    "https://backupv2.sillydumb111.workers.dev",       -- [BACKUP #3 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
+    "https://backupv3.just-a-blur-000.workers.dev",    -- [BACKUP #4 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
   },DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},
   VERSION="45.0",SUGGEST_WEBHOOK="https://discord.com/api/webhooks/1568617557253034088/0KYh9iHsjtuYEnR_rS5H-uv9q--V45SXJ0OEQDeSDMAemr9_LOAuqJkeY8qatxd0VDZl",
   BUG_WEBHOOK="https://discord.com/api/webhooks/1568617762371412090/bh_C8jdRsA91WKguiKryM48BpXX1cC7jOAT5C0RenJ9NnlTUnkf8RBtYZF4kCpru29sz",
@@ -674,21 +675,18 @@ local NET={alive=true,notBefore=0,lanes={send={},other={},fast={}},busy={},idx=1
 local function hook(sig,fn)local c=sig:Connect(fn);tinsert(conns,c);return c end
 local PROXY_POOL={}for _,u in ipairs(CFG.PROXIES or{CFG.PROXY})do u=H.trim(tostring(u or"")):gsub("/+$","")
   if u:match("^https?://")then PROXY_POOL[#PROXY_POOL+1]=u end end if#PROXY_POOL==0 then PROXY_POOL[1]=CFG.PROXY end
---- [H.isBossUrl] Kiểm tra một URL có phải là Máy chủ Boss (Render.com) hay không
-function H.isBossUrl(u,idx)
+--- [H.isBossUrl] Kiểm tra một URL có phải là Máy chủ Boss (Render.com - Chỉ Host Bot Discord 24/7) hay không
+function H.isBossUrl(u)
   local s=tostring(u or""):lower()
-  if s:find("onrender%.com")or s:find("hf%.space")or s:find("huggingface")or idx==1 then return true end
+  if s:find("onrender%.com")or s:find("hf%.space")or s:find("huggingface")then return true end
   return false
 end
---- [H.proxyRoleLabel] Trả về nhãn hiển thị rõ ràng [BOSS - RENDER] hoặc [BACKUP - CLOUDFLARE]
+--- [H.proxyRoleLabel] Trả về nhãn hiển thị rõ ràng [BACKUP - CLOUDFLARE #1..4] (Nơi Player Trò Chuyện) hoặc [BOSS - BOT DISCORD 24/7]
 function H.proxyRoleLabel(u,idx)
-  local s=tostring(u or""):lower()
-  if s:find("onrender%.com")then
-    return "[BOSS - RENDER]"
-  elseif H.isBossUrl(u,idx)then
-    return "[BOSS - RENDER]"
+  if H.isBossUrl(u)then
+    return "[BOSS - BOT DISCORD 24/7]"
   end
-  local bIdx=(idx and idx>1)and(idx-1)or 1
+  local bIdx=tonumber(idx)or 1
   return string.format("[BACKUP - CLOUDFLARE #%d]",bIdx)
 end
 --- [autoFailoverProxy] Tự động chuyển sang máy chủ Backup Cloudflare tiếp theo khi máy chủ hiện tại đang khởi động lại hoặc mạng chậm
@@ -5558,21 +5556,45 @@ function F.renderProxyPoolSection(parent,reopenFn)
   local pingAllBtn=tbtn(parent,"⚡ "..T("proxy_ping_all"),{key="accent",h=28,ts=11})
   local pingLabels={}
   NET.lastPings=NET.lastPings or{}
+
+  -- Thẻ thông tin riêng cho Server Boss (Render.com): Chỉ quản lý 4 Server Backup & Host Bot Discord 24/7
+  local bossUrl=CFG.BOSS_URL or"https://cb45-boss.onrender.com"
+  local bossCard=F.card(parent,42)
+  stroke(bossCard,"accent",1,0.35)
+  lab(bossCard,"👑 [BOSS - RENDER] Quản lý 4 Server & Host Bot Discord 24/7",{
+    size=u2(1,-130,0,20),
+    pos=uo(8,3),
+    ts=10,
+    bold=true,
+    key="accent",
+    trunc=true
+  })
+  lab(bossCard,bossUrl.." (Không chứa dữ liệu player)",{
+    size=u2(1,-130,0,16),
+    pos=uo(8,22),
+    ts=9,
+    key="muted",
+    trunc=true
+  })
+  local cachedBossPing=NET.lastPings[bossUrl]
+  local bossPingLab=lab(bossCard,cachedBossPing and(cachedBossPing.." ms")or"— ms",{size=uo(58,28),pos=u2(1,-118,0,7),ts=10,bold=true,align=txR,key="muted"})
+  lab(bossCard,"BOT",{size=uo(52,26),pos=u2(1,-56,0,8),ts=10,bold=true,key="accent",align=txC})
+
+  -- Danh sách 4 Server Backup (Cloudflare Workers): Nơi Player trò chuyện và liên kết Mesh với nhau
   for idx,u in ipairs(PROXY_POOL)do
     local isCur=(u==CFG.PROXY)
-    local isBoss=H.isBossUrl(u,idx)
     local roleText=H.proxyRoleLabel(u,idx)
     local cd=NET.cooldown[u]and max(0,math.ceil(NET.cooldown[u]-os.clock()))or 0
     local c=F.card(parent,42)
-    if isCur then stroke(c,"ok",1.2,0.15)elseif isBoss then stroke(c,"accent",1,0.35)end
-    local statusTxt=isCur and T("proxy_active")or(cd>0 and("Cooldown "..cd.."s")or"Standby")
-    local pName=string.format("#%d %s %s",idx,roleText,statusTxt)
+    if isCur then stroke(c,"ok",1.2,0.15)end
+    local statusTxt=isCur and T("proxy_active")or(cd>0 and("Cooldown "..cd.."s")or"Mesh Ready")
+    local pName=string.format("⚡ #%d %s %s",idx,roleText,statusTxt)
     lab(c,pName,{
       size=u2(1,-130,0,20),
       pos=uo(8,3),
       ts=10,
       bold=true,
-      key=isCur and"ok"or(cd>0 and"danger"or(isBoss and"accent"or"text")),
+      key=isCur and"ok"or(cd>0 and"danger"or"text"),
       trunc=true
     })
     lab(c,u,{
@@ -5591,7 +5613,7 @@ function F.renderProxyPoolSection(parent,reopenFn)
       hook(useBtn.MouseButton1Click,function()
         CFG.PROXY=u
         NET.idx=idx
-        NET.manualPin=(not isBoss)
+        NET.manualPin=true
         NET.cooldown[u]=nil
         S.lastSeq=0
         S.pollFail=0
@@ -5608,7 +5630,24 @@ function F.renderProxyPoolSection(parent,reopenFn)
 
   local function runPingAll()
     if not pingAllBtn.Parent then return end
-    pingAllBtn.Text="⏳ Đang đo Ping [BOSS] & [BACKUP]..."
+    pingAllBtn.Text="⏳ Đang đo Ping [BOSS] & 4 [BACKUP]..."
+    if bossPingLab and bossPingLab.Parent then bossPingLab.Text="..."end
+    task.spawn(function()
+      local t0=os.clock()
+      local ok,res=pcall(httpFn,{Url=bossUrl.."/api/ping",Method="GET"})
+      local ms=math.floor((os.clock()-t0)*1000)
+      if bossPingLab and bossPingLab.Parent then
+        if ok and type(res)=="table"and(tonumber(res.StatusCode or res.Status)or 0)==200 then
+          NET.lastPings[bossUrl]=ms
+          bossPingLab.Text=ms.." ms"
+          bossPingLab.TextColor3=ms<300 and TH.ok or(ms<800 and TH.warn or TH.danger)
+        else
+          NET.lastPings[bossUrl]=nil
+          bossPingLab.Text="WAKE"
+          bossPingLab.TextColor3=TH.warn
+        end
+      end
+    end)
     for idx,u in ipairs(PROXY_POOL)do
       if pingLabels[idx]then pingLabels[idx].Text="..."end
       task.spawn(function()
@@ -6986,12 +7025,22 @@ local CB_API={version="45.0",cfg=CFG,F=F,S=S,P=P,U=U,H=H,command=F.command,on=F.
 ENV.CB45=CB_API ENV.CB44=CB_API ENV.CB43=CB_API ENV.CB42=CB_API ENV.CB41=CB_API
 F.armAutoTeleport()F.layout();F.paintTheme();F.layoutTabs();F.paintTabs();F.updateInfo()task.spawn(function()
   local ok,info=pcall(function()return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)end)S.placeName=(ok and info and info.Name)or tostring(game.Name or"?")S.lastPresPiggy=0
-end)task.spawn(pollLoop)task.spawn(heartbeatLoop)task.spawn(tickLoop)task.spawn(function()task.wait(30)while NET.alive do task.wait(60)
+end)task.spawn(pollLoop)task.spawn(heartbeatLoop)task.spawn(tickLoop)task.spawn(function()
+  -- Gửi 1 nhịp đánh thức ngầm tới Server Boss (Render.com) khi khởi động để Bot Discord luôn thức 24/7
+  if CFG.BOSS_URL and CFG.BOSS_URL~=""then pcall(httpFn,{Url=CFG.BOSS_URL.."/api/ping?source=client-boot",Method="GET"})end
+  task.wait(30)
+  while NET.alive do
+    task.wait(60)
+    if CFG.BOSS_URL and CFG.BOSS_URL~=""then
+      task.spawn(function()pcall(httpFn,{Url=CFG.BOSS_URL.."/api/ping?source=client-keepalive",Method="GET"})end)
+    end
     if NET.idx>1 and not NET.manualPin and PROXY_POOL[1] and (NET.cooldown[PROXY_POOL[1]]or 0)<=os.clock() then
       local ok,res=pcall(httpFn,{Url=PROXY_POOL[1].."/api/ping",Method="GET"})
       if ok and type(res)=="table"and(tonumber(res.StatusCode or res.Status)or 0)==200 then
         NET.idx=1;CFG.PROXY=PROXY_POOL[1];NET.cooldown[PROXY_POOL[1]]=nil;S.lastSeq=0;S.pollFail=0
       end
     end
-    if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0 warn("[CB45] Watchdog: resync")end end end)if saved.W==nil and IS_MOBILE then P.W,P.H=340,480 end
+    if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0 warn("[CB45] Watchdog: resync")end
+  end
+end)if saved.W==nil and IS_MOBILE then P.W,P.H=340,480 end
 print("[CB45] Chat Bridge v45.0 · "..EXEC.." · "..(L=="en"and"Stop: getgenv().CB45_STOP()"or"Dừng: getgenv().CB45_STOP()"))
