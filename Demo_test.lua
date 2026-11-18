@@ -1215,7 +1215,21 @@ function F.compactProfTheme(pt)
   if pt.wx~=nil and tonumber(pt.wx)~=0 then out.wx=clamp(floor(tonumber(pt.wx)or 0),-100,100)end
   if pt.wy~=nil and tonumber(pt.wy)~=0 then out.wy=clamp(floor(tonumber(pt.wy)or 0),-100,100)end
   if pt.wa and pt.wa~="auto"then out.wa=pt.wa end
-  if pt.avDec and pt.avDec~="none"and pt.avDec~=""then out.avDec=pt.avDec end
+  if pt.avDec and pt.avDec~="none"and pt.avDec~=""then
+    out.avDec=pt.avDec
+    local decDef for _,d in ipairs(F._AV_DECS or{})do if d.id==pt.avDec then decDef=d;break end end
+    for _,rk in ipairs({"rc1","rc2","rc3"})do
+      local rv=tostring(pt[rk]or""):match("^#%x%x%x%x%x%x$")
+      if rv then out[rk]=rv:upper()end
+    end
+    if pt.rw~=nil and tonumber(pt.rw)~=3 then out.rw=clamp(floor(tonumber(pt.rw)or 3),1,6)end
+    local defRot=decDef and decDef.rot or 35
+    if pt.rrot~=nil and tonumber(pt.rrot)~=defRot then out.rrot=clamp(floor(tonumber(pt.rrot)or defRot),0,360)end
+    local defGlow=(not decDef)or(decDef.glow~=false)
+    if pt.rglow~=nil and(pt.rglow==true)~=defGlow then out.rglow=(pt.rglow==true)end
+    local defAnim=decDef and decDef.anim or"none"
+    if pt.ranim and pt.ranim~=""and pt.ranim~=defAnim then out.ranim=pt.ranim end
+  end
   if pt.nEff and pt.nEff~="solid"and pt.nEff~=""then out.nEff=pt.nEff end
   if type(pt.tag)=="string"and H.trim(pt.tag)~=""then out.tag=H.clip(H.trim(pt.tag),36)end
   if type(pt.abLbl)=="string"and H.trim(pt.abLbl)~=""then out.abLbl=H.clip(H.trim(pt.abLbl),40)end
@@ -1364,35 +1378,203 @@ function F.createClipHost(parent,props)
   if ok and cg then return cg,true end
   return mk("Frame",props,parent),false
 end
---- [F.makeFramedAvatar] Vẽ ảnh đại diện nhỏ (Chat/Danh sách/Cài đặt) tôn trọng Crop/Zoom/Pan & Bo góc `ir` của người dùng
+F._AV_DECS={
+  {id="none",name="None",c1=nil,c2=nil,rot=35,anim="none",glow=false},
+  {id="chroma",name="Chroma",c1="#38BDF8",c2="#A855F7",c3="#EC4899",rot=35,anim="spin",glow=true},
+  {id="flame",name="Flame",c1="#FF4500",c2="#F97316",c3="#FACC15",rot=45,anim="pulse",glow=true},
+  {id="cyber",name="Cyber",c1="#00F5D4",c2="#38BDF8",c3="#7C3AED",rot=25,anim="spin",glow=true},
+  {id="frost",name="Frost",c1="#E0F2FE",c2="#7DD3FC",c3="#2563EB",rot=50,anim="pulse",glow=true},
+  {id="gold",name="Gold VIP",c1="#FEF08A",c2="#F59E0B",c3="#B45309",rot=30,anim="spin",glow=true},
+  {id="void",name="Void",c1="#C084FC",c2="#7E22CE",c3="#311042",rot=40,anim="pulse",glow=true},
+  {id="sakura",name="Sakura",c1="#FBCFE8",c2="#F472B6",c3="#E11D48",rot=35,anim="none",glow=true},
+  {id="emerald",name="Emerald",c1="#6EE7B7",c2="#10B981",c3="#047857",rot=35,anim="pulse",glow=true},
+  {id="crimson",name="Crimson",c1="#FDA4AF",c2="#F43F5E",c3="#881337",rot=45,anim="pulse",glow=true},
+  {id="sunset",name="Sunset",c1="#FDE047",c2="#FB7185",c3="#9333EA",rot=25,anim="none",glow=true},
+  {id="aurora",name="Aurora",c1="#34D399",c2="#22D3EE",c3="#818CF8",rot=20,anim="spin",glow=true},
+  {id="rgb",name="RGB Gamer",c1="#FF2D55",c2="#22C55E",c3="#3B82F6",rot=0,anim="rainbow",glow=true},
+  {id="custom",name="Custom",c1="#5865F2",c2="#EC4899",c3="",rot=35,anim="none",glow=true},
+}
+F._RING_ANIMS={
+  {id="none",vi="Tĩnh",en="Static"},
+  {id="spin",vi="Xoay",en="Spin"},
+  {id="pulse",vi="Nhịp",en="Pulse"},
+  {id="rainbow",vi="RGB",en="Rainbow"},
+}
+function F.resolveAvatarRing(pt)
+  if type(pt)~="table"then return nil end
+  local aid=tostring(pt.avDec or"none")
+  if aid==""or aid=="none"then return nil end
+  local def
+  for _,d in ipairs(F._AV_DECS)do if d.id==aid then def=d;break end end
+  if not def then
+    local h1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")
+    if not h1 then return nil end
+    def=F._AV_DECS[#F._AV_DECS]
+  end
+  if def.id=="none"then return nil end
+  local c1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or def.c1 or"#5865F2"
+  local c2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or def.c2 or c1
+  local rawC3=tostring(pt.rc3 or"")
+  local c3hex=(def.id=="custom")and rawC3:match("^#%x%x%x%x%x%x$")or(rawC3:match("^#%x%x%x%x%x%x$")or(def.c3 and def.c3~=""and def.c3 or nil))
+  local rw=clamp(tonumber(pt.rw)or 3,1,6)
+  local rrot=clamp(tonumber(pt.rrot)~=nil and tonumber(pt.rrot)or(def.rot or 35),0,360)
+  local rglow=(pt.rglow~=nil)and(pt.rglow==true)or(def.glow~=false)
+  local ranim=tostring(pt.ranim or"")
+  if ranim==""then ranim=def.anim or"none"end
+  if ranim~="none"and ranim~="spin"and ranim~="pulse"and ranim~="rainbow"then ranim="none"end
+  return{id=def.id,name=def.name,c1=c1,c2=c2,c3=c3hex,rw=rw,rot=rrot,glow=rglow,anim=ranim}
+end
+function F.ringColorSeq(c1,c2,c3hex)
+  local col1=H.hex(c1);local col2=H.hex(c2 or c1)
+  if c3hex and c3hex~=""then
+    return ColorSequence.new({
+      ColorSequenceKeypoint.new(0,col1),
+      ColorSequenceKeypoint.new(0.5,col2),
+      ColorSequenceKeypoint.new(1,H.hex(c3hex)),
+    })
+  end
+  return ColorSequence.new(col1,col2)
+end
+function F.ensureRingAnimLoop()
+  if S._ringAnimConn then return end
+  local accDt=0
+  S._ringAnimConn=hook(RunService.Heartbeat,function(dt)
+    accDt=accDt+dt
+    if accDt<0.033 then return end
+    accDt=0
+    local list=S._ringAnims
+    if not list or#list==0 then
+      if S._ringAnimConn then pcall(function()S._ringAnimConn:Disconnect()end);S._ringAnimConn=nil end
+      return
+    end
+    local t=os.clock();local rCs
+    for i=#list,1,-1 do
+      local e=list[i]
+      if not e or not e.frame or not e.frame.Parent or not e.grad or not e.stroke then
+        tremove(list,i)
+      elseif e.frame.Visible then
+        if e.anim=="spin"then
+          local rot=(e.baseRot+t*95)%360
+          e.grad.Rotation=rot
+          if e.haloGrad then e.haloGrad.Rotation=rot end
+          if e.hasGlow and e.haloStroke then e.haloStroke.Transparency=0.60+0.12*math.sin(t*2.6)end
+        elseif e.anim=="pulse"then
+          local w=0.5+0.5*math.sin(t*3.3)
+          e.stroke.Thickness=e.thick*(0.84+0.30*w)
+          if e.hasGlow and e.haloStroke then e.haloStroke.Transparency=0.42+0.36*(1-w)end
+        elseif e.anim=="rainbow"then
+          if not rCs then
+            local h1=(t*0.24)%1;local h2=(h1+0.33)%1;local h3=(h1+0.66)%1
+            rCs=ColorSequence.new({
+              ColorSequenceKeypoint.new(0,Color3.fromHSV(h1,0.92,1)),
+              ColorSequenceKeypoint.new(0.5,Color3.fromHSV(h2,0.92,1)),
+              ColorSequenceKeypoint.new(1,Color3.fromHSV(h3,0.92,1)),
+            })
+          end
+          e.grad.Color=rCs
+          local rot=(e.baseRot+t*70)%360
+          e.grad.Rotation=rot
+          if e.haloGrad then e.haloGrad.Color=rCs;e.haloGrad.Rotation=rot end
+        end
+      end
+    end
+    if#list==0 and S._ringAnimConn then
+      pcall(function()S._ringAnimConn:Disconnect()end)
+      S._ringAnimConn=nil
+    end
+  end)
+end
+function F.applyAvatarRingUi(refs,pt,radPct,sizePx)
+  if not refs or not refs.frame then return nil end
+  S._ringAnims=S._ringAnims or{}
+  for i=#S._ringAnims,1,-1 do
+    if S._ringAnims[i].frame==refs.frame then tremove(S._ringAnims,i)end
+  end
+  local spec=F.resolveAvatarRing(pt)
+  if not spec then
+    refs.frame.Visible=false
+    if refs.halo then refs.halo.Visible=false end
+    return nil
+  end
+  local sc=clamp((sizePx or 78)/78,0.56,1.15)
+  local thick=max(1.3,(1.15+spec.rw*0.52)*sc)
+  local rU=u1((radPct or 50)/100,0)
+  if refs.corner then refs.corner.CornerRadius=rU end
+  if refs.stroke then
+    refs.stroke.Color=c3(1,1,1)
+    refs.stroke.Thickness=thick
+    refs.stroke.Transparency=0
+  end
+  local seq=F.ringColorSeq(spec.c1,spec.c2,spec.c3)
+  if refs.grad then refs.grad.Color=seq;refs.grad.Rotation=spec.rot end
+  refs.frame.Visible=true
+  if refs.halo and refs.haloStroke and refs.haloGrad then
+    refs.halo.Visible=spec.glow
+    if spec.glow then
+      if refs.haloCorner then refs.haloCorner.CornerRadius=rU end
+      refs.haloStroke.Color=c3(1,1,1)
+      refs.haloStroke.Thickness=max(2.2,thick*1.95)
+      refs.haloStroke.Transparency=0.66
+      refs.haloGrad.Color=seq
+      refs.haloGrad.Rotation=spec.rot
+    end
+  end
+  if spec.anim~="none"then
+    S._ringAnims[#S._ringAnims+1]={
+      frame=refs.frame,stroke=refs.stroke,grad=refs.grad,
+      halo=refs.halo,haloStroke=refs.haloStroke,haloGrad=refs.haloGrad,
+      anim=spec.anim,baseRot=spec.rot,thick=thick,hasGlow=spec.glow,
+    }
+    F.ensureRingAnimLoop()
+  end
+  return spec
+end
+--- [F.makeFramedAvatar] Vẽ ảnh đại diện nhỏ (Chat/Danh sách/Cài đặt) tôn trọng Crop/Zoom/Pan, Bo góc `ir` & Avatar Decoration Ring
 function F.makeFramedAvatar(parent,opts)
   opts=opts or{}
   local px=opts.px or 28
   local uPt=type(opts.pt)=="table"and opts.pt or{}
   local radPct=clamp(tonumber(uPt.ir)or 50,0,50)
-  local host=F.createClipHost(parent,{
+  local z=opts.z or 8
+  local host=mk("Frame",{
     Size=uo(px,px),Position=opts.pos or uo(0,0),BackgroundTransparency=1,BorderSizePixel=0,
-    ClipsDescendants=true,ZIndex=opts.z or 8,LayoutOrder=opts.layout or 0,
+    ClipsDescendants=false,ZIndex=z,LayoutOrder=opts.layout or 0,
+  },parent)
+  local clip=F.createClipHost(host,{
+    Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,
+    ClipsDescendants=true,ZIndex=z+1,
   })
-  local hc=mk("UICorner",{CornerRadius=u1(radPct/100,0)},host)
+  local hc=mk("UICorner",{CornerRadius=u1(radPct/100,0)},clip)
   local img=mk("ImageLabel",{
     Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),
-    BackgroundTransparency=1,BorderSizePixel=0,ScaleType=Enum.ScaleType.Crop,ZIndex=(opts.z or 8)+1,
+    BackgroundTransparency=1,BorderSizePixel=0,ScaleType=Enum.ScaleType.Crop,ZIndex=z+2,
     Image=opts.customIc and F.thumbUrl(opts.customIc,150,150)or F.avatarUrl(opts.uid or 1),
-  },host)
+  },clip)
   if opts.customIc and opts.customIc~=""then
     F.setAsset(img,opts.customIc)
     local cfg={fit=uPt["if"]or"crop",zoom=uPt.iz or 100,x=uPt.ix or 0,y=uPt.iy or 0,aspect=uPt.ia or"auto"}
-    F.applyImageFrame(host,img,cfg,px,px)
+    F.applyImageFrame(clip,img,cfg,px,px)
     if (tonumber(cfg.zoom)or 100)<=100 and (cfg.fit=="fit"or cfg.fit=="stretch"or (cfg.aspect or"auto")=="auto") then
       mk("UICorner",{CornerRadius=u1(radPct/100,0)},img)
     end
   else
     mk("UICorner",{CornerRadius=u1(0.5,0)},img)
   end
-  if opts.strokeKey then stroke(host,opts.strokeKey,opts.strokeThick or 1.5,opts.strokeTrans or 0.25)end
+  local haloFrame=mk("Frame",{Size=u2(1,4,1,4),Position=uo(-2,-2),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z,Visible=false},host)
+  local haloCorner=mk("UICorner",{CornerRadius=u1(radPct/100,0)},haloFrame)
+  local haloStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=3,Transparency=0.66,ApplyStrokeMode=smBorder},haloFrame)
+  local haloGrad=mk("UIGradient",{Rotation=35},haloStroke)
+  local decFrame=mk("Frame",{Size=u2(1,2,1,2),Position=uo(-1,-1),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z+3,Visible=false},host)
+  local decCorner=mk("UICorner",{CornerRadius=u1(radPct/100,0)},decFrame)
+  local decStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=2,Transparency=0,ApplyStrokeMode=smBorder},decFrame)
+  local decGrad=mk("UIGradient",{Rotation=35},decStroke)
+  local spec=F.applyAvatarRingUi({
+    frame=decFrame,corner=decCorner,stroke=decStroke,grad=decGrad,
+    halo=haloFrame,haloCorner=haloCorner,haloStroke=haloStroke,haloGrad=haloGrad,
+  },uPt,radPct,px)
+  if opts.strokeKey and not spec then stroke(clip,opts.strokeKey,opts.strokeThick or 1.5,opts.strokeTrans or 0.25)end
   if opts.onClick then
-    local hit=mk("TextButton",{Size=us(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,Active=true,ZIndex=(opts.z or 8)+2},host)
+    local hit=mk("TextButton",{Size=us(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,Active=true,ZIndex=z+4},host)
     hook(hit.MouseButton1Click,opts.onClick)
   end
   return host,img,hc
@@ -2737,22 +2919,43 @@ F._TRANS_OPTS={
   {code="en",lbl="English (EN)",cc="US"},
   {code="ja",lbl="日本語 (JA)",cc="JP"},
   {code="ko",lbl="한국어 (KO)",cc="KR"},
-  {code="zh-CN",lbl="中文 (ZH)",cc="CN"},
+  {code="zh-CN",lbl="中文 简体 (ZH-CN)",cc="CN"},
+  {code="zh-TW",lbl="中文 繁體 (ZH-TW)",cc="TW"},
   {code="ru",lbl="Русский (RU)",cc="RU"},
   {code="uk",lbl="Українська (UK)",cc="UA"},
   {code="he",lbl="עברית (HE)",cc="IL"},
   {code="th",lbl="ไทย (TH)",cc="TH"},
   {code="id",lbl="Indonesia (ID)",cc="ID"},
+  {code="ms",lbl="Melayu (MS)",cc="MY"},
+  {code="tl",lbl="Filipino (TL)",cc="PH"},
   {code="fr",lbl="Français (FR)",cc="FR"},
   {code="de",lbl="Deutsch (DE)",cc="DE"},
   {code="es",lbl="Español (ES)",cc="ES"},
   {code="pt",lbl="Português (PT)",cc="BR"},
+  {code="it",lbl="Italiano (IT)",cc="IT"},
+  {code="tr",lbl="Türkçe (TR)",cc="TR"},
+  {code="ar",lbl="العربية (AR)",cc="SA"},
 }
 function F.defaultTranslateLang()
   local pref=tostring(P.transLang or"")
   if pref=="country"and P.country then return F._COUNTRY_TO_LANG[P.country]or(L=="en"and"en"or"vi")end
   if pref~=""then return pref end
   return L=="en"and"en"or"vi"
+end
+function F.translatePrefInfo(pref)
+  local p=H.trim(tostring(pref or""))
+  if p==""then
+    local defC=(L=="en")and"en"or"vi"
+    return"🤖",L=="en"and("Auto ("..defC:upper()..")")or("Tự động ("..defC:upper()..")"),defC
+  elseif p=="country"then
+    local cc=H.resolveCountry(P.country or"VN")
+    local dst=F._COUNTRY_TO_LANG[cc]or((L=="en")and"en"or"vi")
+    return H.flag(cc),L=="en"and("Flag "..cc.." → "..dst:upper())or("Cờ "..cc.." → "..dst:upper()),dst
+  end
+  for _,opt in ipairs(F._TRANS_OPTS or{})do
+    if opt.code==p then return H.flag(opt.cc),opt.lbl,opt.code end
+  end
+  return"🌐",p:upper(),p
 end
 function F.translateTextDirect(rawText,targetLang,cb)
   local txt=H.trim(tostring(rawText or""))
@@ -2798,13 +3001,38 @@ function F.translateMsgInPlace(m,targetLang)
     if F.visibleIn(m,S.chan)then F.renderMessage(m)end
   end)
 end
-function F.openTranslateLangMenu(m)
-  if not m then return end
-  local scr,close=F.popup("🌐 "..T("translate_btn"),300,360)
-  for idx,opt in ipairs(F._TRANS_OPTS)do
-    local b=tbtn(scr,H.flag(opt.cc).."  "..opt.lbl,{size=u2(1,0,0,28),ts=11,key=(opt.code==F.defaultTranslateLang())and"accent"or"btnBg",r=7,layout=idx})
-    b.TextXAlignment=txL;pad(b,10,0,8,0)
-    hook(b.MouseButton1Click,function()close();F.translateMsgInPlace(m,opt.code)end)
+function F.openTranslateLangMenu(m,onPick)
+  local isPicker=(type(onPick)=="function")
+  if not m and not isPicker then return end
+  local title="🌐 "..(isPicker and(L=="en"and"Default Translate Language"or"Chọn ngôn ngữ muốn dịch")or T("translate_btn"))
+  local scr,close=F.popup(title,isPicker and 320 or 300,isPicker and 410 or 360)
+  local curPref=tostring(P.transLang or"")
+  local ord=0
+  local function nextOrd()ord=ord+1 return ord end
+  if isPicker then
+    lab(scr,L=="en"and"Choose default language when translating messages:"or"Chọn ngôn ngữ đích mặc định khi bấm Dịch tin nhắn:",{ts=10,key="muted",wrap=true,h=26,layout=nextOrd()})
+    local cc=H.resolveCountry(P.country or"VN")
+    local smartModes={
+      {code="",ic="🤖",lbl=L=="en"and("Auto (App Language: "..L:upper()..")")or("Tự động theo App ("..L:upper()..")")},
+      {code="country",ic=H.flag(cc),lbl=L=="en"and("Profile Country Flag ("..cc.." → "..(F._COUNTRY_TO_LANG[cc]or"EN"):upper()..")")or("Theo cờ Quốc gia ("..cc.." → "..(F._COUNTRY_TO_LANG[cc]or"VI"):upper()..")")},
+    }
+    for _,sm in ipairs(smartModes)do
+      local on=(curPref==sm.code)
+      local b=tbtn(scr,sm.ic.."  "..sm.lbl..(on and"  ✓"or""),{size=u2(1,0,0,30),ts=11,key=on and"accent"or"btnBg",r=7,layout=nextOrd()})
+      b.TextXAlignment=txL;b.TextTruncate=trEnd;pad(b,10,0,8,0)
+      hook(b.MouseButton1Click,function()close();onPick(sm.code,sm.lbl)end)
+    end
+    lab(scr,L=="en"and"Fixed Target Languages"or"Hoặc chọn ngôn ngữ cố định",{ts=10,bold=true,key="muted",layout=nextOrd()})
+  end
+  local activeDef=F.defaultTranslateLang()
+  for _,opt in ipairs(F._TRANS_OPTS)do
+    local on=isPicker and(curPref==opt.code)or(not isPicker and opt.code==activeDef)
+    local b=tbtn(scr,H.flag(opt.cc).."  "..opt.lbl..(on and"  ✓"or""),{size=u2(1,0,0,28),ts=11,key=on and"accent"or"btnBg",r=7,layout=nextOrd()})
+    b.TextXAlignment=txL;b.TextTruncate=trEnd;pad(b,10,0,8,0)
+    hook(b.MouseButton1Click,function()
+      close()
+      if isPicker then onPick(opt.code,H.flag(opt.cc).." "..opt.lbl)else F.translateMsgInPlace(m,opt.code)end
+    end)
   end
 end
 
@@ -4281,7 +4509,7 @@ function F.userRow(parent,u,o)o=o or{}local rec=F.userRec(u)or{}
   local b=mk("TextButton",{Size=u2(1,0,0,38),Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=o.layout or 0},parent)th(b,"BackgroundColor3","cardBg");corner(b,8);stroke(b,"border",1,0.5)
   local customIc=(isMe and P.profIcon~=""and P.profIcon)or(rec.profIcon and rec.profIcon~=""and rec.profIcon)or nil
   F.makeFramedAvatar(b,{px=28,pos=uo(6,5),z=2,uid=F.uidOf(u),customIc=customIc,pt=uPt})
-  local dot=mk("Frame",{Size=uo(9,9),Position=uo(26,26),BorderSizePixel=0,ZIndex=4},b)corner(dot,5);themed(dot,function(x)x.BackgroundColor3=liveNow and TH.ok or(isFriendOnline and rgb(56,189,248)or TH.muted)end)local top=F.topRole(u)
+  local dot=mk("Frame",{Size=uo(9,9),Position=uo(26,26),BorderSizePixel=0,ZIndex=8},b)corner(dot,5);themed(dot,function(x)x.BackgroundColor3=liveNow and TH.ok or(isFriendOnline and rgb(56,189,248)or TH.muted)end)local top=F.topRole(u)
   local nm=lab(b,F.disp(rec.display or u),{size=u2(1,-(o.right or 60)-44,0,17),pos=uo(40,3),bold=true,trunc=true})
   if top then nm.TextColor3=H.hex(top.color)elseif H.safeHex(uPt.acc,nil)then nm.TextColor3=H.hex(uPt.acc)end
   if uPt.font and FONT_MAP[uPt.font]then nm.Font=FONT_MAP[uPt.font].bold end
@@ -5081,17 +5309,6 @@ end
 -- Namespace nội bộ cho giao diện Hồ sơ Discord-Style (giữ mỗi hàm dưới 25 upvalues cho Lua 5.1)
 F._PROF={}
 
-F._AV_DECS={
-  {id="none",name="None",c1=nil,c2=nil},
-  {id="chroma",name="Chroma",c1="#38BDF8",c2="#EC4899"},
-  {id="flame",name="Flame",c1="#FF4500",c2="#FACC15"},
-  {id="cyber",name="Cyber",c1="#00F5D4",c2="#7C3AED"},
-  {id="frost",name="Frost",c1="#BAE6FD",c2="#3B82F6"},
-  {id="gold",name="Gold VIP",c1="#FDE047",c2="#D97706"},
-  {id="void",name="Void",c1="#A855F7",c2="#311042"},
-  {id="sakura",name="Sakura",c1="#F9A8D4",c2="#F43F5E"},
-}
-
 F._NAME_EFFS={
   {id="solid",name="Solid"},
   {id="gradient",name="Gradient"},
@@ -5186,6 +5403,11 @@ function F._PROF.initState(u,initTab)
   local rawPt=(isSelf and type(P.profTheme)=="table"and P.profTheme)or(type(rec.profTheme)=="table"and rec.profTheme)or{}
   local mode=(rawPt.mode=="solid"or rawPt.mode=="gradient"or rawPt.mode=="mesh"or rawPt.mode=="glass"or rawPt.mode=="image")and rawPt.mode
     or((rawPt.bgImg and H.assetId(rawPt.bgImg))and"image"or((rawPt.g1 or rawPt.g2 or rawPt.g3)and"gradient"or"solid"))
+  local initDec=tostring(rawPt.avDec or"none")
+  local initDecDef for _,d in ipairs(F._AV_DECS)do if d.id==initDec then initDecDef=d;break end end
+  local defRRot=initDecDef and initDecDef.rot or 35
+  local defRGlow=(not initDecDef)or(initDecDef.glow~=false)
+  local defRAnim=initDecDef and initDecDef.anim or"none"
   local pTheme={
     bg=H.safeHex(rawPt.bg,nil)or"",acc=H.safeHex(rawPt.acc,nil)or"",txt=H.safeHex(rawPt.txt,nil)or"",
     g1=H.safeHex(rawPt.g1,nil)or"",g2=H.safeHex(rawPt.g2,nil)or"",g3=H.safeHex(rawPt.g3,nil)or"",
@@ -5203,7 +5425,15 @@ function F._PROF.initState(u,initTab)
     wf=(rawPt.wf=="fit"or rawPt.wf=="stretch"or rawPt.wf=="tile")and rawPt.wf or"crop",
     wz=clamp(tonumber(rawPt.wz)or 100,100,300),wx=clamp(tonumber(rawPt.wx)or 0,-100,100),wy=clamp(tonumber(rawPt.wy)or 0,-100,100),
     wa=F._ASPECT[rawPt.wa or""]and rawPt.wa or"auto",
-    avDec=tostring(rawPt.avDec or"none"),nEff=tostring(rawPt.nEff or"solid"),
+    avDec=initDec,
+    rc1=tostring(rawPt.rc1 or""):match("^#%x%x%x%x%x%x$")or"",
+    rc2=tostring(rawPt.rc2 or""):match("^#%x%x%x%x%x%x$")or"",
+    rc3=tostring(rawPt.rc3 or""):match("^#%x%x%x%x%x%x$")or"",
+    rw=clamp(tonumber(rawPt.rw)or 3,1,6),
+    rrot=clamp(tonumber(rawPt.rrot)~=nil and tonumber(rawPt.rrot)or defRRot,0,360),
+    rglow=(rawPt.rglow~=nil)and(rawPt.rglow==true)or defRGlow,
+    ranim=(rawPt.ranim and rawPt.ranim~="")and tostring(rawPt.ranim)or defRAnim,
+    nEff=tostring(rawPt.nEff or"solid"),
     tag=H.clip(H.trim(tostring(rawPt.tag or"")),36),
     abLbl=H.clip(H.trim(tostring(rawPt.abLbl or"")),40),
     hiTxt=H.clip(H.trim(tostring(rawPt.hiTxt or"")),70),
@@ -5224,8 +5454,8 @@ function F._PROF.initState(u,initTab)
     pTheme=pTheme,curTab=mappedTab,
     cards={},subCards={},inputs={},texts={},muted={},accents={},chips={},dividers={},
     icAcc={},icTxt={},icMuted={},icOnAcc={},accStrokes={},
-    cardCorners={},subCorners={},cardStrokes={},tabBtns={},modeBtns={},fontBtns={},gStopBtns={},decBtns={},neffBtns={},
-    cols={},ui={},fields={},fn={},
+    cardCorners={},subCorners={},cardStrokes={},tabBtns={},modeBtns={},fontBtns={},gStopBtns={},decBtns={},neffBtns={},ringAnimBtns={},
+    cols={},ui={},fields={},fn={},ring={},
   }
   F._PROF.computeCols(st)
   return st
@@ -5276,6 +5506,8 @@ function F._PROF.applyImages(st)
     if u.avCorner then u.avCorner.CornerRadius=u1(ir/100,0)end
     if u.avOuterCorner then u.avOuterCorner.CornerRadius=u1(ir/100,0)end
     if u.avDecCorner then u.avDecCorner.CornerRadius=u1(ir/100,0)end
+    if u.avHaloCorner then u.avHaloCorner.CornerRadius=u1(ir/100,0)end
+    if st.fn.refreshRingStudio then st.fn.refreshRingStudio()end
     if st.iconId~=""then
       F.applyImageFrame(u.avClip,u.avImg,{fit=pt["if"],zoom=pt.iz,x=pt.ix,y=pt.iy,aspect=pt.ia},76,76)
       if u.avImgCorner then
@@ -5407,16 +5639,12 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
   if u.stBubble then u.stBubble.BackgroundColor3=cols.sub;local sb=u.stBubble:FindFirstChildOfClass("UIStroke");if sb then sb.Color=cols.cBorder end end
   if u.stBubbleLbl then u.stBubbleLbl.Font=pReg end
 
-  -- Áp dụng Avatar Decoration & Name Effect (Discord-style)
+  -- Áp dụng Avatar Decoration Ring (Custom Colors/Thickness/Angle/Glow/Animation) & Name Effect
   if u.avDecFrame and u.avDecStroke and u.avDecGrad then
-    local decInfo
-    for _,d in ipairs(F._AV_DECS)do if d.id==(pt.avDec or"none")then decInfo=d;break end end
-    local showDec=(decInfo and decInfo.c1~=nil)
-    u.avDecFrame.Visible=showDec
-    if showDec then
-      u.avDecStroke.Color=c3(1,1,1)
-      u.avDecGrad.Color=ColorSequence.new(H.hex(decInfo.c1),H.hex(decInfo.c2))
-    end
+    F.applyAvatarRingUi({
+      frame=u.avDecFrame,corner=u.avDecCorner,stroke=u.avDecStroke,grad=u.avDecGrad,
+      halo=u.avHaloFrame,haloCorner=u.avHaloCorner,haloStroke=u.avHaloStroke,haloGrad=u.avHaloGrad,
+    },pt,clamp(tonumber(pt.ir)or 50,0,50),78)
   end
   if u.dnameLbl and u.dnameLbl.Parent then
     u.dnameLbl.Font=pBold
@@ -5444,7 +5672,9 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
   if st.fn.refreshTabVisuals then st.fn.refreshTabVisuals()end
   for k,mb in pairs(st.modeBtns)do if mb.btn and mb.btn.Parent then local on=(mode==k);mb.btn.BackgroundColor3=on and cols.acc or cols.sub;mb.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if mb.st then mb.st.Color=on and cols.acc or cols.cBorder end end end
   for k,fb in pairs(st.fontBtns)do if fb.btn and fb.btn.Parent then local on=((pt.font or"gotham")==k);fb.btn.BackgroundColor3=on and cols.acc or cols.sub;fb.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if fb.st then fb.st.Color=on and cols.acc or cols.cBorder end end end
-  for k,db in pairs(st.decBtns)do if db.btn and db.btn.Parent then local on=((pt.avDec or"none")==k);db.btn.BackgroundColor3=on and cols.acc or cols.sub;db.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if db.st then db.st.Color=on and cols.acc or cols.cBorder end end end
+  for k,db in pairs(st.decBtns)do if db.btn and db.btn.Parent then local on=((pt.avDec or"none")==k);db.btn.BackgroundColor3=on and cols.acc or cols.sub;local tc=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if db.lbl then db.lbl.TextColor3=tc else db.btn.TextColor3=tc end;if db.st then db.st.Color=on and cols.acc or cols.cBorder;db.st.Thickness=on and 1.6 or 1.1 end end end
+  for k,ab in pairs(st.ringAnimBtns)do if ab.btn and ab.btn.Parent then local on=((pt.ranim or"none")==k);ab.btn.BackgroundColor3=on and cols.acc or cols.sub;ab.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if ab.st then ab.st.Color=on and cols.acc or cols.cBorder end end end
+  if st.fn.refreshRingStudio then st.fn.refreshRingStudio()end
   for k,nb in pairs(st.neffBtns)do if nb.btn and nb.btn.Parent then local on=((pt.nEff or"solid")==k);nb.btn.BackgroundColor3=on and cols.acc or cols.sub;nb.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if nb.st then nb.st.Color=on and cols.acc or cols.cBorder end end end
   for gk,gb in pairs(st.gStopBtns)do
     if gb.sw and gb.sw.Parent then
@@ -5509,10 +5739,16 @@ function F._PROF.buildLeftIdentity(st,parent)
   u.avOuterCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},avWrap)
   u.avStroke=mk("UIStroke",{Color=st.cols.card,Thickness=4,Transparency=0,ApplyStrokeMode=smBorder},avWrap)
 
-  local avDecFrame=mk("Frame",{Size=u2(1,6,1,6),Position=uo(-3,-3),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=7,Visible=false},avWrap)
+  local avHaloFrame=mk("Frame",{Size=u2(1,12,1,12),Position=uo(-6,-6),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=6,Visible=false},avWrap)
+  u.avHaloFrame=avHaloFrame
+  u.avHaloCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},avHaloFrame)
+  u.avHaloStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=5,Transparency=0.66,ApplyStrokeMode=smBorder},avHaloFrame)
+  u.avHaloGrad=mk("UIGradient",{Rotation=35},u.avHaloStroke)
+
+  local avDecFrame=mk("Frame",{Size=u2(1,6,1,6),Position=uo(-3,-3),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=10,Visible=false},avWrap)
   u.avDecFrame=avDecFrame
   u.avDecCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},avDecFrame)
-  u.avDecStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=2.6,Transparency=0,ApplyStrokeMode=smBorder},avDecFrame)
+  u.avDecStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=2.8,Transparency=0,ApplyStrokeMode=smBorder},avDecFrame)
   u.avDecGrad=mk("UIGradient",{Rotation=35},u.avDecStroke)
 
   local avClip=F.createClipHost(avWrap,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=8})
@@ -6407,25 +6643,252 @@ function F._PROF.buildImagesTab(st,parent)
   st.fields.tBanner=tBanner;st.fields.tIcon=tIcon;st.fields.tBgImg=tBgImg;st.fields.updBgImg=updBgImg
 end
 
+function F._PROF.buildAvatarRingStudio(st,parent,refresh)
+  local pt=st.pTheme
+  local cols=st.cols
+  local rg={}
+  st.ring=rg
+
+  -- Tiêu đề + Nút nhanh: Theo Theme / Ngẫu nhiên / Tắt viền
+  local topRow=row(parent,24,1)
+  local decLbl=lab(topRow,L=="en"and"Avatar Ring Studio"or"Studio Viền Avatar",{size=u2(1,-162,1,0),ts=10,bold=true,trunc=true})
+  st.muted[#st.muted+1]=decLbl
+  local bSyncTh=F._PROF.btn(st,topRow,L=="en"and"Theme"or"Theo Theme",{size=uo(64,22),pos=u2(1,-158,0,1),key="accent",ts=9,r=5})
+  local bRandR=F._PROF.btn(st,topRow,"🎲",{size=uo(28,22),pos=u2(1,-90,0,1),key="btnBg",ts=10,r=5})
+  local bOffR=F._PROF.btn(st,topRow,L=="en"and"Off"or"Tắt viền",{size=uo(58,22),pos=u2(1,-58,0,1),key="btnBg",ts=9,r=5})
+  hook(bSyncTh.MouseButton1Click,function()
+    local c1=H.tohex(st.cols.acc)
+    local c2=H.tohex((pt.mode=="gradient"or pt.mode=="mesh")and st.cols.g2 or H.mix(st.cols.acc,c3(1,1,1),0.36))
+    local c3h=(pt.mode=="gradient"or pt.mode=="mesh")and H.tohex(st.cols.g3)or""
+    pt.avDec="custom";pt.rc1=c1;pt.rc2=c2;pt.rc3=c3h
+    if pt.rglow==nil then pt.rglow=true end
+    refresh()
+  end)
+  hook(bRandR.MouseButton1Click,function()
+    local h1=math.random();local h2=(h1+0.14+math.random()*0.18)%1;local h3=(h2+0.16+math.random()*0.18)%1
+    pt.avDec="custom"
+    pt.rc1=H.tohex(Color3.fromHSV(h1,0.88,1))
+    pt.rc2=H.tohex(Color3.fromHSV(h2,0.88,1))
+    pt.rc3=H.tohex(Color3.fromHSV(h3,0.84,1))
+    if not pt.ranim or pt.ranim=="none"then pt.ranim="spin"end
+    pt.rglow=true
+    refresh()
+  end)
+  hook(bOffR.MouseButton1Click,function()
+    pt.avDec="none";pt.rc1="";pt.rc2="";pt.rc3="";pt.rw=3;pt.rrot=35;pt.rglow=true;pt.ranim="none"
+    if rg.setSlRw then rg.setSlRw(3,false)end
+    if rg.setSlRRot then rg.setSlRRot(35,false)end
+    refresh()
+  end)
+
+  -- Thẻ Xem trước trực tiếp (Live Studio Preview Card)
+  local pvCard=mk("Frame",{Size=u2(1,0,0,74),BackgroundColor3=cols.box,BorderSizePixel=0,LayoutOrder=2},parent)
+  corner(pvCard,9);local pvSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},pvCard)
+  st.subCards[#st.subCards+1]=pvCard
+  local ir=clamp(tonumber(pt.ir)or 50,0,50)
+  local pvWrap=mk("Frame",{Size=uo(52,52),Position=uo(12,11),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=4},pvCard)
+  local pvHalo=mk("Frame",{Size=u2(1,8,1,8),Position=uo(-4,-4),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=3,Visible=false},pvWrap)
+  local pvHaloCor=mk("UICorner",{CornerRadius=u1(ir/100,0)},pvHalo)
+  local pvHaloSt=mk("UIStroke",{Color=c3(1,1,1),Thickness=4,Transparency=0.66,ApplyStrokeMode=smBorder},pvHalo)
+  local pvHaloGr=mk("UIGradient",{Rotation=35},pvHaloSt)
+  local pvClip=F.createClipHost(pvWrap,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=4})
+  local pvCor=mk("UICorner",{CornerRadius=u1(ir/100,0)},pvClip)
+  local pvImg=mk("ImageLabel",{
+    Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,
+    ScaleType=Enum.ScaleType.Crop,ZIndex=5,Image=st.iconId~=""and F.thumbUrl(st.iconId,150,150)or F.avatarUrl(F.uidOf(st.u)),
+  },pvClip)
+  local pvRing=mk("Frame",{Size=u2(1,4,1,4),Position=uo(-2,-2),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=6,Visible=false},pvWrap)
+  local pvRingCor=mk("UICorner",{CornerRadius=u1(ir/100,0)},pvRing)
+  local pvRingSt=mk("UIStroke",{Color=c3(1,1,1),Thickness=2.4,Transparency=0,ApplyStrokeMode=smBorder},pvRing)
+  local pvRingGr=mk("UIGradient",{Rotation=35},pvRingSt)
+  rg.pvRefs={frame=pvRing,corner=pvRingCor,stroke=pvRingSt,grad=pvRingGr,halo=pvHalo,haloCorner=pvHaloCor,haloStroke=pvHaloSt,haloGrad=pvHaloGr}
+  rg.pvClip=pvClip;rg.pvImg=pvImg;rg.pvCor=pvCor;rg.pvSt=pvSt
+
+  local pvTitle=lab(pvCard,"",{size=u2(1,-84,0,18),pos=uo(74,10),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=pvTitle
+  local pvBarBg=mk("Frame",{Size=u2(1,-84,0,12),Position=uo(74,31),BackgroundColor3=cols.sub,BorderSizePixel=0,ClipsDescendants=true},pvCard)
+  corner(pvBarBg,6);mk("UIStroke",{Color=cols.cBorder,Thickness=1,Transparency=0.4,ApplyStrokeMode=smBorder},pvBarBg)
+  local pvBarFill=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(1,1,1),BorderSizePixel=0,Visible=false},pvBarBg)
+  corner(pvBarFill,6);local pvBarGr=mk("UIGradient",{Rotation=0},pvBarFill)
+  local pvSub=lab(pvCard,L=="en"and"Shown on Profile, Chat & Online List"or"Hiện ở Hồ sơ, Chat & Danh sách Online",{size=u2(1,-84,0,15),pos=uo(74,47),ts=9,trunc=true});st.muted[#st.muted+1]=pvSub
+  rg.pvTitle=pvTitle;rg.pvBarFill=pvBarFill;rg.pvBarGr=pvBarGr;rg.pvBarBg=pvBarBg
+
+  -- Lưới Preset kèm vòng xem trước Gradient
+  local decGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3},parent)
+  mk("UIGridLayout",{CellSize=u2(0.25,-4,0,28),CellPadding=uo(4,4),SortOrder=soLO},decGrid)
+  for idx,d in ipairs(F._AV_DECS)do
+    local b=mk("TextButton",{Size=us(1,1),BackgroundColor3=cols.sub,Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},decGrid)
+    corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
+    local sw=mk("Frame",{Size=uo(14,14),Position=uo(5,7),BackgroundColor3=cols.box,BorderSizePixel=0},b);corner(sw,7)
+    if d.c1 then
+      local sSt=mk("UIStroke",{Color=c3(1,1,1),Thickness=2.2,ApplyStrokeMode=smBorder},sw)
+      mk("UIGradient",{Rotation=d.rot or 35,Color=F.ringColorSeq(d.c1,d.c2,d.c3)},sSt)
+    else
+      mk("UIStroke",{Color=cols.muted,Thickness=1.2,Transparency=0.3,ApplyStrokeMode=smBorder},sw)
+    end
+    local dl=lab(b,d.name,{size=u2(1,-25,1,0),pos=uo(23,0),ts=9,bold=true,trunc=true})
+    st.decBtns[d.id]={btn=b,st=bSt,lbl=dl}
+    hook(b.MouseButton1Click,function()
+      pt.avDec=d.id
+      if d.id=="custom"then
+        if not tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")then pt.rc1="#38BDF8";pt.rc2="#EC4899";pt.rc3=""end
+      else
+        pt.rc1="";pt.rc2="";pt.rc3=""
+        pt.rrot=d.rot or 35
+        pt.rglow=(d.glow~=false)
+        pt.ranim=d.anim or"none"
+      end
+      if rg.setSlRRot then rg.setSlRRot(pt.rrot or 35,false)end
+      refresh()
+    end)
+  end
+
+  -- 3 điểm màu tùy chỉnh cho Viền Avatar (Ring #1, #2, #3 + xóa #3)
+  local stopRow=row(parent,28,4)
+  local rWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false,LayoutOrder=5},parent)
+  local actRK,rPicker
+  rg.stops={}
+  local function prepCustomRing()
+    if pt.avDec~="custom"then
+      local sp=F.resolveAvatarRing(pt)
+      pt.avDec="custom"
+      if sp then
+        pt.rc1=sp.c1 or"#38BDF8";pt.rc2=sp.c2 or"#EC4899";pt.rc3=sp.c3 or""
+        pt.rw=sp.rw or 3;pt.rrot=sp.rot or 35;pt.rglow=(sp.glow~=false);pt.ranim=sp.anim or"none"
+      else
+        pt.rc1="#38BDF8";pt.rc2="#EC4899";pt.rc3=""
+      end
+    end
+  end
+  for idx,rk in ipairs({"rc1","rc2","rc3"})do
+    local gb=mk("TextButton",{Size=u2(1/3,-4,1,0),BackgroundColor3=cols.sub,Text="",BorderSizePixel=0,LayoutOrder=idx,AutoButtonColor=true},stopRow)
+    corner(gb,6);local gst=mk("UIStroke",{Color=cols.cBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},gb)
+    local sw=mk("Frame",{Size=uo(14,14),Position=uo(5,7),BorderSizePixel=0},gb);corner(sw,4)
+    local hasX=(rk=="rc3")
+    local gl=lab(gb,"",{size=u2(1,hasX and-38 or-24,1,0),pos=uo(22,0),ts=9,bold=true,trunc=true})
+    local clrB
+    if hasX then
+      clrB=mk("TextButton",{Size=uo(16,16),Position=u2(1,-19,0.5,-8),BackgroundColor3=cols.box,Text="×",Font=fGB,TextSize=11,TextColor3=cols.muted,BorderSizePixel=0,ZIndex=4},gb)
+      corner(clrB,4)
+      hook(clrB.MouseButton1Click,function()
+        prepCustomRing();pt.rc3="";if actRK=="rc3"then rWrap.Visible=false;actRK=nil end;refresh()
+      end)
+    end
+    rg.stops[rk]={btn=gb,sw=sw,lbl=gl,st=gst,clr=clrB,title="Ring #"..idx}
+    hook(gb.MouseButton1Click,function()
+      if rWrap.Visible and actRK==rk then rWrap.Visible=false;actRK=nil;return end
+      actRK=rk
+      local sp=F.resolveAvatarRing(pt)
+      local defH=(sp and(rk=="rc1"and sp.c1 or rk=="rc2"and sp.c2 or sp.c3))or(rk=="rc1"and"#38BDF8"or rk=="rc2"and"#EC4899"or"#A855F7")
+      local curH=tostring(pt[rk]or""):match("^#%x%x%x%x%x%x$")or defH
+      if not rPicker then
+        rPicker=F.colorPicker(rWrap,curH,function(hex)
+          if actRK then prepCustomRing();pt[actRK]=hex;refresh()end
+        end)
+      else rPicker.set(curH)end
+      rWrap.Visible=true
+    end)
+  end
+
+  -- Hiệu ứng chuyển động viền (Tĩnh / Xoay / Nhịp / Cầu vồng)
+  local animRow=row(parent,26,6)
+  for idx,an in ipairs(F._RING_ANIMS)do
+    local b=mk("TextButton",{Size=u2(0.25,-4,1,0),BackgroundColor3=cols.sub,Text=(L=="en"and an.en or an.vi),Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},animRow)
+    corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
+    st.ringAnimBtns[an.id]={btn=b,st=bSt}
+    hook(b.MouseButton1Click,function()
+      if not pt.avDec or pt.avDec=="none"then
+        pt.avDec="custom";pt.rc1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or"#38BDF8";pt.rc2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or"#EC4899"
+      end
+      pt.ranim=an.id;refresh()
+    end)
+  end
+
+  -- Thanh trượt Độ dày viền & Góc xoay Gradient
+  local slRw,setSlRw=F.slider(parent,L=="en"and"Ring Thickness"or"Độ dày Viền Avatar",1,6,pt.rw or 3,{step=1,fmt=function(v)return v.."px"end,onChange=function(v)
+    if not pt.avDec or pt.avDec=="none"then pt.avDec="custom";pt.rc1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or"#38BDF8";pt.rc2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or"#EC4899"end
+    pt.rw=v;refresh()
+  end})
+  slRw.LayoutOrder=7;st.subCards[#st.subCards+1]=slRw;rg.setSlRw=setSlRw
+
+  local slRRot,setSlRRot=F.slider(parent,L=="en"and"Ring Gradient Angle"or"Góc xoay dải màu Viền",0,360,pt.rrot or 35,{step=5,fmt=function(v)return v.."°"end,onChange=function(v)pt.rrot=v;refresh()end})
+  slRRot.LayoutOrder=8;st.subCards[#st.subCards+1]=slRRot;rg.setSlRRot=setSlRRot
+
+  -- Công tắc Ánh sáng Hào quang ngoài (Outer Halo Glow)
+  local gwBtn=mk("TextButton",{Size=u2(1,0,0,30),BackgroundColor3=cols.box,Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=9},parent)
+  corner(gwBtn,8);local gwSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},gwBtn)
+  local gwLbl=lab(gwBtn,L=="en"and"Outer Halo Glow"or"Hào quang phát sáng ngoài (Glow)",{size=u2(1,-58,1,0),pos=uo(10,0),ts=10,bold=true,trunc=true});st.texts[#st.texts+1]=gwLbl
+  local gwTrk=mk("Frame",{Size=uo(36,18),Position=u2(1,-46,0.5,-9),BorderSizePixel=0},gwBtn);corner(gwTrk,9)
+  local gwKnob=mk("Frame",{Size=uo(12,12),Position=uo(3,3),BackgroundColor3=c3(1,1,1),BorderSizePixel=0},gwTrk);corner(gwKnob,6)
+  rg.gwBtn=gwBtn;rg.gwSt=gwSt;rg.gwTrk=gwTrk;rg.gwKnob=gwKnob;st.subCards[#st.subCards+1]=gwBtn
+  hook(gwBtn.MouseButton1Click,function()
+    if not pt.avDec or pt.avDec=="none"then pt.avDec="custom";pt.rc1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or"#38BDF8";pt.rc2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or"#EC4899"end
+    pt.rglow=not(pt.rglow~=false);refresh()
+  end)
+
+  st.fn.resetRingSliders=function()
+    if rg.setSlRw then rg.setSlRw(pt.rw or 3,false)end
+    if rg.setSlRRot then rg.setSlRRot(pt.rrot or 35,false)end
+  end
+
+  st.fn.refreshRingStudio=function()
+    local sp=F.resolveAvatarRing(pt)
+    local curIr=clamp(tonumber(pt.ir)or 50,0,50)
+    if rg.pvCor then rg.pvCor.CornerRadius=u1(curIr/100,0)end
+    if rg.pvImg then
+      if rg.lastIconId~=st.iconId then
+        rg.lastIconId=st.iconId
+        if st.iconId~=""then rg.pvImg.Image=F.thumbUrl(st.iconId,150,150);F.setAsset(rg.pvImg,st.iconId)else rg.pvImg.Image=F.avatarUrl(F.uidOf(st.u))end
+      end
+      if st.iconId~=""then
+        F.applyImageFrame(rg.pvClip,rg.pvImg,{fit=pt["if"],zoom=pt.iz,x=pt.ix,y=pt.iy,aspect=pt.ia},52,52)
+      else
+        rg.pvImg.AnchorPoint=v2(0.5,0.5);rg.pvImg.Position=us(0.5,0.5);rg.pvImg.Size=us(1,1);rg.pvImg.ScaleType=Enum.ScaleType.Crop
+      end
+    end
+    F.applyAvatarRingUi(rg.pvRefs,pt,curIr,52)
+    local cCols=st.cols
+    if pvCard then pvCard.BackgroundColor3=cCols.box end
+    if rg.pvBarBg then rg.pvBarBg.BackgroundColor3=cCols.inpBg end
+    if rg.pvSt then rg.pvSt.Color=sp and cCols.acc or cCols.cBorder end
+    if sp then
+      local aLbl=sp.anim
+      for _,a in ipairs(F._RING_ANIMS)do if a.id==sp.anim then aLbl=(L=="en"and a.en or a.vi);break end end
+      rg.pvTitle.Text="✨ "..sp.name.." • "..sp.rw.."px • "..aLbl..(sp.glow and" • Glow"or"")
+      rg.pvBarFill.Visible=true
+      rg.pvBarGr.Color=F.ringColorSeq(sp.c1,sp.c2,sp.c3)
+      rg.pvBarGr.Rotation=0
+    else
+      rg.pvTitle.Text=L=="en"and"No Ring Selected (None)"or"Chưa bật Viền Avatar (None)"
+      rg.pvBarFill.Visible=false
+    end
+    for rk,sb in pairs(rg.stops)do
+      local hx=(sp and((rk=="rc1"and sp.c1)or(rk=="rc2"and sp.c2)or sp.c3))or tostring(pt[rk]or""):match("^#%x%x%x%x%x%x$")
+      if hx and hx~=""then
+        sb.sw.BackgroundColor3=H.hex(hx);sb.lbl.Text=hx;sb.lbl.TextColor3=cCols.txt
+      else
+        sb.sw.BackgroundColor3=cCols.inpBg;sb.lbl.Text=(rk=="rc3")and(L=="en"and"+ Stop 3"or"+ Điểm 3")or(sb.title);sb.lbl.TextColor3=cCols.muted
+      end
+      sb.btn.BackgroundColor3=cCols.sub;sb.st.Color=cCols.cBorder
+      if sb.clr then sb.clr.Visible=(rk=="rc3"and hx~=nil and hx~="")end
+    end
+    local gOn=(pt.rglow~=false)
+    rg.gwTrk.BackgroundColor3=gOn and cCols.ok or cCols.inpBg
+    rg.gwKnob.Position=gOn and uo(21,3)or uo(3,3)
+    rg.gwSt.Color=gOn and cCols.acc or cCols.cBorder
+  end
+end
+
 function F._PROF.buildStyleTab(st,parent)
   local pt=st.pTheme
   local cols=st.cols
   local refresh=function()F._PROF.applyColors(st,st.fields.tBg and st.fields.tBg.Text or pt.bg,st.fields.tAcc and st.fields.tAcc.Text or pt.acc,st.fields.tTxt and st.fields.tTxt.Text or pt.txt)end
 
-  -- 1. Discord Avatar Decoration & Nameplate Effects
-  F._PROF.section(st,parent,L=="en"and"AVATAR DECORATION & NAME EFFECT"or"KHUNG AVATAR & HIỆU ỨNG TÊN",1,"sparkles")
+  -- 1. Discord Avatar Decoration Ring Studio & Nameplate Effects
+  F._PROF.section(st,parent,L=="en"and"AVATAR RING STUDIO & NAME EFFECT"or"STUDIO VIỀN AVATAR & HIỆU ỨNG TÊN",1,"sparkles")
   local cosC=F._PROF.makeCard(st,parent,2,10,8)
-  local decLbl=lab(cosC,L=="en"and"Avatar Decoration Ring"or"Viền trang trí Avatar",{ts=10,bold=true,layout=1});st.muted[#st.muted+1]=decLbl
-  local decGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=2},cosC)
-  mk("UIGridLayout",{CellSize=u2(0.25,-4,0,26),CellPadding=uo(4,4),SortOrder=soLO},decGrid)
-  for idx,d in ipairs(F._AV_DECS)do
-    local b=mk("TextButton",{Size=us(1,1),BackgroundColor3=cols.sub,Text=d.name,Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},decGrid)
-    corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
-    st.decBtns[d.id]={btn=b,st=bSt}
-    hook(b.MouseButton1Click,function()pt.avDec=d.id;refresh()end)
-  end
-  local neLbl=lab(cosC,L=="en"and"Display Name Effect"or"Hiệu ứng Tên hiển thị",{ts=10,bold=true,layout=3});st.muted[#st.muted+1]=neLbl
-  local neRow=row(cosC,26,4)
+  F._PROF.buildAvatarRingStudio(st,cosC,refresh)
+  local neLbl=lab(cosC,L=="en"and"Display Name Effect"or"Hiệu ứng Tên hiển thị",{ts=10,bold=true,layout=10});st.muted[#st.muted+1]=neLbl
+  local neRow=row(cosC,26,11)
   for idx,ne in ipairs(F._NAME_EFFS)do
     local b=mk("TextButton",{Size=u2(1/#F._NAME_EFFS,-3,1,0),BackgroundColor3=cols.sub,Text=ne.name,Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},neRow)
     corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
@@ -6617,7 +7080,8 @@ function F._PROF.buildStyleTab(st,parent)
         hook(pb.MouseButton1Click,function()
           tBg.Text=pr.bg;tAcc.Text=pr.acc;tTxt.Text=pr.txt;pt.g1=pr.g1;pt.g2=pr.g2;pt.g3=pr.g3;pt.gRot=pr.gRot or 28;setSlRot(pt.gRot,false)
           if pr.isReset then
-            pt.mode="solid";pt.font="gotham";pt.rad=12;pt.glow=true;pt.avDec="none";pt.nEff="solid";setSlRad(12,false)
+            pt.mode="solid";pt.font="gotham";pt.rad=12;pt.glow=true;pt.avDec="none";pt.rc1="";pt.rc2="";pt.rc3="";pt.rw=3;pt.rrot=35;pt.rglow=true;pt.ranim="none";pt.nEff="solid";setSlRad(12,false)
+            if st.fn.resetRingSliders then st.fn.resetRingSliders()end
             if st.fields.tBgImg then st.fields.tBgImg.Text=""end
           elseif pr.cat=="chroma"and pt.mode=="solid"then pt.mode="gradient"end
           if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end
@@ -8313,17 +8777,13 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
       end)
     end
     local v47Row=row(gen,28)
-    local curPref=tostring(P.transLang or"")
-    local curLbl=(curPref==""and(L=="en"and"Auto ("..L:upper()..")"or"Tự động ("..L:upper()..")"))
-      or(curPref=="country"and((L=="en"and"Flag: "or"Cờ: ")..tostring(P.country or"VN")))
-      or curPref:upper()
-    local trBtn=rbtn(v47Row,"🌐 "..(L=="en"and"Translate: "or"Dịch: ")..curLbl,{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6,layout=1})
+    local tIc,tLbl=F.translatePrefInfo(P.transLang)
+    local trBtn=rbtn(v47Row,tIc.." "..(L=="en"and"Translate: "or"Dịch: ")..tLbl.." ▾",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6,layout=1})
+    trBtn.TextTruncate=trEnd
     hook(trBtn.MouseButton1Click,function()
-      local seq={"","country"}
-      for _,opt in ipairs(F._TRANS_OPTS or{})do seq[#seq+1]=opt.code end
-      local nx=seq[1]
-      for i,code in ipairs(seq)do if code==curPref then nx=seq[(i%#seq)+1];break end end
-      P.transLang=nx;S.isDirty=true;F.save(true);F.openSettings()
+      F.openTranslateLangMenu(nil,function(chosenCode,chosenLbl)
+        P.transLang=chosenCode;S.isDirty=true;F.save(true);F.toast("🌐 "..chosenLbl,true);F.openSettings()
+      end)
     end)
     local bmBtn=rbtn(v47Row,"🔖 "..T("bookmarks_title").." ("..#(P.savedBookmarks or{})..")",{size=u2(0.5,-3,1,0),key="accent",ts=10,r=6,layout=2})
     hook(bmBtn.MouseButton1Click,function()F.openBookmarks()end)
