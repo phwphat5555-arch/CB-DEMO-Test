@@ -301,6 +301,7 @@ function F.safeTap(id,fn,delay)delay=delay or 0.28 local now=os.clock()if S.tapL
 -- =============================================================================
 local hasIO=type(writefile)=="function"and type(readfile)=="function"and type(isfile)=="function"
 local FILE="cb47_"..tostring(LP.UserId)..".json"
+local PROF_FILE="cb47_profile_"..tostring(LP.UserId)..".json"
 local LAYOUT_FILE="cb47_layout.json"
 local REJOIN_FILE="cb47_rejoin_state.json"
 --- [loadSave] Đọc dữ liệu cài đặt, vị trí cửa sổ và trạng thái Rejoin từ file JSON cục bộ (tự động kế thừa từ bản v46 trở xuống)
@@ -310,6 +311,24 @@ local function loadSave()
     local names={FILE}for v=46,30,-1 do tinsert(names,"cb"..v.."_"..tostring(LP.UserId)..".json")end
     for _,f in ipairs(names)do local ok,raw=pcall(function()if isfile(f)then return readfile(f)end end)
       if ok and raw then local d=H.jdec(raw)if type(d)=="table"then out=d;break end end end
+    pcall(function()
+      for _,pf in ipairs({PROF_FILE,"cb46_profile_"..tostring(LP.UserId)..".json"})do
+        if isfile(pf)then
+          local pd=H.jdec(readfile(pf))
+          if type(pd)=="table"then
+            local pdTs=tonumber(pd._profSavedAt)or 0
+            local outTs=tonumber(out._profSavedAt)or 0
+            local outHas=(tostring(out.bio or"")~=""or tostring(out.status or"")~=""or tostring(out.profBanner or"")~=""or tostring(out.profIcon or"")~=""or(type(out.profTheme)=="table"and next(out.profTheme)~=nil))
+            if pdTs>outTs or not outHas then
+              for _,k in ipairs({"display","status","bio","country","profBanner","profIcon","profMusic","profTheme","_profSavedAt","_profCleared"})do
+                if pd[k]~=nil then out[k]=pd[k]end
+              end
+            end
+            break
+          end
+        end
+      end
+    end)
     pcall(function()for _,lf in ipairs({LAYOUT_FILE,"cb46_layout.json","cb45_layout.json","cb44_layout.json","cb42_layout.json"})do if isfile(lf)then local ly=H.jdec(readfile(lf))if type(ly)=="table"then
           for _,k in ipairs({"winX","winY","W","H","prevW","prevH","miniX","miniY","minimized"})do if ly[k]~=nil then out[k]=ly[k]end end return end end end end)
     pcall(function()for _,rf in ipairs({REJOIN_FILE,"cb46_rejoin_state.json","cb45_rejoin_state.json","cb44_rejoin_state.json","cb42_rejoin_state.json"})do if isfile(rf)then local rj=H.jdec(readfile(rf))if type(rj)=="table"then out._rejoinState=rj;return end end end end)
@@ -635,6 +654,9 @@ local ACCENTS={"#5865F2","#7C6AF7","#BD93F9","#F472B6","#EF4444","#FB923C","#FAC
 P.username,P.userId=LP.Name,LP.UserId P.display=saved.display or LP.DisplayName or LP.Name P.status,P.bio=saved.status or"",saved.bio or""P.country=H.resolveCountry(saved.country or"??")
 P.profBanner=H.assetId(saved.profBanner or"")or""P.profIcon=H.assetId(saved.profIcon or"")or""
 P.profTheme=type(saved.profTheme)=="table"and saved.profTheme or{}
+P._profSavedAt=tonumber(saved._profSavedAt)or 0
+P._profCleared=saved._profCleared==true
+if P._profSavedAt==0 and(P.bio~=""or P.status~=""or P.profBanner~=""or P.profIcon~=""or next(P.profTheme)~=nil)then P._profSavedAt=H.now()end
 P.autoExecute=saved.autoExecute~=false
 P.dmList={};(function()local rawDm=type(saved.dmList)=="table"and saved.dmList or{}for k,v in pairs(rawDm)do if type(k)=="number"and type(v)=="string"and v:match("^[%w_]+$")then P.dmList[v]=H.now()elseif type(k)=="string"and k:match("^[%w_]+$")and not k:match("^grp_")then P.dmList[k]=tonumber(v)or H.now()end end end)();P.customEmojis=type(saved.customEmojis)=="table"and saved.customEmojis or{}P.recentEmoji=type(saved.recentEmoji)=="table"and saved.recentEmoji or{}
 P.recentColors=type(saved.recentColors)=="table"and saved.recentColors or{}P.themeName=THEMES[saved.themeName]and saved.themeName or"dark"P.custom=type(saved.custom)=="table"and saved.custom or{}
@@ -2055,7 +2077,8 @@ function F.rememberProfile(u,data,isOnline)
     end
   elseif type(data)=="table"then
     if data.u and tostring(data.u)~=""and tostring(data.u)~="?"then p.u=tostring(data.u)end
-    local allowClear=data._allowClear==true or isOnline==true
+    local allowClear=(data._allowClear==true)
+    local isMeKey=(key==P.username:lower())
     local d=data.display~=nil and data.display or data.d
     if d~=nil and tostring(d)~=""and tostring(d)~="?"then p.display=tostring(d)end
     local uid=tonumber(data.userId or data.id or data.uid)
@@ -2064,21 +2087,21 @@ function F.rememberProfile(u,data,isOnline)
     if mc and mc>(tonumber(p.msgCount)or 0)then p.msgCount=mc end
     if key==P.username:lower()and(P.msgCount or 0)>(tonumber(p.msgCount)or 0)then p.msgCount=P.msgCount end
     local st=data.status~=nil and data.status or data.st
-    if st~=nil and(allowClear or tostring(st)~="")then p.status=tostring(st)end
-    if data.bio~=nil and(allowClear or tostring(data.bio)~="")then p.bio=tostring(data.bio)end
+    if st~=nil and((allowClear and not isMeKey)or(allowClear and data._localSave==true)or tostring(st)~="")then p.status=tostring(st)end
+    if data.bio~=nil and((allowClear and not isMeKey)or(allowClear and data._localSave==true)or tostring(data.bio)~="")then p.bio=tostring(data.bio)end
     local c=data.country~=nil and data.country or data.c
     if c~=nil then
       local rc=H.resolveCountry(c)
       if rc~=""and(rc~="??"or p.country==""or p.country=="??")then p.country=rc end
     end
     local pb=data.profBanner~=nil and data.profBanner or data.pb
-    if pb~=nil and(allowClear or tostring(pb)~="")then p.profBanner=H.assetId(pb)or""end
+    if pb~=nil and((allowClear and not isMeKey)or(allowClear and data._localSave==true)or tostring(pb)~="")then p.profBanner=H.assetId(pb)or""end
     local pi=data.profIcon~=nil and data.profIcon or data.pi
-    if pi~=nil and(allowClear or tostring(pi)~="")then p.profIcon=H.assetId(pi)or""end
+    if pi~=nil and((allowClear and not isMeKey)or(allowClear and data._localSave==true)or tostring(pi)~="")then p.profIcon=H.assetId(pi)or""end
     local pt=data.profTheme~=nil and data.profTheme or data.pt
-    if type(pt)=="table"and(allowClear or next(pt)~=nil)then
+    if type(pt)=="table"and(next(pt)~=nil or data._localSave==true or(allowClear and not isMeKey))then
       p.profTheme=pt
-    elseif allowClear and data._fromProfileApi==true and pt==nil then
+    elseif allowClear and data._fromProfileApi==true and pt==nil and not isMeKey then
       p.profTheme={}
     end
     if type(pt)=="table"or data._allowClear==true then S.profFullLoaded[key]=true end
@@ -2196,8 +2219,21 @@ function F.fetchUserProfile(u,cb,force)
     if cb then pcall(cb,F.userRec(target))end
   end)
 end
-function F.pushMyProfileSync(cb)
+function F.hasLocalProfileData()
+  if not P then return false end
+  if tostring(P.bio or"")~=""or tostring(P.status or"")~=""or tostring(P.profBanner or"")~=""or tostring(P.profIcon or"")~=""then return true end
+  if type(P.profTheme)=="table"and next(F.compactProfTheme(P.profTheme))~=nil then return true end
+  return false
+end
+function F.hasServerProfileData(pr)
+  if type(pr)~="table"then return false end
+  if tostring(pr.bio or"")~=""or tostring(pr.st or"")~=""or tostring(pr.pb or"")~=""or tostring(pr.pi or"")~=""then return true end
+  if type(pr.pt)=="table"and next(pr.pt)~=nil then return true end
+  return false
+end
+function F.pushMyProfileSync(cb,allowEmpty)
   if not P or not P.username or P.username==""then if cb then pcall(cb,false)end return end
+  if not allowEmpty and not F.hasLocalProfileData()then if cb then pcall(cb,false,"skip_empty")end return end
   task.spawn(function()
     local payload={
       action="save",
@@ -2213,11 +2249,67 @@ function F.pushMyProfileSync(cb)
     }
     local data=type(F.rawRequest)=="function"and F.rawRequest("POST","/api/profile",payload)or nil
     if type(data)=="table"and data.ok and type(data.profile)=="table"then
+      P._profCleared=false
+      P._profSavedAt=max(tonumber(P._profSavedAt)or 0,tonumber(data.now)or H.now())
       data.profile._allowClear=true;data.profile._fromProfileApi=true
       F.rememberProfile(P.username,data.profile,true)
+      S.isDirty=true;F.save(true)
       if cb then pcall(cb,true,data)end
     else
       if cb then pcall(cb,false,data)end
+    end
+  end)
+end
+function F.restoreOrSyncMyProfileOnBoot()
+  if not NET.alive or not P or not P.username or P.username==""then return end
+  task.spawn(function()
+    local hasLoc=F.hasLocalProfileData()
+    local data=type(F.rawRequest)=="function"and F.rawRequest("GET","/api/profile?u="..H.url(P.username))or nil
+    if not NET.alive then return end
+    if type(data)=="table"and data.ok then
+      local pr=type(data.profile)=="table"and data.profile or nil
+      local rv=type(data.review)=="table"and data.review or nil
+      local srvCleared=(rv and rv.status=="cleared")
+      local srvTs=tonumber(pr and (pr.ts or pr.lastSeen))or 0
+      local rvTs=tonumber(rv and rv.ts)or 0
+      local hasSrv=F.hasServerProfileData(pr)
+      if not hasLoc and not P._profCleared and hasSrv and not srvCleared then
+        if pr.d and tostring(pr.d)~=""and tostring(pr.d)~="?"then P.display=tostring(pr.d)end
+        P.status=tostring(pr.st or"")
+        P.bio=tostring(pr.bio or"")
+        local rc=H.resolveCountry(pr.c or"??")
+        if rc~=""and rc~="??"then P.country=rc end
+        P.profBanner=H.assetId(pr.pb or"")or""
+        P.profIcon=H.assetId(pr.pi or"")or""
+        P.profTheme=type(pr.pt)=="table"and pr.pt or{}
+        P._profCleared=false
+        P._profSavedAt=max(srvTs,H.now())
+        pr._allowClear=true;pr._localSave=true;pr._fromProfileApi=true
+        F.rememberProfile(P.username,pr,true)
+        S.isDirty=true;F.save(true);F.updateInfo()
+        F.toast(L=="en"and"☁️ Restored your profile from Cloud!"or"☁️ Đã khôi phục dữ liệu Profile từ Cloud!",false)
+        return
+      elseif hasLoc then
+        if not hasSrv or(tonumber(P._profSavedAt)or 0)>srvTs+5 then
+          if not srvCleared or(tonumber(P._profSavedAt)or 0)>rvTs then
+            F.pushMyProfileSync(nil,true)
+          end
+        elseif hasSrv and srvTs>(tonumber(P._profSavedAt)or 0)+5 and not P._profCleared and not srvCleared then
+          if pr.d and tostring(pr.d)~=""and tostring(pr.d)~="?"then P.display=tostring(pr.d)end
+          P.status=tostring(pr.st or"")
+          P.bio=tostring(pr.bio or"")
+          P.profBanner=H.assetId(pr.pb or"")or""
+          P.profIcon=H.assetId(pr.pi or"")or""
+          P.profTheme=type(pr.pt)=="table"and pr.pt or{}
+          P._profSavedAt=srvTs
+          pr._allowClear=true;pr._localSave=true;pr._fromProfileApi=true
+          F.rememberProfile(P.username,pr,true)
+          S.isDirty=true;F.save(true);F.updateInfo()
+        end
+        return
+      end
+    elseif hasLoc then
+      F.pushMyProfileSync(nil,true)
     end
   end)
 end
@@ -3904,7 +3996,13 @@ function F.openPoll()if tostring(S.chan):sub(1,3)=="dm:"then F.toast(T("no_poll_
     F.closeModal();F.renderPoll(p);F.scrollBottom()F.publish({type="poll",packetId=id,pollId=id,question=p.q,options=o,multi=multi,author=P.username,chan=S.chan})end)end
 --- [F.heartbeat] Gửi gói tin nhịp tim (Presence Heartbeat) lên `/api/presence` để báo trạng thái trực tuyến, ảnh Profile, chủ đề riêng và server đang chơi
 function F.heartbeat(off)
-  local body={u=P.username,d=P.display,id=P.userId,st=P.status,bio=P.bio,c=P.country,pb=P.profBanner,pi=P.profIcon,pt=F.compactProfTheme(P.profTheme),sg=P.showGame,mc=P.msgCount or 0,pl=game.PlaceId,gn=S.placeName,jb=game.JobId,off=off and true or nil}
+  local pTheme=F.compactProfTheme(P.profTheme or{})
+  local body={u=P.username,d=P.display,id=P.userId,c=P.country,sg=P.showGame,mc=P.msgCount or 0,pl=game.PlaceId,gn=S.placeName,jb=game.JobId,off=off and true or nil}
+  if(P.status or"")~=""then body.st=P.status end
+  if(P.bio or"")~=""then body.bio=P.bio end
+  if(P.profBanner or"")~=""then body.pb=P.profBanner end
+  if(P.profIcon or"")~=""then body.pi=P.profIcon end
+  if next(pTheme)~=nil then body.pt=pTheme end
   enqueue("other","POST","/api/presence",body,function(data,err)if data and data.ok then F.ingestPresence(data)end end)end
 --- [F.ingestPresence] Cập nhật danh sách người dùng trực tuyến (`S.users`), ảnh Profile, chủ đề riêng, trạng thái Mute và Ban từ dữ liệu phản hồi của máy chủ
 function F.isDmPartner(u)
@@ -3920,14 +4018,26 @@ function F.ingestPresence(data)
   for _,u in ipairs(data.users or{})do
     local lk=tostring(u.u or""):lower()
     if lk~=""then curLive[lk]=true end
-    local rec=S.users[u.u]or{}rec.display,rec.userId,rec.status,rec.bio,rec.country=u.d,tonumber(u.id)or 1,u.st or"",u.bio or"",H.resolveCountry(u.c or"??")
-    rec.profBanner,rec.profIcon=H.assetId(u.pb or"")or"",H.assetId(u.pi or"")or""
-    rec.profTheme=type(u.pt)=="table"and u.pt or{}
     local umc=tonumber(u.mc or u.msgCount)or 0
-    rec.msgCount=max(tonumber(rec.msgCount)or 0,umc)
     if lk==P.username:lower()and umc>(P.msgCount or 0)then P.msgCount=umc;S.isDirty=true end
-    rec.inGame,rec.placeId,rec.gameName,rec.jobId=u.sg==true,tonumber(u.pl)or 0,u.gn or"",u.jb or""rec.age=(tonumber(data.now)or 0)-(tonumber(u.ts)or 0)rec.recvAt=now rec.isScript=true S.users[u.u]=rec
-    rec._allowClear=true;F.rememberProfile(u.u,rec,true);rec._allowClear=nil
+    local incPb=H.assetId(u.pb or"")or""
+    local incPi=H.assetId(u.pi or"")or""
+    local incPt=(type(u.pt)=="table"and next(u.pt)~=nil)and u.pt or nil
+    local stored=F.rememberProfile(u.u,{
+      u=u.u,d=u.d,id=tonumber(u.id)or 1,c=u.c,
+      st=(u.st and u.st~="")and u.st or nil,
+      bio=(u.bio and u.bio~="")and u.bio or nil,
+      pb=incPb~=""and incPb or nil,
+      pi=incPi~=""and incPi or nil,
+      pt=incPt,
+      sg=u.sg==true,mc=umc,pl=tonumber(u.pl)or 0,gn=u.gn or"",jb=u.jb or"",
+    },true)
+    local rec={}
+    if type(stored)=="table"then for k,v in pairs(stored)do rec[k]=v end end
+    rec.age=(tonumber(data.now)or 0)-(tonumber(u.ts)or 0)
+    rec.recvAt=now
+    rec.isScript=true
+    S.users[u.u]=rec
     if lk~=""and lk~=P.username:lower()then
       local isWatch=F.isDmPartner(u.u)or(type(S.friendsMap)=="table"and S.friendsMap[lk]~=nil)
       local canJoin=(tonumber(rec.placeId)or 0)>0 and tostring(rec.jobId or"")~=""and(tonumber(rec.placeId)~=game.PlaceId or tostring(rec.jobId)~=tostring(game.JobId))
@@ -5663,9 +5773,11 @@ function F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
 
   local function persistNow()
     P.profTheme=F.compactProfTheme(pt)
+    P._profCleared=false
     if S.users[P.username]then S.users[P.username].profTheme=P.profTheme end
-    F.rememberProfile(P.username,{u=P.username,display=P.display,userId=LP.UserId,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,_allowClear=true,_fromProfileApi=true},true)
-    S.isDirty=true;F.save(true);F.heartbeat(false);F.pushMyProfileSync()
+    F.rememberProfile(P.username,{u=P.username,display=P.display,userId=LP.UserId,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,_allowClear=true,_localSave=true,_fromProfileApi=true},true)
+    P._profSavedAt=H.now()
+    S.isDirty=true;F.save(true);F.heartbeat(false);F.pushMyProfileSync(nil,true)
     if F.rebuildFeed then pcall(F.rebuildFeed,true)end
   end
 
@@ -6005,11 +6117,18 @@ function F._PROF.buildActivityTab(st,parent)
       local b1=F._PROF.btn(st,r4,T("ban"),{size=u2(0.5,-3,1,0),key="danger",ts=10});hook(b1.MouseButton1Click,function()F.openBan(u)end)
       local b2=F._PROF.btn(st,r4,T("unban"),{size=u2(0.5,-3,1,0),key="ok",ts=10});hook(b2.MouseButton1Click,function()F.openUnban(u)end)
       local r5=row(admC,28,4)
-      local dpBusy=false
+      local dpBusy,dpArm=false,0
       local dpB=F._PROF.btn(st,r5,L=="en"and"Clear Profile Data (Dev/Admin)"or"Xóa Data Profile (Dev/Admin)",{size=u2(1,0,1,0),key="danger",ts=10})
       hook(dpB.MouseButton1Click,function()
         if dpBusy then return end
-        dpBusy=true
+        local nowC=os.clock()
+        if nowC-dpArm>4 then
+          dpArm=nowC
+          dpB.Text=L=="en"and"⚠️ Tap again in 4s to confirm Clear!"or"⚠️ Bấm lần nữa trong 4s để XÁC NHẬN XÓA!"
+          task.delay(4.1,function()if dpB and dpB.Parent and not dpBusy and os.clock()-dpArm>=4 then dpB.Text=L=="en"and"Clear Profile Data (Dev/Admin)"or"Xóa Data Profile (Dev/Admin)"end end)
+          return
+        end
+        dpArm=0;dpBusy=true
         F.toast(L=="en"and"Clearing profile data..."or"Đang xóa Data Profile...",true)
         task.spawn(function()
           local d,err=F.rawRequest("POST","/api/profile",{action="delete",target=u,by=P.username,reason="Sensitive profile data cleared by "..P.username})
@@ -6053,17 +6172,25 @@ function F._PROF.buildActivityTab(st,parent)
       F.toast(L=="en"and"Re-fetching full-res textures..."or"Đang tải lại ảnh độ phân giải gốc...",true)
     end)
     local sr2=row(selfC,28,2)
-    local myDelBusy=false
+    local myDelBusy,myDelArm=false,0
     local clrMyB=F._PROF.btn(st,sr2,L=="en"and"Reset My Cloud Profile Data"or"Xóa sạch Data Profile của tôi",{size=u2(1,0,1,0),key="danger",ts=10})
     hook(clrMyB.MouseButton1Click,function()
       if myDelBusy then return end
-      myDelBusy=true
+      local nowC=os.clock()
+      if nowC-myDelArm>4 then
+        myDelArm=nowC
+        clrMyB.Text=L=="en"and"⚠️ Tap again in 4s to confirm Reset!"or"⚠️ Bấm lần nữa trong 4s để XÁC NHẬN XÓA!"
+        task.delay(4.1,function()if clrMyB and clrMyB.Parent and not myDelBusy and os.clock()-myDelArm>=4 then clrMyB.Text=L=="en"and"Reset My Cloud Profile Data"or"Xóa sạch Data Profile của tôi"end end)
+        return
+      end
+      myDelArm=0;myDelBusy=true
       F.toast(L=="en"and"Clearing your profile data..."or"Đang xóa Data Profile của bạn...",true)
       task.spawn(function()
         local d,err=F.rawRequest("POST","/api/profile",{action="delete",target=P.username,by=P.username,reason="Self reset profile data"})
         myDelBusy=false
         if type(d)=="table"and d.ok then
           P.status="";P.bio="";P.profBanner="";P.profIcon="";P.profTheme={}
+          P._profCleared=true;P._profSavedAt=H.now()
           F.rememberProfile(P.username,{_forceReset=true},true)
           S.isDirty=true;F.save(true);F.heartbeat(false)
           F.toast(L=="en"and"Cleared your profile data!"or"Đã xóa sạch Data Profile của bạn!",true)
@@ -6529,9 +6656,11 @@ function F._PROF.saveProfile(st)
   if f.tTxt then pt.txt=H.safeHex(f.tTxt.Text,nil)or""end
   if f.tBgImg then pt.bgImg=H.assetId(f.tBgImg.Text)or""end
   P.profTheme=F.compactProfTheme(pt)
+  P._profCleared=false
   if S.users[P.username]then S.users[P.username].profTheme=P.profTheme;S.users[P.username].profBanner=P.profBanner;S.users[P.username].profIcon=P.profIcon end
-  F.rememberProfile(P.username,{u=P.username,display=P.display,userId=LP.UserId,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,_allowClear=true,_fromProfileApi=true},true)
-  S.isDirty=true;F.save(true);F.heartbeat(false);F.pushMyProfileSync()
+  F.rememberProfile(P.username,{u=P.username,display=P.display,userId=LP.UserId,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,_allowClear=true,_localSave=true,_fromProfileApi=true},true)
+  P._profSavedAt=H.now()
+  S.isDirty=true;F.save(true);F.heartbeat(false);F.pushMyProfileSync(nil,true)
   if F.rebuildFeed then pcall(F.rebuildFeed,true)end
   F.toast(T("saved_ok"),true);F.closeModal()
 end
@@ -7669,7 +7798,8 @@ function F.importSettings(code)local j=H.trim(code):match("^CBS1:(.+)$")local d=
   P.backgroundOpacity=clamp(tonumber(P.backgroundOpacity)or 0.82,0.15,1)P.backgroundDim=clamp(tonumber(P.backgroundDim)or 0.25,0,0.75)
   P.alpha=clamp(tonumber(P.alpha)or 0,0,0.85)
   P.textSize=clamp(tonumber(P.textSize)or 13,11,20)if d.lang=="en"or d.lang=="vi"then L=d.lang end
-  F.paintTheme();F.layout();S.isDirty=true return true end
+  if F.hasLocalProfileData and F.hasLocalProfileData()then P._profCleared=false;P._profSavedAt=H.now();if NET and NET.alive and F.pushMyProfileSync then F.pushMyProfileSync(nil,true)end end
+  F.paintTheme();F.layout();S.isDirty=true;F.save(true)return true end
 --- [F.setLang] Chuyển đổi ngôn ngữ hiển thị (Tiếng Việt / Tiếng Anh) và cập nhật lại toàn bộ nhãn giao diện ngay lập tức
 function F.setLang(l)
   L=l
@@ -8917,13 +9047,34 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
     end
   elseif t=="profile_del"then
     local pu=tostring(pkt.target or pkt.u or"")
-    if pu~=""then
-      F.rememberProfile(pu,{_forceReset=true},F.isLive(pu))
-      if pu:lower()==me:lower()then
-        P.status="";P.bio="";P.profBanner="";P.profIcon="";P.profTheme={};S.isDirty=true;F.save(true)
+    local actor=tostring(pkt.by or pkt.author or"")
+    local pktTs=tonumber(pkt.ts)or 0
+    if pu~=""and(pkt.manual==true or(actor~=""and actor:lower()==pu:lower()))and not(pkt.manual~=true and actor:lower()=="discordadmin")then
+      local sp=S.profiles and S.profiles[pu:lower()]
+      local spLs=tonumber(sp and sp.lastSeen)or 0
+      if not stale and(spLs==0 or pktTs==0 or pktTs>=spLs)then
+        F.rememberProfile(pu,{_forceReset=true},F.isLive(pu))
+      end
+      if pu:lower()==me:lower()and not stale and pktTs>0 and(not F.hasLocalProfileData()or pktTs>(tonumber(P._profSavedAt)or 0))then
+        P.status="";P.bio="";P.profBanner="";P.profIcon="";P.profTheme={};P._profCleared=true;P._profSavedAt=pktTs;S.isDirty=true;F.save(true)
         F.toast(L=="en"and"Your profile data was cleared by Admin/Dev."or"Data Profile của bạn đã bị Dev/Admin xóa.",true)
       end
       F.updateInfo()
+    end
+  elseif t=="profile_review"then
+    local pu=tostring(pkt.target or pkt.u or"")
+    local actor=tostring(pkt.by or pkt.author or"")
+    local act=tostring(pkt.action or"approve"):lower()
+    if pu~=""then
+      S.profReviews=S.profReviews or{}
+      S.profReviews[pu:lower()]={status=act,by=actor,reason=tostring(pkt.reason or""),ts=tonumber(pkt.ts)or H.now()}
+      if pu:lower()==me:lower()and not stale and(act=="approve"or act=="unblock"or act=="restore")then
+        F.toast(L=="en"and("✅ Your profile was approved/restored by @"..F.disp(actor))or("✅ Hồ sơ của bạn đã được @"..F.disp(actor).." duyệt / giải duyệt!"),true)
+        local hasPt=type(P.profTheme)=="table"and next(P.profTheme)~=nil
+        if(P.bio or"")~=""or(P.status or"")~=""or(P.profBanner or"")~=""or(P.profIcon or"")~=""or hasPt then
+          F.pushMyProfileSync()
+        end
+      end
     end
   elseif t=="req_presence"then if pkt.author~=me and not stale then task.delay(0.4+math.random()*1.4,function()if NET.alive then F.heartbeat(false)end end)end end end
 --- [F.ingest] Tiếp nhận toàn bộ gói dữ liệu trả về từ `/api/feed` (đồng bộ Devs, Presence, Emojis, Scripts, Groups, Roles và danh sách tin nhắn)
@@ -9687,14 +9838,19 @@ function F.save(force)
   end
   local gameChat=(not S.quitting and #gameMsgs>0)and{placeId=curPlace,jobId=tostring(game.JobId or""),savedAt=os.time(),joinTs=S.joinTs,msgs=gameMsgs}or nil
   local d={clientId=P.clientId,lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,
-    profBanner=P.profBanner,profIcon=P.profIcon,profMusic=P.profMusic,profTheme=P.profTheme,autoExecute=P.autoExecute,scriptUrl=P.scriptUrl,msgCount=P.msgCount,
+    profBanner=P.profBanner,profIcon=P.profIcon,profMusic=P.profMusic,profTheme=P.profTheme,_profSavedAt=P._profSavedAt,_profCleared=P._profCleared,autoExecute=P.autoExecute,scriptUrl=P.scriptUrl,msgCount=P.msgCount,
     dmList=P.dmList,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,recentColors=P.recentColors,themeName=P.themeName,custom=P.custom,alpha=P.alpha,
     backgroundMode=P.backgroundMode,backgroundImage=P.backgroundImage,backgroundOpacity=P.backgroundOpacity,backgroundDim=P.backgroundDim,bgFrame=P.bgFrame,
     gradAngle=P.gradAngle,gradMix=P.gradMix,uiRadius=P.uiRadius,fontFamily=P.fontFamily,msgStyle=P.msgStyle,borderGlow=P.borderGlow,savedThemes=P.savedThemes,userNotes=P.userNotes,blockedUsers=P.blockedUsers,savedBookmarks=P.savedBookmarks,drafts=P.drafts,mutedToasts=P.mutedToasts,transLang=P.transLang,myFeedbacks=P.myFeedbacks,mute=P.mute,
     W=P.W,H=P.H,prevW=P.prevW,prevH=P.prevH,winX=P.winX,winY=P.winY,minimized=P.minimized,
     notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,showTyping=P.showTyping,showSeen=P.showSeen,textSize=P.textSize,toastPos=P.toastPos,
     miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,mutes=S.mutes,warns=S.warns,bannedMap=S.bannedMap,punishments=S.punishments,reports=S.reports,reactions=rx,seenBy=seenOut,polls=polls,profiles=profOut,
-    customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,groups=S.groups,savedScripts=P.savedScripts,gameChat=gameChat,generalChat=generalMsgs}local s=H.jenc(d)
+    customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,groups=S.groups,savedScripts=P.savedScripts,gameChat=gameChat,generalChat=generalMsgs}
+  do
+    local pSnap=H.jenc({display=P.display,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profMusic=P.profMusic,profTheme=P.profTheme,_profSavedAt=P._profSavedAt,_profCleared=P._profCleared})
+    if pSnap then pcall(writefile,PROF_FILE,pSnap)end
+  end
+  local s=H.jenc(d)
   if s then pcall(writefile,FILE,s)end
   local flagStr=(P.autoExecute~=false)and"1"or"0"
   if S._savedAutoFlag~=flagStr or not isfile("cb47_autoexec_on.txt")then
@@ -9770,7 +9926,13 @@ local function pollLoop()while NET.alive do
     if S.lastSeq==0 or os.clock()-(S.lastPresPiggy or 0)>40 then
       local pTheme=F.compactProfTheme(P.profTheme or{})
       local ptJson=(type(pTheme)=="table"and next(pTheme)~=nil and H.jenc(pTheme))or""
-      pQuery=string.format("&d=%s&id=%d&st=%s&bio=%s&c=%s&sg=%d&mc=%d&pl=%d&gn=%s&jb=%s&pb=%s&pi=%s&ptb=%s&pta=%s&ptt=%s&ptbi=%s&ptj=%s",H.url(P.display),P.userId,H.url(P.status),H.url(P.bio or""),H.url(P.country),P.showGame and 1 or 0,P.msgCount or 0,P.showGame and game.PlaceId or 0,H.url(P.showGame and S.placeName or""),H.url(P.showGame and game.JobId or""),H.url(P.profBanner or""),H.url(P.profIcon or""),H.url(pTheme.bg or""),H.url(pTheme.acc or""),H.url(pTheme.txt or""),H.url(pTheme.bgImg or""),H.url(ptJson))
+      local qParts={string.format("&d=%s&id=%d&c=%s&sg=%d&mc=%d&pl=%d&gn=%s&jb=%s",H.url(P.display),P.userId,H.url(P.country),P.showGame and 1 or 0,P.msgCount or 0,P.showGame and game.PlaceId or 0,H.url(P.showGame and S.placeName or""),H.url(P.showGame and game.JobId or""))}
+      if(P.status or"")~=""then qParts[#qParts+1]="&st="..H.url(P.status)end
+      if(P.bio or"")~=""then qParts[#qParts+1]="&bio="..H.url(P.bio)end
+      if(P.profBanner or"")~=""then qParts[#qParts+1]="&pb="..H.url(P.profBanner)end
+      if(P.profIcon or"")~=""then qParts[#qParts+1]="&pi="..H.url(P.profIcon)end
+      if ptJson~=""then qParts[#qParts+1]="&ptj="..H.url(ptJson)end
+      pQuery=tconcat(qParts)
       S.lastPresPiggy=os.clock()
     end
     local path=string.format("/api/feed?since=%s&limit=%d&rs=%s&ss=%s&es=%s&as=%s&ms=%s&vws=%s&gs=%s&fbs=%s&u=%s&gpl=%d&gjb=%s&wait=%d%s",H.num(since),S.lastSeq==0 and CFG.HISTORY or 100,H.num(rs),H.num(S.scriptSeq or 0),H.num(S.emojiSeq or 0),H.num(S.announceSeq or 0),H.num(S.modSeq or 0),H.num(S.seenSeq or 0),H.num(S.groupSeq or 0),H.num(S.feedbackSeq or 0),H.url(P.username),tonumber(game.PlaceId)or 0,H.url(tostring(game.JobId or"")),wait,pQuery)local t0=os.clock()
@@ -9853,7 +10015,7 @@ function F.refreshSame()if not P.sameUser then
 --- [F.afterBoot] Hoàn tất quá trình khởi động sau khi nạp xong dữ liệu lần đầu từ máy chủ
 function F.afterBoot()if S.booted then return end
   S.booted=true F.armAutoTeleport()F.layoutTabs();F.selectChannel(S.chan)F.toast(T("ready"),false)F.emit("ready")
-  task.delay(3,function()if not NET.alive then return end local hasPt=type(P.profTheme)=="table"and next(P.profTheme)~=nil if(P.bio or"")~=""or(P.status or"")~=""or(P.profBanner or"")~=""or(P.profIcon or"")~=""or hasPt then F.pushMyProfileSync()end end)
+  task.delay(2,function()if NET.alive and F.restoreOrSyncMyProfileOnBoot then F.restoreOrSyncMyProfileOnBoot()end end)
   task.delay(5,function()if NET.alive then F.loadRobloxFriends()end end)end
 --- [F.stop] Dừng toàn bộ vòng lặp mạng, lưu dữ liệu lần cuối, ngắt mọi kết nối sự kiện và xóa giao diện Chat Bridge
 function F.stop()if S.stopped then return end
