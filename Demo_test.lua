@@ -1,5 +1,5 @@
 -- =============================================================================
--- CHAT BRIDGE CLIENT SCRIPT CHO ROBLOX (CB.lua - Phiên bản v46.0)
+-- CHAT BRIDGE CLIENT SCRIPT CHO ROBLOX (CB.lua - Phiên bản v47.0)
 -- =============================================================================
 -- Kiến trúc tổng thể gồm 6 bảng trung tâm:
 --   1. CFG : Cấu hình hằng số hệ thống, danh sách máy chủ Proxy, Emoji & Shortcode.
@@ -13,26 +13,27 @@
 -- =============================================================================
 -- 1. KHỞI TẠO MÔI TRƯỜNG & DỌN DẸP PHIÊN BẢN CŨ
 -- =============================================================================
-local ENV=(getgenv and getgenv())or _G for v=46,37,-1 do local fn=ENV["CB"..v.."_STOP"]if type(fn)=="function"then pcall(fn)end end
-ENV.__CB46_TP_RAN=nil ENV.__CB45_TP_RAN=nil
+local ENV=(getgenv and getgenv())or _G for v=47,37,-1 do local fn=ENV["CB"..v.."_STOP"]if type(fn)=="function"then pcall(fn)end end
+ENV.__CB47_TP_RAN=nil ENV.__CB46_TP_RAN=nil ENV.__CB45_TP_RAN=nil
 if game and game.IsLoaded and not game:IsLoaded()and game.Loaded then pcall(function()game.Loaded:Wait()end)end
 local CFG={
   -- Khởi tạo bảng cấu hình trung tâm CFG (URL Proxy chính, danh sách Proxy dự phòng, ngưỡng thời gian và giới hạn)
-  SCRIPT_URL=(type(ENV.CB46_SCRIPT_URL)=="string"and ENV.CB46_SCRIPT_URL)or(type(ENV.CB45_SCRIPT_URL)=="string"and ENV.CB45_SCRIPT_URL)or(type(ENV.CB44_SCRIPT_URL)=="string"and ENV.CB44_SCRIPT_URL)or(type(ENV.CB43_SCRIPT_URL)=="string"and ENV.CB43_SCRIPT_URL)or(type(ENV.CB42_SCRIPT_URL)=="string"and ENV.CB42_SCRIPT_URL)or"",
+  SCRIPT_URL=(type(ENV.CB47_SCRIPT_URL)=="string"and ENV.CB47_SCRIPT_URL)or(type(ENV.CB46_SCRIPT_URL)=="string"and ENV.CB46_SCRIPT_URL)or(type(ENV.CB45_SCRIPT_URL)=="string"and ENV.CB45_SCRIPT_URL)or(type(ENV.CB44_SCRIPT_URL)=="string"and ENV.CB44_SCRIPT_URL)or(type(ENV.CB43_SCRIPT_URL)=="string"and ENV.CB43_SCRIPT_URL)or(type(ENV.CB42_SCRIPT_URL)=="string"and ENV.CB42_SCRIPT_URL)or"",
   -- BOSS_URL: Server Boss (Render.com) chỉ dùng để quản lý các server & host Bot Discord 24/7 (không chứa dữ liệu player)
-  BOSS_URL=(type(ENV.CB46_BOSS_URL)=="string"and ENV.CB46_BOSS_URL~=""and ENV.CB46_BOSS_URL)or(type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com",
-  -- PROXY & PROXIES: 4 Server Backup (Cloudflare Workers) — Nơi player trò chuyện và mọi server liên kết Mesh với nhau
-  PROXY=(type(ENV.CB46_BACKUP_URL)=="string"and ENV.CB46_BACKUP_URL~=""and ENV.CB46_BACKUP_URL)or(type(ENV.CB45_BACKUP_URL)=="string"and ENV.CB45_BACKUP_URL~=""and ENV.CB45_BACKUP_URL)or"https://cb-roblox.phwphat5555.workers.dev",
+  BOSS_URL=(type(ENV.CB47_BOSS_URL)=="string"and ENV.CB47_BOSS_URL~=""and ENV.CB47_BOSS_URL)or(type(ENV.CB46_BOSS_URL)=="string"and ENV.CB46_BOSS_URL~=""and ENV.CB46_BOSS_URL)or(type(ENV.CB45_BOSS_URL)=="string"and ENV.CB45_BOSS_URL~=""and ENV.CB45_BOSS_URL)or"https://cb45-boss.onrender.com",
+  -- PROXY & PROXIES: 5 Server Backup (Cloudflare Workers) — Nơi player trò chuyện và mọi server liên kết Mesh với nhau
+  PROXY=(type(ENV.CB47_BACKUP_URL)=="string"and ENV.CB47_BACKUP_URL~=""and ENV.CB47_BACKUP_URL)or(type(ENV.CB46_BACKUP_URL)=="string"and ENV.CB46_BACKUP_URL~=""and ENV.CB46_BACKUP_URL)or(type(ENV.CB45_BACKUP_URL)=="string"and ENV.CB45_BACKUP_URL~=""and ENV.CB45_BACKUP_URL)or"https://cb-roblox.phwphat5555.workers.dev",
   PROXIES={
     "https://cb-roblox.phwphat5555.workers.dev",       -- [BACKUP #1 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
     "https://backup.phwphat8888.workers.dev",          -- [BACKUP #2 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
     "https://backupv2.sillydumb111.workers.dev",       -- [BACKUP #3 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
     "https://backupv3.just-a-blur-000.workers.dev",    -- [BACKUP #4 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
+    "https://backup5.dumbnguyen5555.workers.dev",      -- [BACKUP #5 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
   },DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},
-  VERSION="46.0",SUGGEST_WEBHOOK="https://discord.com/api/webhooks/1568617557253034088/0KYh9iHsjtuYEnR_rS5H-uv9q--V45SXJ0OEQDeSDMAemr9_LOAuqJkeY8qatxd0VDZl",
-  BUG_WEBHOOK="https://discord.com/api/webhooks/1568617762371412090/bh_C8jdRsA91WKguiKryM48BpXX1cC7jOAT5C0RenJ9NnlTUnkf8RBtYZF4kCpru29sz",
+  VERSION="47.0",SUGGEST_WEBHOOK="",
+  BUG_WEBHOOK="",
   LONGPOLL=12,POLL_FAST=0.35,POLL_IDLE=1.5,POLL_AFK=3.5,LP_RETRY=30,HEARTBEAT=90,PRESENCE_TIMEOUT=150,SWEEP=12,OVERLAP_MS=15000,HISTORY=60,MAX_MESSAGES=250,MAX_RENDER=50,MAX_CONTENT=800,
-  TYPING_TIMEOUT=4,TYPING_THROTTLE=1.5,REACT_THRO=0.4,GROUP_SECS=300,MENTION_SOUND="rbxassetid://6042053626",MIN_W=60,MIN_H=60,SEEN_MAX=1500,SAVE_THROTTLE=3,GAME_CACHE_TTL=7200,}for v=46,43,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end for v=41,19,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end
+  TYPING_TIMEOUT=4,TYPING_THROTTLE=1.5,REACT_THRO=0.4,GROUP_SECS=300,MENTION_SOUND="rbxassetid://6042053626",MIN_W=60,MIN_H=60,SEEN_MAX=1500,SAVE_THROTTLE=3,GAME_CACHE_TTL=7200,}for v=47,43,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end for v=41,19,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end
 
 -- =============================================================================
 -- 2. DANH SÁCH CẢM XÚC NHANH, SHORTCODE & KHO EMOJI UNICODE MẶC ĐỊNH
@@ -49,7 +50,7 @@ CFG.REACT={"👍","😂","🔥","💀","😭","👀","🙏","💔","😎","💢"
 -- 3. KHỞI TẠO DỊCH VỤ ROBLOX (SERVICES) & NHẬN DIỆN EXECUTOR HTTP
 -- =============================================================================
 local Players=game:GetService("Players")local UIS=game:GetService("UserInputService")local HttpService=game:GetService("HttpService")local TeleportService=game:GetService("TeleportService")
-local SoundService=game:GetService("SoundService")local ContentProvider=game:GetService("ContentProvider")local TextService=game:GetService("TextService")local TweenService=game:GetService("TweenService")local Debris=game:GetService("Debris")
+local SoundService=game:GetService("SoundService")local ContentProvider=game:GetService("ContentProvider")local TextService=game:GetService("TextService")local TweenService=game:GetService("TweenService")local Debris=game:GetService("Debris")local RunService=game:GetService("RunService")
 local LP=Players.LocalPlayer
 if not LP then
   pcall(function()
@@ -64,7 +65,7 @@ local function viewNow()local cam=workspace.CurrentCamera
   if cam and cam.ViewportSize.X>1 then return cam.ViewportSize end return Vector2.new(1280,720)end
 local httpFn=(type(syn)=="table"and syn.request)or(type(request)=="function"and request)
 or(type(http_request)=="function"and http_request)or(type(http)=="table"and http.request)or(type(fluxus)=="table"and fluxus.request)or(type(xeno)=="table"and xeno.request)or(type(delta)=="table"and delta.request)
-if not httpFn then warn("[CB46] Executor does not support HTTP / Executor không có HTTP.")return end
+if not httpFn then warn("[CB47] Executor does not support HTTP / Executor không có HTTP.")return end
 local EXEC=IS_MOBILE and"Delta"or"Xeno"pcall(function()if identifyexecutor then EXEC=tostring(identifyexecutor())end end)
 
 -- =============================================================================
@@ -299,21 +300,21 @@ function F.safeTap(id,fn,delay)delay=delay or 0.28 local now=os.clock()if S.tapL
 -- 7. ĐỌC/GHI FILE LƯU TRỮ CỤC BỘ & TỪ ĐIỂN ĐA NGÔN NGỮ (VIỆT / ANH)
 -- =============================================================================
 local hasIO=type(writefile)=="function"and type(readfile)=="function"and type(isfile)=="function"
-local FILE="cb46_"..tostring(LP.UserId)..".json"
-local LAYOUT_FILE="cb46_layout.json"
-local REJOIN_FILE="cb46_rejoin_state.json"
---- [loadSave] Đọc dữ liệu cài đặt, vị trí cửa sổ và trạng thái Rejoin từ file JSON cục bộ (tự động kế thừa từ bản v45 trở xuống)
+local FILE="cb47_"..tostring(LP.UserId)..".json"
+local LAYOUT_FILE="cb47_layout.json"
+local REJOIN_FILE="cb47_rejoin_state.json"
+--- [loadSave] Đọc dữ liệu cài đặt, vị trí cửa sổ và trạng thái Rejoin từ file JSON cục bộ (tự động kế thừa từ bản v46 trở xuống)
 local function loadSave()
   local out={}
   if hasIO then
-    local names={FILE}for v=45,30,-1 do tinsert(names,"cb"..v.."_"..tostring(LP.UserId)..".json")end
+    local names={FILE}for v=46,30,-1 do tinsert(names,"cb"..v.."_"..tostring(LP.UserId)..".json")end
     for _,f in ipairs(names)do local ok,raw=pcall(function()if isfile(f)then return readfile(f)end end)
       if ok and raw then local d=H.jdec(raw)if type(d)=="table"then out=d;break end end end
-    pcall(function()for _,lf in ipairs({LAYOUT_FILE,"cb45_layout.json","cb44_layout.json","cb42_layout.json"})do if isfile(lf)then local ly=H.jdec(readfile(lf))if type(ly)=="table"then
+    pcall(function()for _,lf in ipairs({LAYOUT_FILE,"cb46_layout.json","cb45_layout.json","cb44_layout.json","cb42_layout.json"})do if isfile(lf)then local ly=H.jdec(readfile(lf))if type(ly)=="table"then
           for _,k in ipairs({"winX","winY","W","H","prevW","prevH","miniX","miniY","minimized"})do if ly[k]~=nil then out[k]=ly[k]end end return end end end end)
-    pcall(function()for _,rf in ipairs({REJOIN_FILE,"cb45_rejoin_state.json","cb44_rejoin_state.json","cb42_rejoin_state.json"})do if isfile(rf)then local rj=H.jdec(readfile(rf))if type(rj)=="table"then out._rejoinState=rj;return end end end end)
+    pcall(function()for _,rf in ipairs({REJOIN_FILE,"cb46_rejoin_state.json","cb45_rejoin_state.json","cb44_rejoin_state.json","cb42_rejoin_state.json"})do if isfile(rf)then local rj=H.jdec(readfile(rf))if type(rj)=="table"then out._rejoinState=rj;return end end end end)
   end
-  local envLayout=type(ENV.CB46_LAYOUT)=="table"and ENV.CB46_LAYOUT or(type(ENV.CB45_LAYOUT)=="table"and ENV.CB45_LAYOUT or(type(ENV.CB44_LAYOUT)=="table"and ENV.CB44_LAYOUT or(type(ENV.CB43_LAYOUT)=="table"and ENV.CB43_LAYOUT or ENV.CB42_LAYOUT)))
+  local envLayout=type(ENV.CB47_LAYOUT)=="table"and ENV.CB47_LAYOUT or(type(ENV.CB46_LAYOUT)=="table"and ENV.CB46_LAYOUT or(type(ENV.CB45_LAYOUT)=="table"and ENV.CB45_LAYOUT or(type(ENV.CB44_LAYOUT)=="table"and ENV.CB44_LAYOUT or(type(ENV.CB43_LAYOUT)=="table"and ENV.CB43_LAYOUT or ENV.CB42_LAYOUT))))
   if type(envLayout)=="table"then
     for _,k in ipairs({"winX","winY","W","H","prevW","prevH","miniX","miniY","minimized"})do if envLayout[k]~=nil then out[k]=envLayout[k]end end
   end
@@ -518,6 +519,16 @@ local TXT={title={"Chat Bridge","Chat Bridge"},send={"Gửi","Send"},
   fb_st_replied={"💬 Đã phản hồi","💬 Replied"},
   c_suggest={"Mở hộp thoại Góp ý tính năng (Suggestions)","Open Feature Suggestions dialog"},
   c_bug={"Mở hộp thoại Báo cáo lỗi (Report Bugs)","Open Bug Report dialog"},
+  bookmark_add={"Lưu tin nhắn","Save Bookmark"},bookmark_rem={"Bỏ lưu tin nhắn","Remove Bookmark"},
+  bookmarks_title={"Kho Tin Nhắn Đã Lưu","Saved Bookmarks"},bookmark_empty={"Chưa có tin nhắn nào được lưu. Bấm '…' -> 'Lưu tin nhắn' ở bất kỳ tin nhắn nào.","No saved bookmarks yet. Tap '…' -> 'Save Bookmark' on any message."},
+  translate_btn={"Dịch tin nhắn","Translate Message"},translate_by={"Được dịch bởi Roblox","Translated by Roblox"},translate_fail={"Không thể dịch tin nhắn này.","Unable to translate message."},
+  sound_play={"Nghe","Play"},sound_stop={"Dừng","Stop"},
+  theme_share={"Chia sẻ Theme lên Chat","Share Theme to Chat"},theme_try={"Thử ngay","Try Now"},theme_undo={"Hoàn tác Theme","Undo Theme"},
+  prof_share={"Chia sẻ Danh thiếp","Share Card"},
+  script_edit={"Sửa Script","Edit Script"},script_update_ok={"Đã cập nhật Script!","Script updated!"},script_changelog={"Ghi chú cập nhật (Changelog)","Update Notes (Changelog)"},
+  chan_toast_on={"Đã bật thông báo nổi kênh ","Toasts enabled for "},chan_toast_off={"Đã tắt thông báo nổi kênh ","Muted toasts for "},
+  friend_online={"vừa online!","just came online!"},draft_tag={"[Nháp]","[Draft]"},
+  c_saved={"Mở Kho tin nhắn đã lưu (Bookmarks)","Open Saved Bookmarks"},c_sound={"Phát thử âm thanh Roblox ([sound:ID])","Play Roblox Sound ([sound:ID])"},c_card={"Chia sẻ thẻ danh thiếp hồ sơ vào chat","Share profile card into chat"},c_sharetheme={"Gửi thẻ giao diện hiện tại lên chat","Share current theme card to chat"},
 }local L=saved.lang=="en"and"en"or"vi"
 --- [T] Hàm dịch đa ngôn ngữ: trả về chuỗi văn bản theo ngôn ngữ hiện tại (Tiếng Việt = 1, Tiếng Anh = 2)
 local function T(k)local v=TXT[k]if not v then return k end return v[L=="en"and 2 or 1]end
@@ -652,6 +663,10 @@ do local bf=type(saved.bgFrame)=="table"and saved.bgFrame or{}
   }
 end
 P.savedThemes=type(saved.savedThemes)=="table"and saved.savedThemes or{}
+P.savedBookmarks=type(saved.savedBookmarks)=="table"and saved.savedBookmarks or{}
+P.drafts=type(saved.drafts)=="table"and saved.drafts or{}
+P.mutedToasts=type(saved.mutedToasts)=="table"and saved.mutedToasts or{}
+P.transLang=tostring(saved.transLang or"")
 P.myFeedbacks=type(saved.myFeedbacks)=="table"and saved.myFeedbacks or{}
 P.H=tonumber(saved.H or saved.height)or(IS_MOBILE and 380 or 320)P.notify=saved.notify~=false P.sound=saved.sound~=false P.bubble=saved.bubble~=false P.safeEmoji=saved.safeEmoji~=false P.showGame=saved.showGame~=false
 P.preview=saved.preview~=false P.compact=saved.compact==true P.sameUser=saved.sameUser~=false P.group=saved.group~=false P.showTyping=saved.showTyping~=false P.showSeen=saved.showSeen~=false S.viewAs=false S.tapLock={}S.sameBb={}P.textSize=clamp(tonumber(saved.textSize)or 13,11,20)
@@ -659,13 +674,16 @@ P.preview=saved.preview~=false P.compact=saved.compact==true P.sameUser=saved.sa
 P.toastPos=saved.toastPos or"tr"P.miniX,P.miniY=tonumber(saved.miniX),tonumber(saved.miniY)
 P.winX,P.winY=tonumber(saved.winX),tonumber(saved.winY)P.minimized=saved.minimized==true
 P.msgCount=max(0,floor(tonumber(saved.msgCount)or 0))
-P.scriptUrl=(type(saved.scriptUrl)=="string"and saved.scriptUrl~=""and H.trim(saved.scriptUrl))or H.trim(tostring(ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or ENV.CB44_SCRIPT_URL or""))
-if P.scriptUrl==""and hasIO then for _,uf in ipairs({"cb46_script_url.txt","cb45_script_url.txt"})do local okU,uRaw=pcall(readfile,uf)if okU and type(uRaw)=="string"then uRaw=H.trim(uRaw)if uRaw:match("^https?://")then P.scriptUrl=uRaw;break end end end end
+P.scriptUrl=(type(saved.scriptUrl)=="string"and saved.scriptUrl~=""and H.trim(saved.scriptUrl))or H.trim(tostring(ENV.CB47_SCRIPT_URL or ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or ENV.CB44_SCRIPT_URL or""))
+if P.scriptUrl==""and hasIO then for _,uf in ipairs({"cb47_script_url.txt","cb46_script_url.txt","cb45_script_url.txt"})do local okU,uRaw=pcall(readfile,uf)if okU and type(uRaw)=="string"then uRaw=H.trim(uRaw)if uRaw:match("^https?://")then P.scriptUrl=uRaw;break end end end end
 if P.scriptUrl==""then P.scriptUrl=H.trim(tostring(CFG.SCRIPT_URL or""))end
-if P.scriptUrl~=""then ENV.CB46_SCRIPT_URL=P.scriptUrl ENV.CB45_SCRIPT_URL=P.scriptUrl end
+if P.scriptUrl~=""then ENV.CB47_SCRIPT_URL=P.scriptUrl ENV.CB46_SCRIPT_URL=P.scriptUrl ENV.CB45_SCRIPT_URL=P.scriptUrl end
+S.soundNameCache={};S.soundBtns={};S.transCache={};S.prevLiveFriends={};S.friendToastCd={};S.bootClock=os.clock()
 S.prevW=tonumber(saved.prevW)or((P.W>=240 and P.W)or(IS_MOBILE and 330 or 400))
 S.prevH=tonumber(saved.prevH)or((P.H>=220 and P.H)or(IS_MOBILE and 380 or 320))
-S.users,S.profiles,S.profFetchedAt,S.uidCache,S.msgs,S.order,S.frames,S.frameQ={},{},{},{},{},{},{},{}S.polls=type(saved.polls)=="table"and saved.polls or{}
+S.users,S.profiles,S.profFetchedAt,S.profFullLoaded,S.uidCache,S.msgs,S.order,S.frames,S.frameQ={},{},{},{},{},{},{},{},{}S.polls=type(saved.polls)=="table"and saved.polls or{}
+S.friendsList,S.friendsMap,S.friendsLoadedAt,S.friendsLoading,S.knownUsersFetchedAt,S.knownUsersLoading={},{},0,false,0,false
+if type(saved.profiles)=="table"then for k,v in pairs(saved.profiles)do if type(v)=="table"then local kn=tostring(v.u or k)if kn~=""and kn~="?"then S.profiles[kn:lower()]=v end end end end
 S.reactions=type(saved.reactions)=="table"and saved.reactions or{}S.seen,S.seenOld,S.seenN={},{},0 S.typing,S.unread,S.dmUnread={},{game=0,general=0,announce=0,punish=0,scripts=0,staff=0},{}
 S.seenBy=type(saved.seenBy)=="table"and saved.seenBy or{}S.seenSeq=0 S.mySentSeen={}S.statusLabels={}S.wasTyping=false
 S.roles=type(saved.roles)=="table"and saved.roles or{}S.sharedEmojis=type(saved.sharedEmojis)=="table"and saved.sharedEmojis or{}S.emojiSeq=0 S.scripts=type(saved.scripts)=="table"and saved.scripts or{}S.scriptSeq=0
@@ -708,7 +726,7 @@ local PROXY_POOL={}for _,u in ipairs(CFG.PROXIES or{CFG.PROXY})do u=H.trim(tostr
   if u:match("^https?://")and not H.isBossUrl(u)then PROXY_POOL[#PROXY_POOL+1]=u end end
 if#PROXY_POOL==0 then local fb=H.trim(tostring(CFG.PROXY or"")):gsub("/+$","")if fb:match("^https?://")then PROXY_POOL[1]=fb end end
 if PROXY_POOL[1]then CFG.PROXY=PROXY_POOL[1]end
---- [H.proxyRoleLabel] Trả về nhãn hiển thị [BACKUP - CLOUDFLARE #1..4] hoặc [BOSS - BOT DISCORD 24/7]
+--- [H.proxyRoleLabel] Trả về nhãn hiển thị [BACKUP - CLOUDFLARE #1..5] hoặc [BOSS - BOT DISCORD 24/7]
 function H.proxyRoleLabel(u,idx)
   if H.isBossUrl(u)then
     return "[BOSS - BOT DISCORD 24/7]"
@@ -716,7 +734,7 @@ function H.proxyRoleLabel(u,idx)
   local bIdx=tonumber(idx)or 1
   return string.format("[BACKUP - CLOUDFLARE #%d]",bIdx)
 end
---- [autoFailoverProxy] Tự động chuyển tuần tự #1 -> #2 -> #3 -> #4 sang Backup Cloudflare tiếp theo khi kết nối lỗi
+--- [autoFailoverProxy] Tự động chuyển tuần tự #1 -> #2 -> #3 -> #4 -> #5 sang Backup Cloudflare tiếp theo khi kết nối lỗi
 local function autoFailoverProxy()if#PROXY_POOL<=1 then return CFG.PROXY end
   local now=os.clock()
   NET.cooldown[CFG.PROXY]=now+180
@@ -729,6 +747,7 @@ local function autoFailoverProxy()if#PROXY_POOL<=1 then return CFG.PROXY end
       S.forceRoles=true
       S.scriptSeq=0
       S.lastSeq=0
+      S.seenSeq=0
       return cand
     end
   end
@@ -737,6 +756,7 @@ local function autoFailoverProxy()if#PROXY_POOL<=1 then return CFG.PROXY end
   S.forceRoles=true
   S.scriptSeq=0
   S.lastSeq=0
+  S.seenSeq=0
   return CFG.PROXY
 end
 --- [isQuotaLimitReached] Kiểm tra phản hồi HTTP có phải lỗi hết hạn mức Cloudflare Workers (Error 1027 / limit exceeded) hay không
@@ -788,6 +808,8 @@ local function themed(o,fn)reg[#reg+1]={o=o,fn=fn};pcall(fn,o)end
 local function th(o,prop,key,isBg)reg[#reg+1]={o=o,p=prop,k=key,a=isBg}pcall(function()o[prop]=TH[key]end)if isBg then pcall(function()o.BackgroundTransparency=P.alpha end)end end
 --- [F.pruneThemeReg] Dọn dẹp các Instance đã bị hủy (Destroy) khỏi danh sách đăng ký Theme `reg`
 function F.pruneThemeReg()local keep={}for _,r in ipairs(reg)do if r.o and r.o.Parent then keep[#keep+1]=r end end reg=keep end
+--- [F.unthemeTree] Gỡ đăng ký Theme App khỏi cây UI riêng (dùng cho Profile người khác để tránh dính viền/icon Theme cá nhân)
+function F.unthemeTree(root)if not root then return end local keep={}for _,r in ipairs(reg)do if r.o and r.o.Parent and not(r.o==root or r.o:IsDescendantOf(root))then keep[#keep+1]=r end end reg=keep end
 --- [F.computeTheme] Tính toán bảng màu `TH` hiện hành kèm các điểm dừng Gradient 3 màu (`g1`, `g2`, `g3`), Nút bấm (`btnBg`), Ô nhập (`inputBg`) và Thẻ (`cardBg`)
 function F.computeTheme()
   local fm=FONT_MAP[P.fontFamily]or FONT_MAP.gotham
@@ -1174,6 +1196,9 @@ function F.compactProfTheme(pt)
   if pt.avDec and pt.avDec~="none"and pt.avDec~=""then out.avDec=pt.avDec end
   if pt.nEff and pt.nEff~="solid"and pt.nEff~=""then out.nEff=pt.nEff end
   if type(pt.tag)=="string"and H.trim(pt.tag)~=""then out.tag=H.clip(H.trim(pt.tag),36)end
+  if type(pt.abLbl)=="string"and H.trim(pt.abLbl)~=""then out.abLbl=H.clip(H.trim(pt.abLbl),40)end
+  if type(pt.hiTxt)=="string"and H.trim(pt.hiTxt)~=""then out.hiTxt=H.clip(H.trim(pt.hiTxt),70)end
+  if type(pt.music)=="string"and H.trim(pt.music)~=""then out.music=H.clip(H.trim(pt.music),160)end
   if type(pt.pinSc)=="string"and pt.pinSc~=""then out.pinSc=pt.pinSc:gsub("[^%w_%-]",""):sub(1,48)end
   if type(pt.wOrder)=="string"and pt.wOrder~=""and pt.wOrder~="bio,scripts,game,stats"then out.wOrder=pt.wOrder:sub(1,40)end
   return out
@@ -1376,9 +1401,9 @@ end
 local guiParent pcall(function()if gethui then guiParent=gethui()end end)if not guiParent then pcall(function()guiParent=game:GetService("CoreGui")end)end
 if not guiParent then guiParent=LP:WaitForChild("PlayerGui")end
 pcall(function()for _,c in ipairs(guiParent:GetChildren())do
-    if type(c.Name)=="string"and c.Name:match("^CB%d%d_GUI$")then local v=tonumber(c.Name:sub(3,4))if v and v>=37 and v<=46 then c:Destroy()end end end end)
--- Khởi tạo ScreenGui 'CB46_GUI' và nút thu nhỏ nổi (U.mini) kèm huy hiệu đếm tin chưa đọc
-U.gui=mk("ScreenGui",{Name="CB46_GUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,IgnoreGuiInset=true,DisplayOrder=99999})pcall(function()if syn and syn.protect_gui then syn.protect_gui(U.gui)end end)
+    if type(c.Name)=="string"and c.Name:match("^CB%d%d_GUI$")then local v=tonumber(c.Name:sub(3,4))if v and v>=37 and v<=47 then c:Destroy()end end end end)
+-- Khởi tạo ScreenGui 'CB47_GUI' và nút thu nhỏ nổi (U.mini) kèm huy hiệu đếm tin chưa đọc
+U.gui=mk("ScreenGui",{Name="CB47_GUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,IgnoreGuiInset=true,DisplayOrder=99999})pcall(function()if syn and syn.protect_gui then syn.protect_gui(U.gui)end end)
 U.gui.Parent=guiParent U.mini=mk("TextButton",{Size=uo(42,42),Position=uo(P.miniX or 12,P.miniY or 80),Text="",TextSize=20,Font=fGB,BorderSizePixel=0,Visible=P.minimized==true,ZIndex=50},U.gui)
 th(U.mini,"BackgroundColor3","accent");corner(U.mini,21);stroke(U.mini,"btnBorder",1.5,0.25)
 do local mi=F.lucide(U.mini,"msgCircle",20,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=c3(1,1,1),themed=false,z=51})
@@ -1460,8 +1485,19 @@ U.infoBar=mk("Frame",{Size=u2(1,-12,0,18),Position=uo(6,66),BorderSizePixel=0,ZI
 -- Khởi tạo thanh thông tin trạng thái kênh (U.infoBar), ô tìm kiếm (U.searchBox) và khung cuộn tin nhắn (U.scroll)
 themed(U.infoBar,function(o)o.BackgroundColor3=TH.bg2;o.BackgroundTransparency=F.surfaceAlpha("bar")end);corner(U.infoBar,6);stroke(U.infoBar,"border",1,0.45)
 U.infoDot=mk("Frame",{Size=uo(6,6),Position=uo(7,6),BorderSizePixel=0,ZIndex=7},U.infoBar)corner(U.infoDot,3)themed(U.infoDot,function(d)d.BackgroundColor3=(S.pollFail<2 and TH.ok)or TH.danger end)
-U.infoLbl=lab(U.infoBar,"",{size=u2(1,-82,1,0),pos=uo(18,0),ts=10,key="muted",trunc=true})U.infoLbl.ZIndex=7
-U.infoFrameBtn=mk("TextButton",{Size=uo(56,14),Position=u2(1,-58,0,2),Text=" Frame",Font=fGB,TextSize=9,BorderSizePixel=0,AutoButtonColor=true,Visible=false,ZIndex=8},U.infoBar)
+U.infoLbl=lab(U.infoBar,"",{size=u2(1,-108,1,0),pos=uo(18,0),ts=10,key="muted",trunc=true})U.infoLbl.ZIndex=7
+U.muteToastBtn=mk("TextButton",{Size=uo(24,14),Position=u2(1,-26,0,2),Text="🔔",Font=fGB,TextSize=9,BorderSizePixel=0,AutoButtonColor=true,ZIndex=8},U.infoBar)
+th(U.muteToastBtn,"BackgroundColor3","btnBg");th(U.muteToastBtn,"TextColor3","ok");corner(U.muteToastBtn,4);stroke(U.muteToastBtn,"border",1,0.45)
+hook(U.muteToastBtn.MouseButton1Click,function()
+  local ck=F.chanKey(S.chan)
+  P.mutedToasts=type(P.mutedToasts)=="table"and P.mutedToasts or{}
+  local nextMute=not(P.mutedToasts[ck]==true)
+  P.mutedToasts[ck]=nextMute and true or nil
+  S.isDirty=true;F.save(true)
+  F.updateInfo()
+  F.toast((nextMute and T("chan_toast_off")or T("chan_toast_on"))..F.chanName(S.chan),true)
+end)
+U.infoFrameBtn=mk("TextButton",{Size=uo(56,14),Position=u2(1,-86,0,2),Text=" Frame",Font=fGB,TextSize=9,BorderSizePixel=0,AutoButtonColor=true,Visible=false,ZIndex=8},U.infoBar)
 th(U.infoFrameBtn,"BackgroundColor3","btnBg");th(U.infoFrameBtn,"TextColor3","text");corner(U.infoFrameBtn,4);stroke(U.infoFrameBtn,"accent",1,0.4)
 F.lucide(U.infoFrameBtn,"crop",10,{pos=uo(4,2),key="accent",z=9})
 hook(U.infoFrameBtn.MouseButton1Click,function()
@@ -1593,54 +1629,99 @@ function F.layout()local v=viewNow()P.W=clamp(P.W,CFG.MIN_W,max(CFG.MIN_W,v.X-8)
   U.scroll.Size=u2(1,-12,0,max(0,bottomEdge-top))U.jump.Position=uo(max(6,W-68),max(top,bottomEdge-30))local tw=min(250,v.X-16)U.toasts.Size=uo(tw,300)local pos=P.toastPos
   local tx=(pos=="tl"or pos=="bl")and 8 or(v.X-tw-8)local ty=(pos=="tl"or pos=="tr")and 8 or(v.Y-308)U.toasts.Position=uo(tx,ty)
   U.toasts:FindFirstChildOfClass("UIListLayout").VerticalAlignment=(pos=="bl"or pos=="br")and Enum.VerticalAlignment.Bottom or Enum.VerticalAlignment.Top if F.paintTabs then pcall(F.paintTabs)end if F.applyMainWallpaper then pcall(F.applyMainWallpaper,false)end end
---- [F.toast] Hiển thị thông báo nổi (Toast Notification) ở góc màn hình và tự động ẩn sau 4 giây
-function F.toast(text,force,fn)if not force and not P.notify then return end
+--- [F.isToastMuted] Kiểm tra xem thông báo nổi (U.toasts) cho kênh `chan` có đang bị tắt riêng hay không
+function F.isToastMuted(chan)
+  if type(P.mutedToasts)~="table"or not chan then return false end
+  local ck=F.chanKey and F.chanKey(chan)or tostring(chan)
+  return P.mutedToasts[ck]==true or P.mutedToasts[tostring(chan)]==true
+end
+--- [F.toast] Hiển thị thông báo nổi (Toast Notification) ở góc màn hình (có thể kèm nút hành động) và tự động ẩn sau 4-5 giây
+function F.toast(text,force,fn,opts)if not force and not P.notify then return end
+  opts=type(opts)=="table"and opts or nil
   local b=mk("TextButton",{Size=u2(1,0,0,0),AutomaticSize=asY,Text="",BorderSizePixel=0,AutoButtonColor=false,LayoutOrder=floor(os.clock()*100)%100000},U.toasts)
-  th(b,"BackgroundColor3","title");corner(b,8);stroke(b,"accent",1,0.4);pad(b,10,6,10,6)lab(b,tostring(text),{wrap=true,auto=true,ts=12})
-  if fn then hook(b.MouseButton1Click,function()b:Destroy();fn()end)else hook(b.MouseButton1Click,function()b:Destroy()end)end Debris:AddItem(b,4)return b end
+  th(b,"BackgroundColor3","title");corner(b,8);stroke(b,"accent",1,0.4);pad(b,10,6,10,6)
+  if opts and type(opts.btnText)=="string"and opts.btnText~=""and type(opts.onBtn)=="function"then
+    list(b,4)
+    lab(b,tostring(text),{wrap=true,auto=true,ts=12,layout=1})
+    local ab=tbtn(b,opts.btnText,{size=u2(1,0,0,22),key=opts.btnKey or"ok",ts=10,r=6,layout=2})
+    hook(ab.MouseButton1Click,function()b:Destroy();opts.onBtn()end)
+  else
+    lab(b,tostring(text),{wrap=true,auto=true,ts=12})
+  end
+  if fn then hook(b.MouseButton1Click,function()b:Destroy();fn()end)else hook(b.MouseButton1Click,function()b:Destroy()end)end Debris:AddItem(b,(opts and opts.dur)or 4)return b end
+--- [F.chanToast] Hiển thị thông báo nổi theo kênh (tôn trọng P.notify VÀ cài đặt tắt thông báo riêng của từng kênh P.mutedToasts)
+function F.chanToast(chan,text,force,fn,opts)
+  if not force and F.isToastMuted(chan)then return nil end
+  return F.toast(text,force,fn,opts)
+end
 --- [F.closeModal] Đóng hộp thoại Modal đang mở và xóa toàn bộ các lớp Popup con
 function F.closeModal()
   for _,c in ipairs(U.modal:GetChildren())do c:Destroy()end
   U.modal.Visible=false S.popN=0 S.reopenModal=nil end
 --- [buildBox] Xây dựng khung hộp thoại chuẩn (có thanh tiêu đề bo góc mượt, nút đóng 'X' và vùng cuộn nội dung)
-local function buildBox(parentFrame,title,w,h,z,onClose)local v=viewNow()w=min(w or 340,v.X-16)h=min(h or 420,v.Y-16)
-  local mode=P.backgroundMode or"solid"
-  local mRad=clamp((tonumber(P.uiRadius)or 10)+2,4,18)
-  local box=mk("Frame",{Size=uo(w,h),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1,Active=true},parentFrame)
-  th(box,"BackgroundColor3","bg2");corner(box,mRad)
-  if mode=="glass"then box.BackgroundTransparency=F.surfaceAlpha("modal")
-  elseif mode=="image"then
-    local imgId=H.assetId(P.backgroundImage or"")
-    if imgId then
-      local wpBg=F.createClipHost(box,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1})
-      corner(wpBg,mRad)
-      local wpImg=mk("ImageLabel",{Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ImageTransparency=clamp(1-(tonumber(P.backgroundOpacity)or 0.82)*0.28,0.68,0.92),ZIndex=z+1},wpBg)
-      F.setAsset(wpImg,imgId,function()
-        if wpImg and wpImg.Parent then F.applyImageFrame(wpBg,wpImg,P.bgFrame,w,h)end
-      end,wpImg.ImageTransparency)
-      F.applyImageFrame(wpBg,wpImg,P.bgFrame,w,h)
+local function buildBox(parentFrame,title,w,h,z,onClose,opts)opts=type(opts)=="table"and opts or{}local v=viewNow()w=min(w or 340,v.X-16)h=min(h or 420,v.Y-16)
+  local customProf=(opts.noAppTheme==true and type(opts.cols)=="table")
+  local ic=customProf and opts.cols or nil
+  local ipt=customProf and(opts.pt or{})or nil
+  local mode=customProf and(ipt.mode or"solid")or(P.backgroundMode or"solid")
+  local mRad=customProf and clamp(tonumber(ipt.rad)or 12,3,16)or clamp((tonumber(P.uiRadius)or 10)+2,4,18)
+  local box=mk("Frame",{Size=uo(w,h),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundColor3=customProf and ic.box or TH.bg2,BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1,Active=true},parentFrame)
+  if not customProf then th(box,"BackgroundColor3","bg2")end
+  corner(box,customProf and max(6,mRad+2)or mRad)
+  if not customProf then
+    if mode=="glass"then box.BackgroundTransparency=F.surfaceAlpha("modal")
+    elseif mode=="image"then
+      local imgId=H.assetId(P.backgroundImage or"")
+      if imgId then
+        local wpBg=F.createClipHost(box,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1})
+        corner(wpBg,mRad)
+        local wpImg=mk("ImageLabel",{Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ImageTransparency=clamp(1-(tonumber(P.backgroundOpacity)or 0.82)*0.28,0.68,0.92),ZIndex=z+1},wpBg)
+        F.setAsset(wpImg,imgId,function()
+          if wpImg and wpImg.Parent then F.applyImageFrame(wpBg,wpImg,P.bgFrame,w,h)end
+        end,wpImg.ImageTransparency)
+        F.applyImageFrame(wpBg,wpImg,P.bgFrame,w,h)
+      end
+    end
+    if mode=="gradient"or mode=="mesh"or mode=="glass"then
+      local bgGrad=mk("UIGradient",{Rotation=tonumber(P.gradAngle)or 28,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,TH.bg2),ColorSequenceKeypoint.new(0.6,H.mix(TH.bg2,TH.g2,0.36)),ColorSequenceKeypoint.new(1,H.mix(TH.bg2,TH.g3,0.42))})},box)
+      bgGrad.Enabled=true
     end
   end
-  if mode=="gradient"or mode=="mesh"or mode=="glass"then
-    local bgGrad=mk("UIGradient",{Rotation=tonumber(P.gradAngle)or 28,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,TH.bg2),ColorSequenceKeypoint.new(0.6,H.mix(TH.bg2,TH.g2,0.36)),ColorSequenceKeypoint.new(1,H.mix(TH.bg2,TH.g3,0.42))})},box)
-    bgGrad.Enabled=true
+  local useGlow=customProf and(ipt.glow~=false)or(P.borderGlow~=false)
+  local bs=mk("UIStroke",{Thickness=useGlow and 1.5 or 1.2,Transparency=useGlow and 0.2 or 0.45,ApplyStrokeMode=smBorder,Color=useGlow and c3(1,1,1)or(customProf and ic.cBorder or TH.accent)},box)
+  if useGlow then
+    local sgCol=customProf and ColorSequence.new({ColorSequenceKeypoint.new(0,ic.acc),ColorSequenceKeypoint.new(0.5,H.mix(ic.acc,ic.g3 or ic.acc,0.58)),ColorSequenceKeypoint.new(1,H.mix(ic.acc,ic.g2 or ic.acc,0.48))})
+      or ColorSequence.new({ColorSequenceKeypoint.new(0,TH.accent),ColorSequenceKeypoint.new(0.5,H.mix(TH.accent,TH.g3,0.6)),ColorSequenceKeypoint.new(1,H.mix(TH.accent,TH.ok,0.45))})
+    mk("UIGradient",{Rotation=(tonumber(customProf and ipt.gRot or P.gradAngle)or 28)+15,Color=sgCol},bs)
   end
-  local bs=mk("UIStroke",{Thickness=P.borderGlow~=false and 1.4 or 1.2,Transparency=P.borderGlow~=false and 0.2 or 0.45,ApplyStrokeMode=smBorder,Color=P.borderGlow~=false and c3(1,1,1)or TH.accent},box)
-  if P.borderGlow~=false then mk("UIGradient",{Rotation=(tonumber(P.gradAngle)or 28)+15,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,TH.accent),ColorSequenceKeypoint.new(0.5,H.mix(TH.accent,TH.g3,0.6)),ColorSequenceKeypoint.new(1,H.mix(TH.accent,TH.ok,0.45))})},bs)end
   local head=mk("Frame",{Size=u2(1,0,0,34),BackgroundTransparency=1,ZIndex=z+3},box)
-  local hBar=mk("Frame",{Size=uo(3,14),Position=uo(10,10),BorderSizePixel=0,ZIndex=z+4},head)th(hBar,"BackgroundColor3","accent");corner(hBar,2)
-  local titleLbl=lab(head,title,{size=u2(1,-52,1,0),pos=uo(18,0),bold=true,ts=14,trunc=true});titleLbl.ZIndex=z+4
-  themed(titleLbl,function(lb)lb.TextColor3=H.ensureContrast(TH.text,TH.bg2,4.8)end)
-  local hdiv=mk("Frame",{Size=u2(1,-16,0,1),Position=uo(8,34),BorderSizePixel=0,ZIndex=z+3},box)th(hdiv,"BackgroundColor3","border")
-  local x=tbtn(head,"",{size=uo(28,24),pos=u2(1,-34,0,5),ts=11,key="btnBg",r=max(5,mRad-6)});x.ZIndex=z+4
-  F.lucide(x,"x",13,{pos=us(0.5,0.5),anc=v2(0.5,0.5),key="text",contrastBg="btnBg",z=z+5})
+  local hBar=mk("Frame",{Size=uo(3,14),Position=uo(10,10),BackgroundColor3=customProf and ic.acc or TH.accent,BorderSizePixel=0,ZIndex=z+4},head)
+  if not customProf then th(hBar,"BackgroundColor3","accent")end corner(hBar,2)
+  local titleLbl
+  if customProf then
+    titleLbl=mk("TextLabel",{Size=u2(1,-52,1,0),Position=uo(18,0),BackgroundTransparency=1,BorderSizePixel=0,Text=title or"",Font=fGB,TextSize=14,TextColor3=ic.txt,TextXAlignment=txL,TextTruncate=trEnd,ZIndex=z+4},head)
+  else
+    titleLbl=lab(head,title,{size=u2(1,-52,1,0),pos=uo(18,0),bold=true,ts=14,trunc=true});titleLbl.ZIndex=z+4
+    themed(titleLbl,function(lb)lb.TextColor3=H.ensureContrast(TH.text,TH.bg2,4.8)end)
+  end
+  local hdiv=mk("Frame",{Size=u2(1,-16,0,1),Position=uo(8,34),BackgroundColor3=customProf and ic.cBorder or TH.border,BorderSizePixel=0,ZIndex=z+3},box)
+  if not customProf then th(hdiv,"BackgroundColor3","border")end
+  local x
+  if customProf then
+    x=mk("TextButton",{Size=uo(28,24),Position=u2(1,-34,0,5),BackgroundColor3=ic.sub,Text="",AutoButtonColor=true,BorderSizePixel=0,ZIndex=z+4},head)
+    corner(x,max(5,mRad-6));mk("UIStroke",{Color=ic.cBorder,Thickness=1,Transparency=0.45,ApplyStrokeMode=smBorder},x)
+    F.lucide(x,"x",13,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=ic.txt,themed=false,z=z+5})
+  else
+    x=tbtn(head,"",{size=uo(28,24),pos=u2(1,-34,0,5),ts=11,key="btnBg",r=max(5,mRad-6)});x.ZIndex=z+4
+    F.lucide(x,"x",13,{pos=us(0.5,0.5),anc=v2(0.5,0.5),key="text",contrastBg="btnBg",z=z+5})
+  end
   hook(x.MouseButton1Click,onClose)
   local scr=mk("ScrollingFrame",{Size=u2(1,-16,1,-42),Position=uo(8,38),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,CanvasSize=u2(),AutomaticCanvasSize=asY,ZIndex=z+3},box)list(scr,6);pad(scr,2,2,4,8)
   return scr,box end
 --- [F.modalBox] Mở một hộp thoại Modal chính giữa màn hình (đóng Modal cũ nếu có)
-function F.modalBox(title,w,h)F.closeModal()U.modal.Visible=true
+function F.modalBox(title,w,h,opts)F.closeModal()U.modal.Visible=true
   local back=mk("TextButton",{Size=us(1,1),BackgroundColor3=c3(0,0,0),BackgroundTransparency=0.45,Text="",AutoButtonColor=false,ZIndex=40},U.modal)hook(back.MouseButton1Click,F.closeModal)
-  local scr,box=buildBox(U.modal,title,w,h,40,F.closeModal)return scr,F.closeModal,box end
+  local scr,box=buildBox(U.modal,title,w,h,40,F.closeModal,opts)return scr,F.closeModal,box end
 --- [F.popup] Mở một hộp thoại Popup xếp chồng lên trên Modal hiện tại
 function F.popup(title,w,h)if not U.modal.Visible then local scr,closeFn,box=F.modalBox(title,w,h)return scr,closeFn,box end
   S.popN=S.popN+1 local z=50+S.popN*4 local layer=mk("TextButton",{Size=us(1,1),BackgroundColor3=c3(0,0,0),BackgroundTransparency=0.5,Text="",AutoButtonColor=false,ZIndex=z},U.modal)local box
@@ -1843,7 +1924,7 @@ function F.formatMsgStatus(m)
   if #viewers>0 then
     local ch=tostring(m.chan or"")
     if ch:sub(1,3)=="dm:"and not F.isGroupChan(ch)then
-      return"✓✓","ok"
+      return"✓✓ "..(L=="en"and"Seen"or"Đã xem"),"ok"
     end
     local shown={}
     for i=1,min(#viewers,2)do shown[#shown+1]="@"..F.disp(viewers[i])end
@@ -1891,30 +1972,48 @@ function F.markChannelSeen(chan)
   if chan=="staff"and not F.isStaff(P.username)then return end
   local meLow=P.username:lower()
   local unseen={}
+  local moreLeft=false
   for i=#S.order,1,-1 do
     local id=S.order[i]
     local m=S.msgs[id]
-    if m and not m.deleted and not m.cleared and F.visibleIn(m,chan)then
+    if m and not m.deleted and not m.cleared and not m.sending and not m.failed and F.visibleIn(m,chan)then
       if tostring(m.author or""):lower()~=meLow then
         local map=S.seenBy[id]
-        local already=(S.mySentSeen and S.mySentSeen[id])or(type(map)=="table"and(map[P.username]~=nil or map[meLow]~=nil))
-        if not already then
+        local sentState=S.mySentSeen and S.mySentSeen[id]
+        local inMap=false
+        if type(map)=="table"then
+          for vk in pairs(map)do if tostring(vk):lower()==meLow then inMap=true;break end end
+        end
+        if not sentState and not inMap then
+          if #unseen>=24 then moreLeft=true;break end
           unseen[#unseen+1]=id
-          if #unseen>=15 then break end
         end
       end
     end
   end
   if #unseen==0 then return end
   local now=H.now()
+  S.mySentSeen=S.mySentSeen or{}
   for _,id in ipairs(unseen)do
-    S.mySentSeen[id]=true
+    S.mySentSeen[id]="pending"
     S.seenBy[id]=type(S.seenBy[id])=="table"and S.seenBy[id]or{}
     S.seenBy[id][P.username]=now
     F.updateMsgStatus(id)
   end
   S.isDirty=true
-  F.publish({type="seen",by=P.username,author=P.username,ids=unseen,target=unseen[1],chan=chan,ts=now},"fast")
+  F.publish({type="seen",by=P.username,author=P.username,ids=unseen,target=unseen[1],chan=chan,ts=now},"other",function(ok)
+    for _,id in ipairs(unseen)do
+      if ok then
+        if S.mySentSeen[id]=="pending"then S.mySentSeen[id]=true end
+      else
+        if S.mySentSeen[id]=="pending"then S.mySentSeen[id]=nil end
+        if type(S.seenBy[id])=="table"then S.seenBy[id][P.username]=nil end
+      end
+    end
+    if ok and moreLeft and NET.alive and S.booted and U.main.Visible and F.chanKey(S.chan)==F.chanKey(chan)then
+      task.delay(0.35,function()pcall(F.markChannelSeen,chan)end)
+    end
+  end)
 end
 --- [F.disp] Chuyển đổi văn bản sang chuỗi hiển thị an toàn (áp dụng `H.safeText` nếu bật chế độ sửa lỗi Emoji)
 function F.disp(t)t=tostring(t or"");return P.safeEmoji and H.safeText(t)or t end
@@ -1930,14 +2029,31 @@ function F.thumbUrl(id,w,h)
   if not id then return""end
   return string.format("rbxthumb://type=Asset&id=%s&w=%d&h=%d",id,w or 420,h or 420)
 end
---- [F.uidOf] Tìm `UserId` của người chơi theo tên từ danh sách trực tuyến hoặc bộ nhớ đệm `S.uidCache`
+--- [F.isSystemActor] Kiểm tra tên có phải Bot Discord / tài khoản hệ thống không hợp lệ để hiển thị hoặc nhắn DM
+function F.isSystemActor(name,pkt)
+  local ln=H.trim(tostring(name or"")):gsub("^@",""):lower()
+  if ln==""or ln=="?"or ln=="discordbot"or ln=="discord"or ln=="system"or ln:sub(1,9)=="[discord]"then return true end
+  if not ln:match("^[%w_%-]+$")then return true end
+  if type(pkt)=="table"and tonumber(pkt.uid or pkt.userId)==1 and tostring(pkt.display or pkt.d or""):sub(1,9)=="[Discord]"then return true end
+  return false
+end
+--- [F.rememberProfile] Lưu đồng bộ thông tin hồ sơ người dùng (kể cả khi đã offline) vào bộ nhớ đệm `S.profiles`
 function F.rememberProfile(u,data,isOnline)
   local name=H.trim(tostring(u or(type(data)=="table"and(data.u or data.author))or""))
-  if name==""or name=="?"then return nil end
+  if F.isSystemActor(name,data)then return nil end
   local key=name:lower()
-  S.profiles=S.profiles or{}S.uidCache=S.uidCache or{}
+  S.profiles=S.profiles or{}S.uidCache=S.uidCache or{}S.profFullLoaded=S.profFullLoaded or{}
   local p=S.profiles[key]or{u=name,display=name,userId=1,status="",bio="",country="??",inGame=false,placeId=0,gameName="",jobId="",profBanner="",profIcon="",profTheme={},lastSeen=0,msgCount=0}
-  if type(data)=="table"then
+  if type(data)=="table"and data._forceReset==true then
+    p.display=p.u or name
+    p.status=""p.bio=""p.country="??"p.profBanner=""p.profIcon=""p.profTheme={}
+    S.profFullLoaded[key]=nil
+    for uk,ur in pairs(S.users)do
+      if tostring(uk):lower()==key and type(ur)=="table"then
+        ur.display=p.display;ur.status="";ur.bio="";ur.country="??";ur.profBanner="";ur.profIcon="";ur.profTheme={}
+      end
+    end
+  elseif type(data)=="table"then
     if data.u and tostring(data.u)~=""and tostring(data.u)~="?"then p.u=tostring(data.u)end
     local allowClear=data._allowClear==true or isOnline==true
     local d=data.display~=nil and data.display or data.d
@@ -1960,7 +2076,12 @@ function F.rememberProfile(u,data,isOnline)
     local pi=data.profIcon~=nil and data.profIcon or data.pi
     if pi~=nil and(allowClear or tostring(pi)~="")then p.profIcon=H.assetId(pi)or""end
     local pt=data.profTheme~=nil and data.profTheme or data.pt
-    if type(pt)=="table"and(allowClear or next(pt)~=nil)then p.profTheme=pt end
+    if type(pt)=="table"and(allowClear or next(pt)~=nil)then
+      p.profTheme=pt
+    elseif allowClear and data._fromProfileApi==true and pt==nil then
+      p.profTheme={}
+    end
+    if type(pt)=="table"or data._allowClear==true then S.profFullLoaded[key]=true end
     local ls=tonumber(data.lastSeen or data.ts)or 0
     if ls>(tonumber(p.lastSeen)or 0)then p.lastSeen=ls end
     local pl=tonumber(data.placeId or data.pl)
@@ -1975,6 +2096,18 @@ function F.rememberProfile(u,data,isOnline)
       p.lastSeen=math.max(tonumber(p.lastSeen)or 0,H.now())
     elseif isOnline==false then
       p.inGame=false;p.jobId=""
+    end
+    for uk,ur in pairs(S.users)do
+      if tostring(uk):lower()==key and type(ur)=="table"then
+        if allowClear or(ur.profBanner or"")==""then ur.profBanner=p.profBanner end
+        if allowClear or(ur.profIcon or"")==""then ur.profIcon=p.profIcon end
+        if allowClear or type(ur.profTheme)~="table"or next(ur.profTheme)==nil then ur.profTheme=p.profTheme end
+        if allowClear or(ur.bio or"")==""then ur.bio=p.bio end
+        if allowClear or(ur.status or"")==""then ur.status=p.status end
+        if allowClear or(ur.country or"")==""or ur.country=="??"then ur.country=p.country end
+        if p.display~=""and(allowClear or(ur.display or"")==""or ur.display==uk)then ur.display=p.display end
+        if(p.userId or 0)>1 and(ur.userId or 0)<=1 then ur.userId=p.userId end
+      end
     end
   end
   if p.userId and tonumber(p.userId)>1 then
@@ -1997,6 +2130,8 @@ function F.uidOf(name,hint)
   end
   local pr=S.profiles and S.profiles[ln]
   if pr and tonumber(pr.userId)and tonumber(pr.userId)>1 then return tonumber(pr.userId)end
+  local fr=S.friendsMap and S.friendsMap[ln]
+  if fr and tonumber(fr.userId)and tonumber(fr.userId)>1 then return tonumber(fr.userId)end
   for _,sc in ipairs(S.scripts or{})do
     if tostring(sc.author or""):lower()==ln and tonumber(sc.uid)and tonumber(sc.uid)>1 then return tonumber(sc.uid)end
   end
@@ -2008,15 +2143,31 @@ end
 --- [F.isLive] Kiểm tra bản ghi người dùng còn trực tuyến hay không (dựa theo `PRESENCE_TIMEOUT`)
 function F.isLive(rec)if not rec or not rec.recvAt then return false end return(rec.age or 0)+(os.clock()-rec.recvAt)<=CFG.PRESENCE_TIMEOUT end
 --- [F.userRec] Tìm bản ghi thông tin trực tuyến của người dùng trong `S.users` (không phân biệt hoa thường)
-function F.userRec(name)if not name then return nil end if S.users[name]then return S.users[name]end
-  local ln=tostring(name):lower()for u,r in pairs(S.users)do if tostring(u):lower()==ln then return r end end
-  return S.profiles and S.profiles[ln]or nil end
+function F.userRec(name)if not name then return nil end
+  local ln=tostring(name):lower()
+  local ur=S.users[name]
+  if not ur then for u,r in pairs(S.users)do if tostring(u):lower()==ln then ur=r;break end end end
+  local sp=S.profiles and S.profiles[ln]or nil
+  if ur and sp then
+    if(ur.profBanner or"")==""and(sp.profBanner or"")~=""then ur.profBanner=sp.profBanner end
+    if(ur.profIcon or"")==""and(sp.profIcon or"")~=""then ur.profIcon=sp.profIcon end
+    if(type(ur.profTheme)~="table"or next(ur.profTheme)==nil)and type(sp.profTheme)=="table"and next(sp.profTheme)~=nil then ur.profTheme=sp.profTheme end
+    if(ur.bio or"")==""and(sp.bio or"")~=""then ur.bio=sp.bio end
+    if(ur.status or"")==""and(sp.status or"")~=""then ur.status=sp.status end
+    if((ur.country or"")==""or ur.country=="??")and(sp.country or"")~=""and sp.country~="??"then ur.country=sp.country end
+    if(ur.userId or 0)<=1 and(sp.userId or 0)>1 then ur.userId=sp.userId end
+    if((ur.display or"")==""or ur.display==name)and(sp.display or"")~=""and sp.display~=sp.u then ur.display=sp.display end
+    if(tonumber(sp.lastSeen)or 0)>(tonumber(ur.lastSeen)or 0)then ur.lastSeen=sp.lastSeen end
+    return ur
+  end
+  local fr=S.friendsMap and S.friendsMap[ln]or nil
+  return ur or sp or fr end
 function F.fetchUserProfile(u,cb,force)
   local target=H.trim(tostring(u or"")):gsub("^@","")
   if target==""or target:lower()==P.username:lower()then if cb then pcall(cb,F.userRec(target))end return end
   local key=target:lower()
-  S.profFetchedAt=S.profFetchedAt or{}
-  if not force and(S.profFetchedAt[key]or 0)+10>os.clock()and F.uidOf(target)>1 then
+  S.profFetchedAt=S.profFetchedAt or{}S.profFullLoaded=S.profFullLoaded or{}
+  if not force and S.profFullLoaded[key]and(S.profFetchedAt[key]or 0)+10>os.clock()and F.uidOf(target)>1 then
     if cb then pcall(cb,F.userRec(target))end return
   end
   S.profFetchedAt[key]=os.clock()
@@ -2026,8 +2177,9 @@ function F.fetchUserProfile(u,cb,force)
       local p=data.profile
       local isOn=(data.online==true or p.online==true)
       local canon=tostring(p.u or target)
-      p._allowClear=true
+      p._allowClear=true;p._fromProfileApi=true
       local stored=F.rememberProfile(canon,p,isOn)
+      if data.found~=false then S.profFullLoaded[key]=true end
       if isOn and stored then
         local cur=S.users[canon]or{}
         for k,v in pairs(stored)do cur[k]=v end
@@ -2038,10 +2190,35 @@ function F.fetchUserProfile(u,cb,force)
     if F.uidOf(target)<=1 then
       local ok,id=pcall(Players.GetUserIdFromNameAsync,Players,target)
       if ok and tonumber(id)and tonumber(id)>1 then
-        F.rememberProfile(target,{userId=tonumber(id)},false)
+        S.uidCache=S.uidCache or{};S.uidCache[target]=tonumber(id);S.uidCache[key]=tonumber(id)
       end
     end
     if cb then pcall(cb,F.userRec(target))end
+  end)
+end
+function F.pushMyProfileSync(cb)
+  if not P or not P.username or P.username==""then if cb then pcall(cb,false)end return end
+  task.spawn(function()
+    local payload={
+      action="save",
+      u=P.username,
+      d=P.display,
+      id=LP and LP.UserId or 1,
+      st=P.status or"",
+      bio=P.bio or"",
+      c=P.country or"??",
+      pb=P.profBanner or"",
+      pi=P.profIcon or"",
+      pt=F.compactProfTheme(P.profTheme),
+    }
+    local data=type(F.rawRequest)=="function"and F.rawRequest("POST","/api/profile",payload)or nil
+    if type(data)=="table"and data.ok and type(data.profile)=="table"then
+      data.profile._allowClear=true;data.profile._fromProfileApi=true
+      F.rememberProfile(P.username,data.profile,true)
+      if cb then pcall(cb,true,data)end
+    else
+      if cb then pcall(cb,false,data)end
+    end
   end)
 end
 --- [F.isScriptUser] Kiểm tra một người chơi có đang sử dụng Chat Bridge và còn trực tuyến hay không
@@ -2049,7 +2226,7 @@ function F.isScriptUser(name)if not name or name==""then return false end if tos
   local rec=F.userRec(name)
   if not rec or not rec.isScript then return false end return F.isLive(rec)end
 --- [F.touchUser] Cập nhật hoặc khởi tạo bản ghi hoạt động mới nhất cho người dùng `name` trong `S.users`
-function F.touchUser(name,uid,display)if not name or name==""or name==P.username then return end
+function F.touchUser(name,uid,display)if not name or name==""or name==P.username or F.isSystemActor(name,{uid=uid,display=display})then return end
   F.rememberProfile(name,{userId=uid,display=display,lastSeen=H.now()},false)
   local rec=S.users[name]
   if not rec then
@@ -2065,8 +2242,25 @@ function F.touchUser(name,uid,display)if not name or name==""or name==P.username
     if display and display~=""and display~="?"then rec.display=display end
   end
   rec.isScript=true rec.age,rec.recvAt=0,os.clock()end
+--- [F.chanKey] Chuẩn hóa khóa kênh chat không phân biệt hoa thường cho DM 1-1 & Group Chat
+function F.chanKey(c)
+  c=tostring(c or"")
+  if F.isGroupChan(c)then local g=F.groupByChan(c);return g and("dm:"..tostring(g.id):lower())or c:lower()end
+  local a,b=c:match("^dm:(.-)|(.+)$")
+  if a and b then a,b=a:lower(),b:lower();if a>b then a,b=b,a end;return"dm:"..a.."|"..b end
+  return c:lower()
+end
 --- [F.dmChan] Tạo tên định danh kênh chat riêng chuẩn hóa (`dm:userA|userB` theo thứ tự bảng chữ cái)
-function F.dmChan(a,b)if a:lower()>b:lower()then a,b=b,a end return"dm:"..a.."|"..b end
+function F.dmChan(a,b)
+  a=H.trim(tostring(a or"")):gsub("^@","")
+  b=H.trim(tostring(b or"")):gsub("^@","")
+  local ra=F.userRec and F.userRec(a)
+  if ra and ra.u and ra.u~=""and ra.u~="?"then a=tostring(ra.u)end
+  local rb=F.userRec and F.userRec(b)
+  if rb and rb.u and rb.u~=""and rb.u~="?"then b=tostring(rb.u)end
+  if a:lower()>b:lower()then a,b=b,a end
+  return"dm:"..a.."|"..b
+end
 --- [F.isGroupChan] Kiểm tra chuỗi định danh kênh có phải là Group Chat trong DM hay không (`dm:grp_...`)
 function F.isGroupChan(chan)return tostring(chan or""):match("^dm:grp_")~=nil end
 --- [F.groupByChan] Tìm thông tin đối tượng Group Chat từ chuỗi kênh `chan` hoặc mã `id`
@@ -2104,7 +2298,7 @@ function F.dmOther(chan)
 function F.dmUnreadTotal()local n=0;for _,v in pairs(S.dmUnread)do n=n+v end return n end
 --- [F.visibleIn] Kiểm tra một tin nhắn `m` có thuộc về kênh `chan` đang mở hay không (kênh `#game` chỉ hiện tin của đúng game `PlaceId` và phiên đó)
 function F.visibleIn(m,chan)if not m or m.deleted or m.cleared then return false end
-  if m.chan~=chan then return false end
+  if F.chanKey(m.chan)~=F.chanKey(chan)then return false end
   if chan~="announce"and chan~="punish"and m.author and type(P.blockedUsers)=="table"and P.blockedUsers[tostring(m.author):lower()]==true and tostring(m.author):lower()~=P.username:lower()then return false end
   if chan=="game"then
     if tonumber(m.place)~=game.PlaceId then return false end
@@ -2169,9 +2363,16 @@ function F.parseInlineSegments(content)local expanded=F.expandShortcodes(content
     local s,e,id=expanded:find("%[img:(%d+)%]",pos)if s then if s>pos then local txt=expanded:sub(pos,s-1)if H.trim(txt)~=""then hasText=true end segs[#segs+1]={kind="text",text=txt}end
       if#id>=5 and#id<=15 and imgCount<10 then imgCount=imgCount+1 segs[#segs+1]={kind="img",id=id}end pos=e+1 else local txt=expanded:sub(pos)if H.trim(txt)~=""then hasText=true end
       if txt~=""then segs[#segs+1]={kind="text",text=txt}end break end end return segs,imgCount,hasText end
---- [F.plain] Chuyển đổi nội dung tin nhắn (có chứa thẻ `[img:id]`) về dạng văn bản thuần để hiển thị trong bản xem trước / trả lời
-function F.plain(content)local expanded=F.expandShortcodes(content)
-  return(tostring(expanded or""):gsub("%[img:(%d+)%]",function(id)local info=F.emojiInfoById(id)return info and(":"..info.name..":")or T("img_tag")end))end
+--- [F.plain] Chuyển đổi nội dung tin nhắn (có chứa `[img:id]`, `[sound:id]`, `[profile:u]`, `CBT1:`) về dạng văn bản thuần gọn gàng
+function F.plain(content)
+  local s=tostring(F.expandShortcodes(content)or"")
+  s=s:gsub("%[img:(%d+)%]",function(id)local info=F.emojiInfoById(id)return info and(":"..info.name..":")or T("img_tag")end)
+  s=s:gsub("%[sound:(%d+)%]",function(id)return"🎵 Audio #"..id end)
+  s=s:gsub("%[profile:([%w_%.%-]+)%]",function(u)return"@"..u end)
+  s=s:gsub("CBT[12]:%b{}","🎨 Theme Card")
+  s=s:gsub("```[%w_%-]*%s*",""):gsub("```","")
+  return H.trim(s)
+end
 --- [F.link] Liên kết tin nhắn mới với tin nhắn liền trước trong cùng kênh để quyết định gộp nhóm hiển thị (`m.grp`)
 function F.link(m)local prev=S.lastByChan[m.chan]
   m.grp=prev~=nil and prev.author==m.author and not prev.deleted and not m.replyTo and math.abs((tonumber(m.ts)or 0)-(tonumber(prev.ts)or 0))<=CFG.GROUP_SECS m.prevId=prev and prev.packetId or nil
@@ -2255,7 +2456,7 @@ function F.openEmoji(opt)opt=opt or{}
       local canDel=(showDelete~=false)and((not isServerShared)or staff or(by:lower()==P.username:lower()))local isSel=selectedIds[id]==true
       local b=mk("TextButton",{Text="",BorderSizePixel=0,LayoutOrder=i,ClipsDescendants=true,AutoButtonColor=true,Active=true,BackgroundColor3=isSel and TH.danger or TH.btnBg},g)corner(b,8)
       mk("UIStroke",{Color=isSel and TH.danger or TH.accent,Thickness=isSel and 2 or 1,Transparency=isSel and 0.1 or 0.75,ApplyStrokeMode=smBorder},b)local ic=F.iconBox(b,"img:"..id,34,{themed=false})ic.Position=u2(0.5,-17,0,5)
-      local nmLbl=mk("TextLabel",{Size=u2(1,-6,0,16),Position=uo(3,42),BackgroundTransparency=1,Text=":"..nm..":",Font=fGB,TextSize=10,TextColor3=isSel and c3(1,1,1)or TH.emojiText,TextXAlignment=txC,TextTruncate=ttEnd,BorderSizePixel=0},b)
+      local nmLbl=mk("TextLabel",{Size=u2(1,-6,0,16),Position=uo(3,42),BackgroundTransparency=1,Text=":"..nm..":",Font=fGB,TextSize=10,TextColor3=isSel and c3(1,1,1)or TH.emojiText,TextXAlignment=txC,TextTruncate=trEnd,BorderSizePixel=0},b)
       if nmLbl.TextColor3 and isSel then nmLbl.TextColor3=H.lum(TH.danger)>0.55 and rgb(20,20,24)or c3(1,1,1)end
       if canDel and not multiMode then local xBtn=mk("TextButton",{Size=uo(18,18),
           Position=u2(1,-20,0,2),BackgroundColor3=TH.danger,BackgroundTransparency=0.15,Text="X",TextColor3=c3(1,1,1),Font=fGB,TextSize=10,BorderSizePixel=0,ZIndex=6,},b)corner(xBtn,9)
@@ -2427,11 +2628,463 @@ function F.jumpToMsg(targetId)local tf=targetId and S.frames and S.frames[target
   pcall(function()
     local dy=tf.AbsolutePosition.Y-U.scroll.AbsolutePosition.Y+U.scroll.CanvasPosition.Y-30 U.scroll.CanvasPosition=v2(0,max(0,dy))local orig=tf.BackgroundColor3 tf.BackgroundColor3=TH.accent
     task.delay(0.55,function()if tf.Parent then tf.BackgroundColor3=orig end end)end)end
---- [F.renderMessage] Khởi tạo và vẽ toàn bộ giao diện của một thẻ tin nhắn `m` vào danh sách cuộn `U.scroll` (gọn gàng, tối ưu chiều cao Seen)
+-- =============================================================================
+-- 16B. ÂM THANH [sound:], KHO LƯU TIN, DỊCH TẠI CHỖ, CODE BLOCK, THEME & PROFILE CARD
+-- =============================================================================
+F._COUNTRY_TO_LANG={
+  VN="vi",US="en",GB="en",AU="en",NZ="en",CA="en",SG="en",IE="en",PH="tl",
+  JP="ja",KR="ko",KP="ko",CN="zh-CN",TW="zh-TW",HK="zh-TW",
+  RU="ru",BY="ru",UA="uk",IL="he",FR="fr",BE="fr",CH="de",DE="de",AT="de",
+  ES="es",MX="es",AR="es",CL="es",CO="es",PE="es",VE="es",PT="pt",BR="pt",
+  TH="th",ID="id",MY="ms",IN="hi",PK="ur",BD="bn",TR="tr",IT="it",NL="nl",PL="pl",
+  SA="ar",AE="ar",QA="ar",KW="ar",EG="ar",MA="ar",DZ="ar",TN="ar",IQ="ar",LB="ar",JO="ar",
+  KH="km",LA="lo",MM="my",GR="el",SE="sv",NO="no",FI="fi",DK="da",RO="ro",HU="hu",CZ="cs",
+}
+F._TRANS_OPTS={
+  {code="vi",lbl="Tiếng Việt (VI)",cc="VN"},
+  {code="en",lbl="English (EN)",cc="US"},
+  {code="ja",lbl="日本語 (JA)",cc="JP"},
+  {code="ko",lbl="한국어 (KO)",cc="KR"},
+  {code="zh-CN",lbl="中文 (ZH)",cc="CN"},
+  {code="ru",lbl="Русский (RU)",cc="RU"},
+  {code="uk",lbl="Українська (UK)",cc="UA"},
+  {code="he",lbl="עברית (HE)",cc="IL"},
+  {code="th",lbl="ไทย (TH)",cc="TH"},
+  {code="id",lbl="Indonesia (ID)",cc="ID"},
+  {code="fr",lbl="Français (FR)",cc="FR"},
+  {code="de",lbl="Deutsch (DE)",cc="DE"},
+  {code="es",lbl="Español (ES)",cc="ES"},
+  {code="pt",lbl="Português (PT)",cc="BR"},
+}
+function F.defaultTranslateLang()
+  local pref=tostring(P.transLang or"")
+  if pref=="country"and P.country then return F._COUNTRY_TO_LANG[P.country]or(L=="en"and"en"or"vi")end
+  if pref~=""then return pref end
+  return L=="en"and"en"or"vi"
+end
+function F.translateTextDirect(rawText,targetLang,cb)
+  local txt=H.trim(tostring(rawText or""))
+  local dst=tostring(targetLang or F.defaultTranslateLang())
+  if txt==""then if cb then cb(false,nil)end return end
+  S.transCache=S.transCache or{}
+  local ck=dst..":"..txt
+  if S.transCache[ck]then
+    if cb then cb(true,S.transCache[ck].text,S.transCache[ck].src,dst)end
+    return
+  end
+  task.spawn(function()
+    local url="https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="..H.url(dst).."&dt=t&q="..H.url(H.clip(txt,750))
+    local ok,res=pcall(httpFn,{Url=url,Method="GET",Headers={["User-Agent"]="Mozilla/5.0",Accept="application/json"}})
+    local sc=ok and type(res)=="table"and(tonumber(res.StatusCode or res.Status)or 0)or 0
+    if sc==200 and type(res.Body)=="string"and res.Body~=""then
+      local d=H.jdec(res.Body)
+      if type(d)=="table"and type(d[1])=="table"then
+        local parts={}
+        for _,seg in ipairs(d[1])do
+          if type(seg)=="table"and type(seg[1])=="string"then parts[#parts+1]=seg[1]end
+        end
+        local out=H.trim(tconcat(parts))
+        if out~=""then
+          local src=tostring(d[2]or"auto")
+          S.transCache[ck]={text=out,src=src}
+          if cb then cb(true,out,src,dst)end
+          return
+        end
+      end
+    end
+    if cb then cb(false,nil,nil,dst)end
+  end)
+end
+function F.translateMsgInPlace(m,targetLang)
+  if not m then return end
+  local cleanSrc=F.plain(m.content)
+  if cleanSrc==""then F.toast(T("translate_fail"),true);return end
+  local dst=targetLang or F.defaultTranslateLang()
+  F.translateTextDirect(cleanSrc,dst,function(ok,out,srcLang,usedDst)
+    if not ok or not out then F.toast(T("translate_fail"),true);return end
+    m._transText=out;m._transSrc=tostring(srcLang or"auto");m._transLang=tostring(usedDst or dst)
+    if F.visibleIn(m,S.chan)then F.renderMessage(m)end
+  end)
+end
+function F.openTranslateLangMenu(m)
+  if not m then return end
+  local scr,close=F.popup("🌐 "..T("translate_btn"),300,360)
+  for idx,opt in ipairs(F._TRANS_OPTS)do
+    local b=tbtn(scr,H.flag(opt.cc).."  "..opt.lbl,{size=u2(1,0,0,28),ts=11,key=(opt.code==F.defaultTranslateLang())and"accent"or"btnBg",r=7,layout=idx})
+    b.TextXAlignment=txL;pad(b,10,0,8,0)
+    hook(b.MouseButton1Click,function()close();F.translateMsgInPlace(m,opt.code)end)
+  end
+end
+
+function F.refreshSoundButtons()
+  for sid,listBtns in pairs(S.soundBtns or{})do
+    local isOn=(S.activeSoundId==sid and S.activeSound and S.activeSound.IsPlaying)
+    for i=#listBtns,1,-1 do
+      local rec=listBtns[i]
+      if rec and rec.btn and rec.btn.Parent then
+        rec.btn.Text=isOn and("⏹ "..T("sound_stop"))or("▶ "..T("sound_play"))
+        rec.btn.BackgroundColor3=isOn and TH.danger or TH.accent
+        rec.btn.TextColor3=H.lum(isOn and TH.danger or TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1)
+      else
+        tremove(listBtns,i)
+      end
+    end
+  end
+end
+function F.stopInlineSound()
+  if S.activeSound then pcall(function()S.activeSound:Stop()end)end
+  S.activeSoundId=nil
+  F.refreshSoundButtons()
+end
+function F.resolveSoundName(id,cb)
+  id=tostring(id or"")
+  if id==""then return end
+  S.soundNameCache=S.soundNameCache or{}
+  if S.soundNameCache[id]~=nil then
+    if cb then cb(S.soundNameCache[id])end
+    return
+  end
+  task.spawn(function()
+    local nm=""
+    local ok,info=pcall(function()return game:GetService("MarketplaceService"):GetProductInfo(tonumber(id),Enum.InfoType.Asset)end)
+    if ok and type(info)=="table"and type(info.Name)=="string"and info.Name~=""then nm=info.Name end
+    S.soundNameCache[id]=nm
+    if cb and nm~=""then cb(nm)end
+  end)
+end
+function F.playInlineSound(id)
+  id=H.assetId(id)or tostring(id or""):match("^(%d+)$")
+  if not id then F.toast("Sound ID invalid",true);return end
+  if S.activeSoundId==id and S.activeSound and S.activeSound.IsPlaying then
+    F.stopInlineSound()
+    return
+  end
+  F.stopInlineSound()
+  local okPlay=pcall(function()
+    if not S.activeSound or not S.activeSound.Parent then
+      local ex=SoundService:FindFirstChild("CB47_InlineAudio")
+      if ex and ex:IsA("Sound")then S.activeSound=ex
+      else
+        local sn=Instance.new("Sound")
+        sn.Name="CB47_InlineAudio";sn.Volume=0.65;sn.Looped=false;sn.Parent=SoundService
+        sn.Ended:Connect(function()S.activeSoundId=nil;F.refreshSoundButtons()end)
+        sn.Stopped:Connect(function()if S.activeSoundId==id then S.activeSoundId=nil;F.refreshSoundButtons()end end)
+        S.activeSound=sn
+      end
+    end
+    S.activeSound.SoundId="rbxassetid://"..id
+    S.activeSound.TimePosition=0
+    S.activeSound.Volume=0.65
+    S.activeSoundId=id
+    S.activeSound:Play()
+  end)
+  if not okPlay then S.activeSoundId=nil;F.toast("Audio play error",true)end
+  F.refreshSoundButtons()
+end
+
+function F.isMsgBookmarked(pid)
+  if not pid then return false end
+  for _,bm in ipairs(P.savedBookmarks or{})do if tostring(bm.id)==tostring(pid)then return true end end
+  return false
+end
+function F.toggleBookmark(m)
+  if not m or not m.packetId then return end
+  P.savedBookmarks=type(P.savedBookmarks)=="table"and P.savedBookmarks or{}
+  for i=#P.savedBookmarks,1,-1 do
+    if tostring(P.savedBookmarks[i].id)==tostring(m.packetId)then
+      tremove(P.savedBookmarks,i);S.isDirty=true;F.save(true)
+      F.toast("🔖 "..T("bookmark_rem"),true)
+      return false
+    end
+  end
+  tinsert(P.savedBookmarks,1,{
+    id=tostring(m.packetId),author=tostring(m.author or"?"),display=tostring(m.display or m.author or"?"),
+    chan=tostring(m.chan or"general"),content=tostring(m.content or""),ts=tonumber(m.ts)or H.now(),savedAt=H.now(),
+  })
+  while#P.savedBookmarks>150 do tremove(P.savedBookmarks)end
+  S.isDirty=true;F.save(true)
+  F.toast("🔖 "..T("bookmark_add"),true)
+  return true
+end
+function F.openBookmarks()
+  S.reopenModal=F.openBookmarks
+  local scr,close=F.modalBox("🔖 "..T("bookmarks_title").." ("..#(P.savedBookmarks or{})..")",410,540)
+  local topRow=row(scr,28)
+  local srch=mk("TextBox",{Size=u2(1,-88,1,0),Text="",PlaceholderText=T("search"),ClearTextOnFocus=false,Font=fG,TextSize=11,BorderSizePixel=0,TextXAlignment=txL},topRow)
+  F.styleInput(srch,"text",false)
+  local clrB=rbtn(topRow,L=="en"and"Clear All"or"Xóa hết",{size=uo(82,28),key="danger",ts=10})
+  local listBox=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr);list(listBox,6)
+  local function renderList()
+    for _,c in ipairs(listBox:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
+    local q=H.trim(srch.Text):lower()
+    local items=P.savedBookmarks or{}
+    local shown=0
+    for idx,bm in ipairs(items)do
+      local match=(q==""or tostring(bm.content or""):lower():find(q,1,true)or tostring(bm.author or""):lower():find(q,1,true))
+      if match then
+        shown=shown+1
+        local card=F.card(listBox,idx);card.AutomaticSize=asY;card.Size=u2(1,0,0,0);pad(card,10,8,10,8);list(card,4)
+        lab(card,"@"..F.disp(bm.display or bm.author or"?").." · "..tostring(bm.chan or"general").." · "..H.shortTime(bm.savedAt or bm.ts),{ts=10,bold=true,key="accent",layout=1,trunc=true})
+        lab(card,F.disp(F.plain(bm.content or"")),{ts=11,wrap=true,auto=true,layout=2})
+        local br=mk("Frame",{Size=u2(1,0,0,24),BackgroundTransparency=1,LayoutOrder=3},card)
+        mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO},br)
+        local cpB=tbtn(br,T("copy"),{size=uo(56,24),key="accent",ts=10,r=6,layout=1})
+        hook(cpB.MouseButton1Click,function()F.copyText(tostring(bm.content or""))end)
+        local putB=tbtn(br,L=="en"and"Insert"or"Dán vào ô",{size=uo(74,24),key="btnBg",ts=10,r=6,layout=2})
+        hook(putB.MouseButton1Click,function()close();U.input.Text=tostring(bm.content or"");U.input:CaptureFocus()end)
+        local sndId=tostring(bm.content or""):match("%[sound:(%d+)%]")
+        if sndId then
+          local plB=tbtn(br,"▶ Audio",{size=uo(64,24),key="ok",ts=10,r=6,layout=3})
+          hook(plB.MouseButton1Click,function()F.playInlineSound(sndId)end)
+        end
+        local delB=tbtn(br,"X",{size=uo(28,24),key="danger",ts=10,r=6,layout=4})
+        hook(delB.MouseButton1Click,function()
+          for k=#P.savedBookmarks,1,-1 do if P.savedBookmarks[k]==bm then tremove(P.savedBookmarks,k);break end end
+          S.isDirty=true;F.save(true);renderList()
+        end)
+      end
+    end
+    if shown==0 then
+      lab(listBox,T("bookmark_empty"),{ts=11,key="muted",wrap=true,auto=true,align=txC})
+    end
+  end
+  hook(srch:GetPropertyChangedSignal("Text"),renderList)
+  hook(clrB.MouseButton1Click,function()P.savedBookmarks={};S.isDirty=true;F.save(true);renderList()end)
+  renderList()
+end
+
+function F.extractThemeCodes(text)
+  local codes,pieces={},{}
+  local n=#text
+  local i=1
+  while i<=n do
+    local s,e=text:find("CBT[12]:%{",i)
+    if not s then pieces[#pieces+1]=text:sub(i);break end
+    if s>i then pieces[#pieces+1]=text:sub(i,s-1)end
+    local j=e
+    local depth=0
+    local inStr=false
+    local esc=false
+    local foundEnd=nil
+    while j<=n do
+      local ch=text:sub(j,j)
+      if esc then esc=false
+      elseif inStr then
+        if ch=="\\"then esc=true elseif ch=='"'then inStr=false end
+      else
+        if ch=='"'then inStr=true
+        elseif ch=="{"then depth=depth+1
+        elseif ch=="}"then
+          depth=depth-1
+          if depth==0 then foundEnd=j;break end
+        end
+      end
+      j=j+1
+    end
+    if foundEnd and#codes<3 then
+      local raw=text:sub(s,foundEnd)
+      local d=H.jdec(raw:match("^CBT[12]:(.+)$"))
+      if type(d)=="table"and(d.n~=nil or type(d.c)=="table")then
+        codes[#codes+1]=raw
+      else
+        pieces[#pieces+1]=raw
+      end
+      i=foundEnd+1
+    else
+      pieces[#pieces+1]=text:sub(s,e)
+      i=e+1
+    end
+  end
+  return tconcat(pieces),codes
+end
+
+function F.parseRichMessageContent(content)
+  local text=tostring(content or"")
+  local codeBlocks={}
+  do
+    local out={}
+    local pos=1
+    while pos<=#text do
+      local s,e=text:find("```",pos,true)
+      if not s then out[#out+1]=text:sub(pos);break end
+      local cS,cE=text:find("```",e+1,true)
+      if not cS then out[#out+1]=text:sub(pos);break end
+      if s>pos then out[#out+1]=text:sub(pos,s-1)end
+      local rawBlock=text:sub(e+1,cS-1)
+      local lang,body=rawBlock:match("^([%w_%-]+)%s*[\r\n]+([%s%S]*)$")
+      if not lang then lang="";body=rawBlock end
+      body=H.trim(body)
+      if body~=""and#codeBlocks<4 then
+        codeBlocks[#codeBlocks+1]={lang=lang~=""and string.upper(lang)or"CODE",code=body}
+      elseif body~=""then
+        out[#out+1]=rawBlock
+      end
+      pos=cE+1
+    end
+    text=tconcat(out)
+  end
+  local noTheme,themeCodes=F.extractThemeCodes(text)
+  text=noTheme
+  local soundIds={}
+  text=text:gsub("%[sound:(%d+)%]",function(id)
+    if#id>=5 and#id<=15 and#soundIds<4 then soundIds[#soundIds+1]=id end
+    return""
+  end)
+  local profNames,seenProf={},{}
+  text=text:gsub("%[profile:([%w_%.%-]+)%]",function(u)
+    local lk=u:lower()
+    if#profNames<3 and not seenProf[lk]then seenProf[lk]=true;profNames[#profNames+1]=u end
+    return""
+  end)
+  text=H.trim(text:gsub(" +"," "):gsub("\n\n\n+","\n\n"))
+  return{cleanText=text,codeBlocks=codeBlocks,themeCodes=themeCodes,soundIds=soundIds,profileNames=profNames}
+end
+
+function F.renderCodeBlockCards(col,blocks,startOrder)
+  for idx,cb in ipairs(blocks or{})do
+    local box=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=(startOrder or 10)+idx,ZIndex=5,ClipsDescendants=true},col)
+    th(box,"BackgroundColor3","inputBg");corner(box,7);stroke(box,"accent",1,0.35);pad(box,8,5,8,6);list(box,3)
+    local hdr=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},box)
+    lab(hdr,cb.lang,{size=u2(1,-62,1,0),ts=9,bold=true,key="accent"})
+    local cpBtn=tbtn(hdr,T("copy"),{size=uo(56,18),pos=u2(1,-56,0,0),key="accent",ts=9,r=5})
+    hook(cpBtn.MouseButton1Click,function()F.copyText(cb.code)end)
+    local codeLbl=lab(box,cb.code,{wrap=true,auto=true,ts=max(10,(P.textSize or 13)-2),key="text",layout=2})
+    codeLbl.Font=fCode
+  end
+end
+
+function F.renderSoundTagCards(col,soundIds,startOrder)
+  for idx,sid in ipairs(soundIds or{})do
+    local card=mk("Frame",{Size=u2(1,0,0,34),BorderSizePixel=0,LayoutOrder=(startOrder or 20)+idx,ZIndex=6},col)
+    th(card,"BackgroundColor3","bg3");corner(card,8);stroke(card,"accent",1,0.4);pad(card,8,4,8,4)
+    local ic=F.lucide(card,"play",13,{pos=uo(0,6),key="accent",z=7})
+    local titleLbl=lab(card,(S.soundNameCache and S.soundNameCache[sid]~=""and S.soundNameCache[sid])or("Audio #"..sid),{size=u2(1,-142,0,16),pos=uo(20,0),ts=11,bold=true,trunc=true})
+    local idLbl=lab(card,"ID: "..sid,{size=u2(1,-142,0,12),pos=uo(20,15),ts=9,key="muted",trunc=true})
+    local isOn=(S.activeSoundId==sid and S.activeSound and S.activeSound.IsPlaying)
+    local playBtn=tbtn(card,isOn and("⏹ "..T("sound_stop"))or("▶ "..T("sound_play")),{size=uo(70,24),pos=u2(1,-120,0,1),key=isOn and"danger"or"accent",ts=10,r=6})
+    playBtn.ZIndex=8
+    S.soundBtns=S.soundBtns or{};S.soundBtns[sid]=S.soundBtns[sid]or{}
+    tinsert(S.soundBtns[sid],{btn=playBtn})
+    hook(playBtn.MouseButton1Click,function()F.playInlineSound(sid)end)
+    local cpBtn=tbtn(card,"ID",{size=uo(42,24),pos=u2(1,-44,0,1),key="btnBg",ts=10,r=6})
+    cpBtn.ZIndex=8
+    hook(cpBtn.MouseButton1Click,function()F.copyText(sid)end)
+    if not(S.soundNameCache and S.soundNameCache[sid])then
+      F.resolveSoundName(sid,function(nm)if titleLbl.Parent then titleLbl.Text=F.disp(nm)end end)
+    end
+  end
+end
+
+function F.renderThemeCards(col,themeCodes,startOrder)
+  for idx,code in ipairs(themeCodes or{})do
+    local d=H.jdec(code:match("^CBT[12]:(.+)$"))or{}
+    local cMap=type(d.c)=="table"and d.c or{}
+    local baseT=THEMES[d.n]or THEMES.dark
+    local cardBgHex=H.safeHex(cMap.bg2 or cMap.bg,baseT.bg2)
+    local accHex=H.safeHex(cMap.accent,baseT.accent)
+    local txtHex=H.safeHex(cMap.text,baseT.text)
+    local card=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundColor3=H.hex(cardBgHex),BorderSizePixel=0,LayoutOrder=(startOrder or 30)+idx,ZIndex=6},col)
+    corner(card,9);mk("UIStroke",{Color=H.hex(accHex),Thickness=1.3,Transparency=0.2,ApplyStrokeMode=smBorder},card)
+    pad(card,9,7,9,7);list(card,5)
+    local topR=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},card)
+    local ttl=mk("TextLabel",{Size=u2(1,-80,1,0),BackgroundTransparency=1,Text="🎨 Theme: "..tostring(d.n or"custom").." ("..tostring(d.bm or"solid")..")",Font=fGB,TextSize=11,TextColor3=H.hex(txtHex),TextXAlignment=txL,TextTruncate=trEnd},topR)
+    local swRow=mk("Frame",{Size=u2(1,0,0,16),BackgroundTransparency=1,LayoutOrder=2},card)
+    mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},swRow)
+    for si,hexStr in ipairs({cMap.bg or baseT.bg,cardBgHex,accHex,txtHex,cMap.g1 or baseT.g1,cMap.g2 or baseT.g2})do
+      if tostring(hexStr):match("^#%x%x%x%x%x%x$")then
+        local sw=mk("Frame",{Size=uo(18,14),BackgroundColor3=H.hex(hexStr),BorderSizePixel=0,LayoutOrder=si},swRow)
+        corner(sw,4);mk("UIStroke",{Color=c3(1,1,1),Thickness=1,Transparency=0.65,ApplyStrokeMode=smBorder},sw)
+      end
+    end
+    local actR=mk("Frame",{Size=u2(1,0,0,24),BackgroundTransparency=1,LayoutOrder=3},card)
+    mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO},actR)
+    local tryB=mk("TextButton",{Size=uo(76,24),BackgroundColor3=H.hex(accHex),Text=T("theme_try"),Font=fGB,TextSize=10,TextColor3=H.lum(H.hex(accHex))>0.55 and rgb(20,20,24)or c3(1,1,1),BorderSizePixel=0,LayoutOrder=1},actR)
+    corner(tryB,6)
+    hook(tryB.MouseButton1Click,function()
+      S.prevThemeCode=S.prevThemeCode or F.themeCode()
+      if F.importTheme(code)then F.save(true);F.toast(T("theme_ok"),true)end
+    end)
+    if S.prevThemeCode then
+      local undoB=tbtn(actR,"↩",{size=uo(28,24),key="warn",ts=10,r=6,layout=2})
+      hook(undoB.MouseButton1Click,function()
+        local prev=S.prevThemeCode;S.prevThemeCode=nil
+        if prev and F.importTheme(prev)then F.save(true);F.toast(T("theme_undo"),true)end
+      end)
+    end
+    local cpB=tbtn(actR,T("copy"),{size=uo(50,24),key="btnBg",ts=10,r=6,layout=3})
+    hook(cpB.MouseButton1Click,function()F.copyText(code)end)
+    local svB=tbtn(actR,"★ "..T("save"),{size=uo(58,24),key="btnBg",ts=10,r=6,layout=4})
+    hook(svB.MouseButton1Click,function()
+      P.savedThemes=type(P.savedThemes)=="table"and P.savedThemes or{}
+      tinsert(P.savedThemes,1,{name="Shared · "..tostring(d.n or"custom"),code=code,ts=H.now()})
+      while#P.savedThemes>16 do tremove(P.savedThemes)end
+      S.isDirty=true;F.save(true);F.toast(T("saved_ok"),true)
+    end)
+  end
+end
+
+function F.renderProfileTagCards(col,profNames,msgId,startOrder)
+  for idx,rawU in ipairs(profNames or{})do
+    local isMe=(rawU:lower()==P.username:lower())
+    local rec=F.userRec(rawU)or{}
+    local pt=(isMe and type(P.profTheme)=="table"and P.profTheme)or(type(rec.profTheme)=="table"and rec.profTheme)or{}
+    local bgC=H.hex(H.safeHex(pt.bg,nil),TH.bg3)
+    local accC=H.hex(H.safeHex(pt.acc,nil),TH.accent)
+    local txtC=H.ensureContrast(H.hex(H.safeHex(pt.txt,nil),TH.text),bgC,4.2)
+    local card=mk("TextButton",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundColor3=bgC,Text="",AutoButtonColor=true,BorderSizePixel=0,ClipsDescendants=true,LayoutOrder=(startOrder or 40)+idx,ZIndex=6},col)
+    corner(card,10);mk("UIStroke",{Color=accC,Thickness=1.3,Transparency=0.25,ApplyStrokeMode=smBorder},card)
+    local banId=H.assetId((isMe and P.profBanner)or rec.profBanner or"")
+    if banId then
+      local banImg=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,ImageTransparency=0.55,ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0,ZIndex=6},card)
+      F.setAsset(banImg,banId,nil,0.55)
+    end
+    local inner=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,ZIndex=7},card)
+    pad(inner,8,6,8,6)
+    local icId=H.assetId((isMe and P.profIcon)or rec.profIcon or"")
+    F.makeFramedAvatar(inner,{px=36,pos=uo(0,2),z=8,uid=(isMe and P.userId)or tonumber(rec.userId or rec.id)or F.uidOf(rawU),customIc=icId,pt=pt})
+    local dName=F.disp((isMe and P.display)or rec.display or rawU)
+    local cc=H.resolveCountry((isMe and P.country)or rec.country or"??")
+    local hdrTxt=dName.." (@"..rawU..") "..(cc~="??"and H.flag(cc)or"")
+    local nLbl=mk("TextLabel",{Size=u2(1,-108,0,16),Position=uo(44,1),BackgroundTransparency=1,Text=hdrTxt,Font=fGB,TextSize=11,TextColor3=txtC,TextXAlignment=txL,TextTruncate=trEnd,ZIndex=8},inner)
+    local bioStr=H.trim(tostring((isMe and P.status~=""and P.status or P.bio)or(rec.status and rec.status~=""and rec.status or rec.bio)or""))
+    local subLbl=mk("TextLabel",{Size=u2(1,-108,0,15),Position=uo(44,19),BackgroundTransparency=1,Text=bioStr~=""and F.disp(H.clip(bioStr,55))or(F.isLive(rec)and"🟢 Online"or"Chat Bridge Profile"),Font=fG,TextSize=10,TextColor3=H.mix(txtC,bgC,0.28),TextXAlignment=txL,TextTruncate=trEnd,ZIndex=8},inner)
+    local openB=tbtn(inner,T("profile"),{size=uo(56,24),pos=u2(1,-56,0,6),key="accent",ts=10,r=6})
+    openB.BackgroundColor3=accC;openB.TextColor3=H.lum(accC)>0.55 and rgb(20,20,24)or c3(1,1,1);openB.ZIndex=9
+    local function openIt()F.openProfile(rawU)end
+    hook(card.MouseButton1Click,openIt);hook(openB.MouseButton1Click,openIt)
+    if not isMe and not S.profFullLoaded[rawU:lower()]then
+      S.profCardFetched=S.profCardFetched or{}
+      if not S.profCardFetched[rawU:lower()]then
+        S.profCardFetched[rawU:lower()]=true
+        F.fetchUserProfile(rawU,function()
+          local msgObj=msgId and S.msgs[msgId]
+          if msgObj and S.frames[msgId]and F.visibleIn(msgObj,S.chan)then F.renderMessage(msgObj)end
+        end)
+      end
+    end
+  end
+end
+
+function F.renderMsgTranslation(col,m,order)
+  if not m or not m._transText or m._transText==""then return end
+  local box=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=order or 50,ZIndex=5},col)
+  th(box,"BackgroundColor3","bg3");corner(box,7);stroke(box,"accent",1,0.4);pad(box,8,5,8,5);list(box,4)
+  lab(box,F.disp(m._transText),{wrap=true,auto=true,ts=max(11,(P.textSize or 13)-1),key="text",layout=1})
+  local foot=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=2},box)
+  lab(foot,"🌐 "..T("translate_by").." ("..tostring(m._transSrc or"auto"):upper().."→"..tostring(m._transLang or"vi"):upper()..")",{size=u2(1,-102,1,0),ts=9,key="muted",trunc=true})
+  local chgB=tbtn(foot,"🌐",{size=uo(24,18),pos=u2(1,-76,0,0),key="btnBg",ts=9,r=4})
+  hook(chgB.MouseButton1Click,function()F.openTranslateLangMenu(m)end)
+  local cpB=tbtn(foot,"Copy",{size=uo(32,18),pos=u2(1,-50,0,0),key="btnBg",ts=9,r=4})
+  hook(cpB.MouseButton1Click,function()F.copyText(m._transText)end)
+  local xB=tbtn(foot,"X",{size=uo(16,18),pos=u2(1,-16,0,0),key="danger",ts=9,r=4})
+  hook(xB.MouseButton1Click,function()m._transText=nil;F.renderMessage(m)end)
+end
+
+--- [F.renderMessage] Khởi tạo và vẽ toàn bộ giao diện của một thẻ tin nhắn `m` vào danh sách cuộn `U.scroll` (hỗ trợ Code Block, Sound Tag, Theme Card, Profile Card & Dịch tại chỗ)
 function F.renderMessage(m)if not m or m.deleted or m.cleared or m.type~="msg"then return end
   if not F.visibleIn(m,S.chan)or not F.matchSearch(m)then return end
   local id=m.packetId if S.frames[id]then F.dropFrame(id)end
-  S.rxHolders=S.rxHolders or{}local mine=m.author==P.username
+  S.rxHolders=S.rxHolders or{}local mine=tostring(m.author or""):lower()==P.username:lower()
   local pinged=(not mine)and F.mentions(m.content)local grp=m.grp==true and not m.failed and P.group and S.search==""and not m.fwdFrom and m.prevId~=nil and S.frames[m.prevId]~=nil
   local mStyle=P.msgStyle or"card"
   local frame=mk("Frame",{Name="Item_"..tostring(id),Size=u2(1,-4,0,0),AutomaticSize=asY,
@@ -2485,23 +3138,38 @@ function F.renderMessage(m)if not m or m.deleted or m.cleared or m.type~="msg"th
     local rbar=mk("Frame",{Size=u2(0,3,1,-4),Position=uo(2,2),BackgroundColor3=barCol,BorderSizePixel=0,ZIndex=7},rb)corner(rbar,2)
     local rl=lab(rb,F.disp("↩ @"..tostring(m.replyAuthor or"?")..": "..H.clip(F.plain(m.replySnippet or""),56)),{size=u2(1,-14,1,0),pos=uo(10,0),ts=10,key="muted",trunc=true,})rl.ZIndex=7
     hook(rb.MouseButton1Click,function()F.jumpToMsg(m.replyTo)end)end
-  local segs,imgCount,hasText=F.parseInlineSegments(m.content)if imgCount==0 then local rawDisp=F.disp(F.expandShortcodes(m.content))..(grp and m.edited and(" "..T("edited"))or"")
-    local body=lab(col,rawDisp,{wrap=true,auto=true,ts=P.textSize,layout=3})if rawDisp:find("@[%w_]+")or rawDisp:find(":[%w_%-]+:")then
-      themed(body,function(bLbl)local eHex=H.tohex(TH.emojiText or TH.accent)local escaped=H.esc(rawDisp):gsub("@([%w_]+)",function(u)
-          local colHex=H.tohex(F.mentionColorFor(u))return'<font color="'..colHex..'"><b>@'..u..'</b></font>'end):gsub(":([%w_%-]+):",function(em)
-          return'<font color="'..eHex..'"><b>:'..em..':</b></font>'end)bLbl.RichText=true bLbl.Text=escaped end)else body.RichText=false
-    end body.ZIndex=3 elseif not hasText then local ir=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3,ZIndex=4},col)
-    mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,6),SortOrder=soLO,VerticalAlignment=vaC},ir)local sz=imgCount==1 and 50 or 40 for i,seg in ipairs(segs)do if seg.kind=="img"then
-        local info=F.emojiInfoById(seg.id)local holder=mk("TextButton",{Size=uo(sz,sz+(info and 13 or 0)),BackgroundTransparency=1,Text="",BorderSizePixel=0,LayoutOrder=i,ZIndex=6,},ir)
-        local ib=F.iconBox(holder,"img:"..seg.id,sz)ib.ZIndex=6 if info and info.name then local tagL=lab(holder,":"..info.name..":",{size=u2(1,0,0,12),pos=uo(0,sz),ts=9,bold=true,key="emojiText",align=txC,trunc=true,})tagL.ZIndex=6 end
-        hook(holder.MouseButton1Click,function()F.openEmojiPreview(seg.id,m,false)end)end end else local flow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3,ZIndex=4},col)
-    mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,3),SortOrder=soLO,VerticalAlignment=vaC},flow)local orderIdx=0 local inlineSz=clamp(P.textSize+8,20,26)for _,seg in ipairs(segs)do if seg.kind=="text"then
-        for word in tostring(seg.text):gmatch("%S+")do orderIdx=orderIdx+1 local wStr=F.disp(word)local wW=max(6,H.textW(wStr,P.textSize,fG)+2)local wl=mk("TextLabel",{Size=uo(wW,inlineSz),BackgroundTransparency=1,
-            Text=wStr,Font=fG,TextSize=P.textSize,TextXAlignment=txL,BorderSizePixel=0,LayoutOrder=orderIdx,ZIndex=4,},flow)if wStr:match("^@[%w_]+")then local u=wStr:match("^@([%w_]+)")wl.Font=fGB
-            themed(wl,function(x)x.TextColor3=F.mentionColorFor(u)end)elseif wStr:match("^:[%w_%-]+:$")then wl.Font=fGB th(wl,"TextColor3","emojiText")else th(wl,"TextColor3","text")end end elseif seg.kind=="img"then orderIdx=orderIdx+1
-        local info=F.emojiInfoById(seg.id)local eb=mk("TextButton",{
-          Size=uo(inlineSz,inlineSz),BackgroundTransparency=1,Text="",BorderSizePixel=0,LayoutOrder=orderIdx,ZIndex=6,},flow)local ib=F.iconBox(eb,"img:"..seg.id,inlineSz)ib.ZIndex=6
-        hook(eb.MouseButton1Click,function()F.openEmojiPreview(seg.id,m,false)end)end end end
+  local rich=F.parseRichMessageContent(m.content)
+  local hasRichCards=(#rich.codeBlocks>0 or#rich.themeCodes>0 or#rich.soundIds>0 or#rich.profileNames>0)
+  local segs,imgCount,hasText=F.parseInlineSegments(rich.cleanText)
+  if rich.cleanText~=""or not hasRichCards then
+    if imgCount==0 then local rawDisp=F.disp(F.expandShortcodes(rich.cleanText))..(grp and m.edited and(" "..T("edited"))or"")
+      if rawDisp~=""then
+        local body=lab(col,rawDisp,{wrap=true,auto=true,ts=P.textSize,layout=3})if rawDisp:find("@[%w_]+")or rawDisp:find(":[%w_%-]+:")then
+          themed(body,function(bLbl)local eHex=H.tohex(TH.emojiText or TH.accent)local escaped=H.esc(rawDisp):gsub("@([%w_]+)",function(u)
+              local colHex=H.tohex(F.mentionColorFor(u))return'<font color="'..colHex..'"><b>@'..u..'</b></font>'end):gsub(":([%w_%-]+):",function(em)
+              return'<font color="'..eHex..'"><b>:'..em..':</b></font>'end)bLbl.RichText=true bLbl.Text=escaped end)else body.RichText=false
+        end body.ZIndex=3
+      end
+    elseif not hasText then local ir=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3,ZIndex=4},col)
+      mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,6),SortOrder=soLO,VerticalAlignment=vaC},ir)local sz=imgCount==1 and 50 or 40 for i,seg in ipairs(segs)do if seg.kind=="img"then
+          local info=F.emojiInfoById(seg.id)local holder=mk("TextButton",{Size=uo(sz,sz+(info and 13 or 0)),BackgroundTransparency=1,Text="",BorderSizePixel=0,LayoutOrder=i,ZIndex=6,},ir)
+          local ib=F.iconBox(holder,"img:"..seg.id,sz)ib.ZIndex=6 if info and info.name then local tagL=lab(holder,":"..info.name..":",{size=u2(1,0,0,12),pos=uo(0,sz),ts=9,bold=true,key="emojiText",align=txC,trunc=true,})tagL.ZIndex=6 end
+          hook(holder.MouseButton1Click,function()F.openEmojiPreview(seg.id,m,false)end)end end
+    else local flow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3,ZIndex=4},col)
+      mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,3),SortOrder=soLO,VerticalAlignment=vaC},flow)local orderIdx=0 local inlineSz=clamp(P.textSize+8,20,26)for _,seg in ipairs(segs)do if seg.kind=="text"then
+          for word in tostring(seg.text):gmatch("%S+")do orderIdx=orderIdx+1 local wStr=F.disp(word)local wW=max(6,H.textW(wStr,P.textSize,fG)+2)local wl=mk("TextLabel",{Size=uo(wW,inlineSz),BackgroundTransparency=1,
+              Text=wStr,Font=fG,TextSize=P.textSize,TextXAlignment=txL,BorderSizePixel=0,LayoutOrder=orderIdx,ZIndex=4,},flow)if wStr:match("^@[%w_]+")then local u=wStr:match("^@([%w_]+)")wl.Font=fGB
+              themed(wl,function(x)x.TextColor3=F.mentionColorFor(u)end)elseif wStr:match("^:[%w_%-]+:$")then wl.Font=fGB th(wl,"TextColor3","emojiText")else th(wl,"TextColor3","text")end end elseif seg.kind=="img"then orderIdx=orderIdx+1
+          local info=F.emojiInfoById(seg.id)local eb=mk("TextButton",{
+            Size=uo(inlineSz,inlineSz),BackgroundTransparency=1,Text="",BorderSizePixel=0,LayoutOrder=orderIdx,ZIndex=6,},flow)local ib=F.iconBox(eb,"img:"..seg.id,inlineSz)ib.ZIndex=6
+          hook(eb.MouseButton1Click,function()F.openEmojiPreview(seg.id,m,false)end)end end
+    end
+  end
+  if#rich.codeBlocks>0 then F.renderCodeBlockCards(col,rich.codeBlocks,10)end
+  if#rich.soundIds>0 then F.renderSoundTagCards(col,rich.soundIds,20)end
+  if#rich.themeCodes>0 then F.renderThemeCards(col,rich.themeCodes,30)end
+  if#rich.profileNames>0 then F.renderProfileTagCards(col,rich.profileNames,id,40)end
+  if m._transText and m._transText~=""then F.renderMsgTranslation(col,m,50)end
   local jPlace,jJob=tostring(m.content or""):match("%[join:(%d+):([%w_%-]+)%]")if jPlace and jJob then
     local jCard=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=4,ZIndex=6},col)th(jCard,"BackgroundColor3","bg3");corner(jCard,8);stroke(jCard,"ok",1,0.3);pad(jCard,6,5,6,5);list(jCard,3)
     local isSameSrv=(tonumber(jPlace)==game.PlaceId and jJob==game.JobId)local jBtn=tbtn(jCard,isSameSrv and T("join_srv_self")or T("join_srv_btn"),{size=u2(1,0,0,24),key=isSameSrv and"bg2"or"ok",ts=11,r=6,layout=1,
@@ -2509,12 +3177,12 @@ function F.renderMessage(m)if not m or m.deleted or m.cleared or m.type~="msg"th
       if isSameSrv then F.toast(T("join_srv_self"),true);return end if F.armAutoTeleport then F.armAutoTeleport(true)end
       F.toast(T("delta_tp_note"),true)
       pcall(function()TeleportService:TeleportToPlaceInstance(tonumber(jPlace),jJob,LP)end)end)end
-  local rx=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=5,Visible=false,ZIndex=12,
+  local rx=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=60,Visible=false,ZIndex=12,
   },col)mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},rx)S.rxHolders[id]=rx F.renderReactions(id)
   if mine then
     S.statusLabels=S.statusLabels or{}
     local stTxt,stKey=F.formatMsgStatus(m)
-    local stLbl=mk("TextButton",{Name="MsgStatus",Size=u2(1,0,0,11),BackgroundTransparency=1,Text=stTxt,Font=fG,TextSize=9,TextXAlignment=txR,TextTruncate=trEnd,AutoButtonColor=false,LayoutOrder=6,BorderSizePixel=0,ZIndex=8},col)
+    local stLbl=mk("TextButton",{Name="MsgStatus",Size=u2(1,0,0,12),BackgroundTransparency=1,Text=stTxt,Font=fG,TextSize=10,TextXAlignment=txR,TextTruncate=trEnd,AutoButtonColor=false,LayoutOrder=70,BorderSizePixel=0,ZIndex=8},col)
     themed(stLbl,function(x)local _,k=F.formatMsgStatus(m)x.TextColor3=TH[k]or TH.muted end)
     hook(stLbl.MouseButton1Click,function()if m.failed then F.resend(m)else F.openSeenDetail(m)end end)
     S.statusLabels[id]=stLbl
@@ -2617,28 +3285,44 @@ function F.openForward(m)
   hook(dmGo.MouseButton1Click,function()
     local u=H.trim(dmIn.Text):gsub("^@","")
     if u==""or u:lower()==P.username:lower()then return end
-    P.dmList=type(P.dmList)=="table"and P.dmList or{}
-    P.dmList[u]=H.now();S.isDirty=true
-    doFwd(F.dmChan(P.username,u),"@"..u)
+    local realU=F.isRealOrFriendUser(u)
+    if realU then
+      P.dmList=type(P.dmList)=="table"and P.dmList or{}
+      P.dmList[realU]=H.now();S.isDirty=true
+      doFwd(F.dmChan(P.username,realU),"@"..realU)
+    else
+      F.verifyRealUser(u,function(vU)
+        if not vU then
+          F.toast(L=="en"and"User not found in Chat Bridge or Friends list."or"Không tìm thấy người dùng thật hoặc bạn bè này!",true)
+          return
+        end
+        P.dmList=type(P.dmList)=="table"and P.dmList or{}
+        P.dmList[vU]=H.now();S.isDirty=true
+        doFwd(F.dmChan(P.username,vU),"@"..vU)
+      end)
+    end
   end)
   local seenU={}
   local function addQuickU(u)
     if not u or u==""or u:lower()==P.username:lower()or seenU[u:lower()]then return end
-    seenU[u:lower()]=true
+    local cu=F.isRealOrFriendUser(u)
+    if not cu then return end
+    seenU[cu:lower()]=true
     lo=lo+1
-    local ub=tbtn(scr,"💬 @"..F.disp(u),{h=26,ts=11,key="btnBg",layout=lo})
+    local ub=tbtn(scr,"💬 @"..F.disp(cu),{h=26,ts=11,key="btnBg",layout=lo})
     ub.TextXAlignment=txL;pad(ub,10,0,10,0)
     hook(ub.MouseButton1Click,function()
       P.dmList=type(P.dmList)=="table"and P.dmList or{}
-      P.dmList[u]=H.now();S.isDirty=true
-      doFwd(F.dmChan(P.username,u),"@"..u)
+      P.dmList[cu]=H.now();S.isDirty=true
+      doFwd(F.dmChan(P.username,cu),"@"..cu)
     end)
   end
   local dmUsers={}
-  for u in pairs(P.dmList or{})do if type(u)=="string"then dmUsers[#dmUsers+1]=u end end
+  for u in pairs(P.dmList or{})do if type(u)=="string"and F.isRealOrFriendUser(u)then dmUsers[#dmUsers+1]=u end end
   tsort(dmUsers,function(a,b)return(tonumber(P.dmList[a])or 0)>(tonumber(P.dmList[b])or 0)end)
   for _,u in ipairs(dmUsers)do addQuickU(u)end
-  for u,r in pairs(S.users or{})do if F.isLive(r)then addQuickU(u)end end
+  for _,u in ipairs(F.allKnownScriptUsers())do addQuickU(u)end
+  for _,fr in ipairs(S.friendsList or{})do addQuickU(fr.u)end
 end
 --- [F.openCtx] Mở trình đơn ngữ cảnh (Context Menu) tại tọa độ chuột/chạm với các thao tác: Trả lời, Chuyển tiếp, Thả cảm xúc, Sao chép, Sửa, Xóa (kể cả Admin/Dev xóa tin nhạy cảm), Báo cáo, Mute
 function F.openCtx(m,pos)F.closeCtx()
@@ -2673,6 +3357,9 @@ function F.openCtx(m,pos)F.closeCtx()
   end
   item("reply",T("reply"),function()F.startReply(m)end)
   item("forward",(L=="en"and"Forward Message"or"Chuyển tiếp tin nhắn"),function()F.openForward(m)end)
+  item("globe",T("translate_btn"),function()F.translateMsgInPlace(m)end,"accent")
+  local isBm=F.isMsgBookmarked(m.packetId)
+  item("bookmark",isBm and T("bookmark_rem")or T("bookmark_add"),function()F.toggleBookmark(m)end,isBm and"warn"or"btnBg")
   item("clipboard",T("copy"),function()F.copyText(F.plain(m.content))end)
   if m.author==P.username then item("pencil",T("edit"),function()F.startEdit(m)end)end
   local isSt=F.isStaff(P.username)
@@ -2696,8 +3383,18 @@ function F.chanName(c)if c=="general"then return"# "..T("general")elseif c=="ann
   elseif c=="scripts"then return T("script_forum")elseif c=="staff"then return T("stafftab")end
   if F.isGroupChan(c)then local g=F.groupByChan(c)return g and("👥 "..F.locText(g.name or"Group"))or"👥 Group"end
   local o=F.dmOther(c)return o and("DM · "..o)or c end
---- [F.updateInfo] Cập nhật thanh thông tin phụ (`U.infoBar`): hiển thị số người đang online, tên kênh và thông tin game
-function F.updateInfo()local n=0 for _,r in pairs(S.users)do if F.isLive(r)then n=n+1 end end n=max(n,1)U.infoLbl.Text=n.." "..T("online").."  ·  "..F.chanName(S.chan)..(S.rtt and("  ·  "..floor(S.rtt).."ms")or"")end
+--- [F.updateInfo] Cập nhật thanh thông tin phụ (`U.infoBar`): hiển thị số người đang online, tên kênh, trạng thái tắt thông báo và nháp tin nhắn
+function F.updateInfo()
+  local n=0 for _,r in pairs(S.users)do if F.isLive(r)then n=n+1 end end n=max(n,1)
+  local ck=F.chanKey(S.chan)
+  local hasDraft=type(P.drafts)=="table"and type(P.drafts[ck])=="string"and H.trim(P.drafts[ck])~=""
+  U.infoLbl.Text=n.." "..T("online").."  ·  "..F.chanName(S.chan)..(hasDraft and("  ·  "..T("draft_tag"))or"")..(S.rtt and("  ·  "..floor(S.rtt).."ms")or"")
+  if U.muteToastBtn then
+    local mutedCh=F.isToastMuted(S.chan)
+    U.muteToastBtn.Text=mutedCh and"🔕"or"🔔"
+    U.muteToastBtn.TextColor3=mutedCh and TH.warn or TH.ok
+  end
+end
 --- [F.cancelCompose] Hủy chế độ đang trả lời (Reply) hoặc đang chỉnh sửa (Edit) tin nhắn
 function F.cancelCompose()S.reply,S.editing=nil,nil U.replyBar.Visible=false F.layout()end
 --- [F.startReply] Bắt đầu chế độ trả lời (Reply) cho tin nhắn `m` kèm biểu tượng Lucide nhận diện rõ ràng
@@ -2725,17 +3422,39 @@ function F.resend(m)m.failed=false;m.sending=true;m.sent=false F.dropFrame(m.pac
     else m.failed=true;F.dropFrame(m.packetId);F.renderMessage(m)end end)end
 --- [F.selectChannel] Chuyển sang kênh chat `chan`, đặt lại bộ đếm chưa đọc, đánh dấu đã xem và vẽ lại danh sách tin nhắn
 function F.selectChannel(chan)
+  chan=tostring(chan or"general")
+  local dmOther=F.dmOther and F.dmOther(chan)or nil
+  if dmOther and not F.isGroupChan(chan)and F.isRealOrFriendUser then
+    local canonOther=F.isRealOrFriendUser(dmOther)or dmOther
+    chan=F.dmChan(P.username,canonOther)
+  end
   if chan=="staff"and not F.isStaff(P.username)then F.toast(T("staff_only"),true);return end
+  if U.input and not S.editing and S.chan and S.chan~="scripts"and S.chan~="punish"then
+    P.drafts=type(P.drafts)=="table"and P.drafts or{}
+    local prevKey=F.chanKey(S.chan)
+    local curTxt=tostring(U.input.Text or"")
+    if H.trim(curTxt)~=""and curTxt:sub(1,1)~="/"then P.drafts[prevKey]=curTxt else P.drafts[prevKey]=nil end
+  end
   S.chan=chan if S.unread[chan]then S.unread[chan]=0 end
-  S.dmUnread[chan]=nil S.newBelow=0;U.jump.Visible=false
-  S.search="";U.searchBox.Text="";U.searchBox.Visible=false if U.input then
+  local ck=F.chanKey(chan)
+  S.dmUnread[chan]=nil
+  for k in pairs(S.dmUnread or{})do if F.chanKey(k)==ck then S.dmUnread[k]=nil end end
+  S.newBelow=0;U.jump.Visible=false
+  S.search="";U.searchBox.Text="";U.searchBox.Visible=false
+  F.cancelCompose()
+  if U.input then
+    local savedDraft=(type(P.drafts)=="table"and type(P.drafts[ck])=="string")and P.drafts[ck]or""
     if chan=="announce"then local canPost=F.canAnnounce(P.username)pcall(function()U.input.TextEditable=canPost end)
       U.input.PlaceholderText=canPost and T("announce_ph")or T("announce_ro")
+      U.input.Text=canPost and savedDraft or""
     elseif chan=="punish"then local isSt=F.isStaff(P.username)pcall(function()U.input.TextEditable=isSt end)
       U.input.PlaceholderText=isSt and T("punish_ph")or T("punish_ro")
-    else pcall(function()U.input.TextEditable=true end)U.input.PlaceholderText=T("input")end end
-  F.cancelCompose();F.layout()
-  F.rebuildFeed();F.paintTabs();F.updateInfo();F.refreshTypingLabel()
+      U.input.Text=""
+    elseif chan=="scripts"then pcall(function()U.input.TextEditable=true end);U.input.PlaceholderText=T("input");U.input.Text=""
+    else pcall(function()U.input.TextEditable=true end)U.input.PlaceholderText=T("input");U.input.Text=savedDraft end
+  end
+  if F.updateSuggest then F.updateSuggest()end
+  F.layout();F.rebuildFeed();F.paintTabs();F.updateInfo();F.refreshTypingLabel()
   if S.booted then F.markChannelSeen(chan)end end
 
 -- =============================================================================
@@ -2780,14 +3499,22 @@ function F.openScriptDetail(sc)if not sc then return end
     Size=uo(clamp(H.textW(authStr,12,fGB)+4,24,130),20),BackgroundTransparency=1,Text=authStr,Font=fGB,TextSize=12,TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0,LayoutOrder=2,},authorRow)
   if topR then authBtn.TextColor3=H.hex(topR.color)else th(authBtn,"TextColor3","text")end
   hook(authBtn.MouseButton1Click,function()F.openProfile(sc.author)end)if topR then F.roleChip(authorRow,topR,3,false)
-  elseif F.isDev(sc.author)then F.roleChip(authorRow,F.DEVROLE,3,false)end lab(metaCard,"["..F.disp(sc.tag or"Universal").."]  ·  "..H.shortTime(sc.ts),{ts=11,bold=true,key="accent"})if sc.desc and sc.desc~=""then
+  elseif F.isDev(sc.author)then F.roleChip(authorRow,F.DEVROLE,3,false)end
+  local verStr=(tonumber(sc.ver)or 1)>1 and(" · v"..tostring(sc.ver))or""
+  lab(metaCard,"["..F.disp(sc.tag or"Universal").."]"..verStr.."  ·  "..H.shortTime(sc.editedAt and sc.editedAt>0 and sc.editedAt or sc.ts),{ts=11,bold=true,key="accent"})
+  if sc.changelog and sc.changelog~=""then lab(metaCard,"📝 "..F.disp(sc.changelog),{wrap=true,auto=true,ts=10,key="ok"})end
+  if sc.desc and sc.desc~=""then
     lab(metaCard,F.disp(sc.desc),{wrap=true,auto=true,ts=12})end if sc.gameName and sc.gameName~=""then lab(metaCard,"🎮 Game: "..F.disp(sc.gameName)..(sc.placeId and sc.placeId>0 and(" ("..tostring(sc.placeId)..")")or""),{
       wrap=true,auto=true,ts=10,key="ok",})end
   F.section(scr,T("script_code"))local codeBox=mk("TextBox",{Size=u2(1,0,0,150),Text=tostring(sc.code or""),ClearTextOnFocus=false,TextEditable=false,MultiLine=true,
     TextWrapped=true,Font=fCode,TextSize=11,TextXAlignment=txL,TextYAlignment=Enum.TextYAlignment.Top,BorderSizePixel=0,},scr)
   F.styleInput(codeBox,"code",true)local act1=row(scr,30)local bCopy=rbtn(act1,T("copy"),{key="accent",size=u2(0.5,-3,1,0)})hook(bCopy.MouseButton1Click,function()F.copyText(tostring(sc.code or""))end)local bReact=rbtn(act1,T("react"),{size=u2(0.5,-3,1,0)})
-  hook(bReact.MouseButton1Click,function()F.openEmoji({title=T("react"),onPick=function(e)F.doScriptReact(sc,e)end})end)local act2=row(scr,28)local bProf=rbtn(act2,T("profile"),{ts=11})
-  hook(bProf.MouseButton1Click,function()F.openProfile(sc.author)end)local bRep=rbtn(act2,T("report"),{key="warn",ts=11})hook(bRep.MouseButton1Click,function()F.openScriptReport(sc)end)
+  hook(bReact.MouseButton1Click,function()F.openEmoji({title=T("react"),onPick=function(e)F.doScriptReact(sc,e)end})end)local act2=row(scr,28)
+  local canEditSc=F.isStaff(P.username)or tostring(sc.author or""):lower()==P.username:lower()
+  local btnW=canEditSc and u2(1/3,-3,1,0)or u2(0.5,-3,1,0)
+  local bProf=rbtn(act2,T("profile"),{size=btnW,ts=11})hook(bProf.MouseButton1Click,function()F.openProfile(sc.author)end)
+  if canEditSc then local bEdSc=rbtn(act2,"✏️ "..T("edit"),{size=btnW,key="ok",ts=11});hook(bEdSc.MouseButton1Click,function()F.openScriptComposer(sc)end)end
+  local bRep=rbtn(act2,T("report"),{size=btnW,key="warn",ts=11})hook(bRep.MouseButton1Click,function()F.openScriptReport(sc)end)
   sc.comments=type(sc.comments)=="table"and sc.comments or{}
   local cmtSecTitle=F.section(scr,(L=="en"and"💬 Comments ("or"💬 Bình luận (")..#sc.comments..")")
   local cmtInputRow=row(scr,30)
@@ -2850,28 +3577,49 @@ function F.openScriptDetail(sc)if not sc then return end
       local rc=F.card(scr,0);rc.AutomaticSize=asY;rc.Size=u2(1,0,0,0)pad(rc,8,5,8,5);list(rc,2)lab(rc,"@"..F.disp(rp.by or"?").." · "..H.shortTime(rp.ts),{ts=10,bold=true,key="warn"})
       lab(rc,F.disp(rp.reason or""),{ts=11,wrap=true,auto=true})end end if F.isStaff(P.username)or tostring(sc.author):lower()==P.username:lower()then local bDel=tbtn(scr,T("script_del_this"),{key="danger",h=32})
     hook(bDel.MouseButton1Click,function()F.deleteScriptTopics({sc.id},function(ok)if ok then if type(close)=="function"then close()else F.closeModal()end end end)end)end end
---- [F.openScriptComposer] Mở hộp thoại đăng tải một chủ đề chia sẻ Script mới lên diễn đàn `#scripts`
-function F.openScriptComposer()
+--- [F.openScriptComposer] Mở hộp thoại đăng tải Script mới HOẶC chỉnh sửa & nâng phiên bản Script cũ (`editSc`) mà vẫn giữ nguyên bình luận & cảm xúc
+function F.openScriptComposer(editSc)
   if F.muted(P.username)then F.toast(T("muted"),true);return end if S.banned then F.toast(T("banned_you"),true);return end
-  local scr,close=F.modalBox("+ "..T("script_new"),400,560)
-  local titleBox=field(scr,T("script_title"),"")titleBox.PlaceholderText=T("script_title_ph")lab(scr,T("script_tag"),{h=14,ts=10,bold=true,key="muted"})local chosenTag="Universal"
+  local isEdit=type(editSc)=="table"and editSc.id~=nil
+  local nextVer=isEdit and((tonumber(editSc.ver)or 1)+1)or 1
+  local modalTitle=isEdit and("✏️ "..T("script_edit").." (v"..nextVer..")")or("+ "..T("script_new"))
+  local scr,close=F.modalBox(modalTitle,400,isEdit and 610 or 560)
+  local titleBox=field(scr,T("script_title"),isEdit and tostring(editSc.title or"")or"")titleBox.PlaceholderText=T("script_title_ph")lab(scr,T("script_tag"),{h=14,ts=10,bold=true,key="muted"})local chosenTag=isEdit and tostring(editSc.tag or"Universal")or"Universal"
   local tagRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO},tagRow)local tagBtns={}
   local postTags={"Universal","Current Game","Hub / GUI","PVP / Combat","Fun / Misc"}
   local function paintTags()for t,b in pairs(tagBtns)do local on=(t==chosenTag)b.BackgroundColor3=on and TH.accent or TH.btnBg b.TextColor3=on and(H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1))or TH.text end end
   for i,tg in ipairs(postTags)do local b=tbtn(tagRow,tg=="Current Game"and("🎮 "..H.clip(S.placeName~="?"and S.placeName or T("tag_cur_game"),18))or tg,{size=uo(112,26),ts=10,r=13,layout=i,})tagBtns[tg]=b
-    hook(b.MouseButton1Click,function()chosenTag=tg;paintTags()end)end paintTags()local descBox=field(scr,T("script_desc"),"",true)descBox.PlaceholderText=T("script_desc_ph")local codeHdr=row(scr,22)
+    hook(b.MouseButton1Click,function()chosenTag=tg;paintTags()end)end paintTags()
+  local descBox=field(scr,T("script_desc"),isEdit and tostring(editSc.desc or"")or"",true)descBox.PlaceholderText=T("script_desc_ph")
+  local chgBox=isEdit and field(scr,T("script_changelog"),"")or nil
+  if chgBox then chgBox.PlaceholderText=L=="en"and"e.g. Fixed autofarm loop..."or"VD: Sửa lỗi, tối ưu tốc độ..."end
+  local codeHdr=row(scr,22)
   lab(codeHdr,T("script_code"),{size=u2(1,-120,1,0),ts=10,bold=true,key="muted"})local codeBox if type(getclipboard)=="function"then local pst=tbtn(codeHdr,T("script_paste"),{size=uo(114,22),ts=10,key="btnBg",r=6})
     hook(pst.MouseButton1Click,function()pcall(function()local clipStr=getclipboard()if type(clipStr)=="string"and clipStr~=""and codeBox then codeBox.Text=clipStr end end)end)end codeBox=mk("TextBox",{
-    Size=u2(1,0,0,120),Text="",PlaceholderText='loadstring(game:HttpGet("https://..."))()',ClearTextOnFocus=false,MultiLine=true,TextWrapped=true,Font=fCode,TextSize=11,TextXAlignment=txL,
+    Size=u2(1,0,0,120),Text=isEdit and tostring(editSc.code or"")or"",PlaceholderText='loadstring(game:HttpGet("https://..."))()',ClearTextOnFocus=false,MultiLine=true,TextWrapped=true,Font=fCode,TextSize=11,TextXAlignment=txL,
     TextYAlignment=Enum.TextYAlignment.Top,BorderSizePixel=0,},scr)F.styleInput(codeBox,"code",true)
-  local submit=tbtn(scr,"+ "..T("script_new"),{key="accent",h=36,ts=13})hook(submit.MouseButton1Click,function()local ttl=H.trim(titleBox.Text)local cd=F.cleanScriptSource(codeBox.Text)local ds=H.trim(descBox.Text)
+  local submit=tbtn(scr,modalTitle,{key="accent",h=36,ts=13})hook(submit.MouseButton1Click,function()local ttl=H.trim(titleBox.Text)local cd=F.cleanScriptSource(codeBox.Text)local ds=H.trim(descBox.Text)
     if ttl==""or cd==""then F.toast(T("script_need_fields"),true)return end
-    local finalTag=chosenTag=="Current Game"and H.clip(S.placeName~="?"and S.placeName or"Game",22)or chosenTag enqueue("send","POST","/api/scripts",{
-      action="create",by=P.username,display=P.display,uid=P.userId,title=H.clip(ttl,80),tag=finalTag,desc=H.clip(ds,300),code=cd:sub(1,15000),placeId=game.PlaceId,gameName=S.placeName,},function(d,err)
-      if d and d.ok then if type(d.scripts)=="table"then S.scripts=d.scripts elseif type(d.topic)=="table"then tinsert(S.scripts,d.topic)end
+    local finalTag=chosenTag=="Current Game"and H.clip(S.placeName~="?"and S.placeName or"Game",22)or chosenTag
+    local payload={
+      action=isEdit and"edit"or"create",id=isEdit and editSc.id or nil,by=P.username,display=P.display,uid=P.userId,
+      title=H.clip(ttl,80),tag=finalTag,desc=H.clip(ds,300),code=cd:sub(1,15000),
+      changelog=chgBox and H.clip(H.trim(chgBox.Text),120)or nil,placeId=game.PlaceId,gameName=S.placeName,
+    }
+    enqueue("send","POST","/api/scripts",payload,function(d,err)
+      if d and d.ok then
+        if type(d.scripts)=="table"then S.scripts=d.scripts
+        elseif type(d.topic)=="table"then
+          local replaced=false
+          for k,x in ipairs(S.scripts or{})do if x.id==d.topic.id then S.scripts[k]=d.topic;replaced=true;break end end
+          if not replaced then tinsert(S.scripts,d.topic)end
+        end
         S.scriptSeq=tonumber(d.scriptSeq)or S.scriptSeq S.isDirty=true
         if type(close)=="function"then close()else F.closeModal()end
-        F.toast(T("script_post_ok"),true)if S.chan=="scripts"then F.rebuildFeed(true)end else F.netError((d and d.error)or err)end end)end)end
+        F.toast(isEdit and T("script_update_ok")or T("script_post_ok"),true)
+        if S.chan=="scripts"then F.rebuildFeed(true)end
+      else F.netError((d and d.error)or err)end
+    end)end)end
 --- [F.renderScriptForum] Vẽ giao diện diễn đàn chia sẻ Script (thanh công cụ, bộ lọc Tag, tìm kiếm và danh sách thẻ Script kèm Bình luận)
 function F.renderScriptForum()local staff=F.isStaff(P.username)local topBar=mk("Frame",{Size=u2(1,-4,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=1,},U.scroll)
   th(topBar,"BackgroundColor3","bg2",true);corner(topBar,10);pad(topBar,8,8,8,8);list(topBar,6)local row1=row(topBar,30);row1.LayoutOrder=1 local postBtn=rbtn(row1,"+ "..T("script_new"),{key="accent",
@@ -2903,7 +3651,13 @@ function F.renderScriptForum()local staff=F.isStaff(P.username)local topBar=mk("
     mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,5),SortOrder=soLO,VerticalAlignment=vaC},metaTop)if staff and S.scriptMultiMode then local chkBtn=tbtn(metaTop,isSel and"x"or"",{
         size=uo(22,20),ts=11,key=isSel and"danger"or"btnBg",r=6,layout=0,})hook(chkBtn.MouseButton1Click,function()S.scriptSelected[sid]=not S.scriptSelected[sid]or nil F.rebuildFeed(true)end)end
     local tgStr=F.disp(sc.tag or"Universal")local tgPillW=clamp(H.textW(tgStr,10,fGB)+14,42,130)local tagPill=mk("Frame",{Size=uo(tgPillW,18),BorderSizePixel=0,LayoutOrder=1},metaTop)
-    th(tagPill,"BackgroundColor3","bg3");corner(tagPill,9)lab(tagPill,tgStr,{size=us(1,1),ts=10,bold=true,key="accent",align=txC,trunc=true})local tmStr=H.shortTime(sc.ts)
+    th(tagPill,"BackgroundColor3","bg3");corner(tagPill,9)lab(tagPill,tgStr,{size=us(1,1),ts=10,bold=true,key="accent",align=txC,trunc=true})
+    local verN=tonumber(sc.ver)or 1
+    if verN>1 then
+      local vPill=mk("Frame",{Size=uo(clamp(H.textW("v"..verN,9,fGB)+10,24,48),18),BorderSizePixel=0,LayoutOrder=1},metaTop)
+      th(vPill,"BackgroundColor3","ok");vPill.BackgroundTransparency=0.82;corner(vPill,9);lab(vPill,"v"..verN,{size=us(1,1),ts=9,bold=true,key="ok",align=txC})
+    end
+    local tmStr=H.shortTime(sc.editedAt and sc.editedAt>0 and sc.editedAt or sc.ts)
     lab(metaTop,"· "..tmStr,{size=uo(H.textW(tmStr,10,fG)+14,18),ts=10,key="muted",layout=2})if staff and rptCount>0 then lab(metaTop,"! "..rptCount,{size=uo(38,18),ts=10,bold=true,key="warn",layout=3})end
     local titleBtn=mk("TextButton",{Size=u2(1,0,0,20),BackgroundTransparency=1,Text=F.disp(sc.title or"Untitled"),Font=fGB,TextSize=13,TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0,LayoutOrder=2,},card)
     th(titleBtn,"TextColor3","text")hook(titleBtn.MouseButton1Click,function()F.openScriptDetail(sc)end)local metaRow=mk("Frame",{Size=u2(1,0,0,20),BackgroundTransparency=1,LayoutOrder=3},card)
@@ -3153,47 +3907,367 @@ function F.heartbeat(off)
   local body={u=P.username,d=P.display,id=P.userId,st=P.status,bio=P.bio,c=P.country,pb=P.profBanner,pi=P.profIcon,pt=F.compactProfTheme(P.profTheme),sg=P.showGame,mc=P.msgCount or 0,pl=game.PlaceId,gn=S.placeName,jb=game.JobId,off=off and true or nil}
   enqueue("other","POST","/api/presence",body,function(data,err)if data and data.ok then F.ingestPresence(data)end end)end
 --- [F.ingestPresence] Cập nhật danh sách người dùng trực tuyến (`S.users`), ảnh Profile, chủ đề riêng, trạng thái Mute và Ban từ dữ liệu phản hồi của máy chủ
-function F.ingestPresence(data)local now=os.clock()for _,u in ipairs(data.users or{})do
+function F.isDmPartner(u)
+  local lk=tostring(u or""):lower()
+  if lk==""then return false end
+  for k in pairs(P.dmList or{})do if tostring(k):lower()==lk then return true end end
+  return false
+end
+function F.ingestPresence(data)
+  local now=os.clock()
+  local curLive={}
+  local warmed=(S.presenceWarmed==true)or(now-(S.bootClock or 0)>6)
+  for _,u in ipairs(data.users or{})do
+    local lk=tostring(u.u or""):lower()
+    if lk~=""then curLive[lk]=true end
     local rec=S.users[u.u]or{}rec.display,rec.userId,rec.status,rec.bio,rec.country=u.d,tonumber(u.id)or 1,u.st or"",u.bio or"",H.resolveCountry(u.c or"??")
     rec.profBanner,rec.profIcon=H.assetId(u.pb or"")or"",H.assetId(u.pi or"")or""
     rec.profTheme=type(u.pt)=="table"and u.pt or{}
     local umc=tonumber(u.mc or u.msgCount)or 0
     rec.msgCount=max(tonumber(rec.msgCount)or 0,umc)
-    if tostring(u.u or""):lower()==P.username:lower()and umc>(P.msgCount or 0)then P.msgCount=umc;S.isDirty=true end
+    if lk==P.username:lower()and umc>(P.msgCount or 0)then P.msgCount=umc;S.isDirty=true end
     rec.inGame,rec.placeId,rec.gameName,rec.jobId=u.sg==true,tonumber(u.pl)or 0,u.gn or"",u.jb or""rec.age=(tonumber(data.now)or 0)-(tonumber(u.ts)or 0)rec.recvAt=now rec.isScript=true S.users[u.u]=rec
-    rec._allowClear=true;F.rememberProfile(u.u,rec,true);rec._allowClear=nil end
+    rec._allowClear=true;F.rememberProfile(u.u,rec,true);rec._allowClear=nil
+    if lk~=""and lk~=P.username:lower()then
+      local isWatch=F.isDmPartner(u.u)or(type(S.friendsMap)=="table"and S.friendsMap[lk]~=nil)
+      local canJoin=(tonumber(rec.placeId)or 0)>0 and tostring(rec.jobId or"")~=""and(tonumber(rec.placeId)~=game.PlaceId or tostring(rec.jobId)~=tostring(game.JobId))
+      if isWatch then
+        if not warmed then
+          S.prevLiveFriends[lk]=true
+        elseif not S.prevLiveFriends[lk]and(now-(S.friendToastCd[lk]or -999))>=120 then
+          S.prevLiveFriends[lk]=true
+          S.friendToastCd[lk]=now
+          local dNm=F.disp(rec.display or u.u)
+          local gTxt=(rec.inGame and rec.gameName~="")and(" · 🎮 "..F.disp(H.clip(rec.gameName,24)))or""
+          local joinPl,joinJob=tonumber(rec.placeId)or 0,tostring(rec.jobId or"")
+          local uTarget=u.u
+          F.toast("🟢 @"..dNm.." "..T("friend_online")..gTxt,false,function()
+            U.main.Visible=true;U.mini.Visible=false;F.openProfile(uTarget)
+          end,canJoin and{
+            btnText="🚀 "..(L=="en"and"Join Same Server"or"Vào chung Server"),
+            btnKey="ok",
+            dur=6,
+            onBtn=function()
+              if F.armAutoTeleport then F.armAutoTeleport(true)end
+              F.toast(T("delta_tp_note"),true)
+              pcall(function()TeleportService:TeleportToPlaceInstance(joinPl,joinJob,LP)end)
+            end,
+          }or{dur=5})
+        else
+          S.prevLiveFriends[lk]=true
+        end
+      end
+    end
+  end
+  if not warmed then S.presenceWarmed=true end
+  for k in pairs(S.prevLiveFriends or{})do if not curLive[k]then S.prevLiveFriends[k]=nil end end
   if type(data.mute)=="table"then F.applyMute(P.username,{on=true,reason=data.mute.reason or"",exp=tonumber(data.mute.exp)or 0,by=data.mute.by or"",ts=tonumber(data.mute.ts)or H.now()})
   elseif data.mute==nil and data.ok then F.clearMuteState(P.username)end
   if type(data.banned)=="table"then S.banned=data.banned elseif data.banned==nil and data.ok then S.banned=nil end
   F.updateInfo()end
+--- [F.allKnownScriptUsers] Lấy toàn bộ danh sách tên người dùng thật đã/đang sử dụng Chat Bridge (Online trước, Offline sau)
+function F.allKnownScriptUsers()
+  local byLow,canon={},{}
+  local function touch(name,uid,pkt)
+    name=H.trim(tostring(name or""):gsub("^@",""))
+    if F.isSystemActor(name,pkt)then return end
+    local lk=name:lower()
+    local sp=S.profiles and S.profiles[lk]
+    local su=S.users and S.users[name]
+    if not su and S.users then for uk,ur in pairs(S.users)do if tostring(uk):lower()==lk then su=ur;break end end end
+    if F.isSystemActor(name,su or sp)then return end
+    local bestName=(sp and sp.u and sp.u~=""and sp.u~="?"and not F.isSystemActor(sp.u,sp)and sp.u)or name
+    if not byLow[lk]then
+      byLow[lk]=true
+      canon[#canon+1]={u=bestName,live=(lk==P.username:lower())or F.isLive(su),lastSeen=max(tonumber(sp and sp.lastSeen)or 0,tonumber(su and su.lastSeen)or 0)}
+    end
+    if uid and tonumber(uid)>1 then S.uidCache=S.uidCache or{};S.uidCache[bestName]=tonumber(uid);S.uidCache[lk]=tonumber(uid)end
+  end
+  touch(P.username,P.userId)
+  for u,r in pairs(S.users or{})do touch(u,type(r)=="table"and r.userId,r)end
+  for k,p in pairs(S.profiles or{})do touch((type(p)=="table"and p.u)or k,type(p)=="table"and p.userId,p)end
+  for _,sc in ipairs(S.scripts or{})do if type(sc)=="table"and sc.author then touch(sc.author,sc.uid,sc)end end
+  for _,m in pairs(S.msgs or{})do if type(m)=="table"and m.author then touch(m.author,m.uid,m)end end
+  for _,em in ipairs(S.sharedEmojis or{})do if type(em)=="table"and em.by then touch(em.by)end end
+  for u in pairs(S.assign or{})do touch(u)end
+  tsort(canon,function(a,b)
+    if a.live~=b.live then return a.live end
+    if a.lastSeen~=b.lastSeen then return a.lastSeen>b.lastSeen end
+    return a.u:lower()<b.u:lower()
+  end)
+  local out={}
+  for _,x in ipairs(canon)do out[#out+1]=x.u end
+  return out
+end
+--- [F.fetchKnownUsers] Tải đồng bộ danh sách toàn bộ người dùng đã từng dùng script (Online & Offline) từ Cloud/Server
+function F.fetchKnownUsers(cb,force)
+  if not force and S.knownUsersFetchedAt and S.knownUsersFetchedAt>0 and os.clock()-S.knownUsersFetchedAt<15 then
+    if cb then pcall(cb,F.allKnownScriptUsers())end return
+  end
+  if S.knownUsersLoading then
+    if cb then task.spawn(function()local t0=os.clock()while S.knownUsersLoading and os.clock()-t0<6 do task.wait(0.1)end pcall(cb,F.allKnownScriptUsers())end)end
+    return
+  end
+  S.knownUsersLoading=true
+  task.spawn(function()
+    local data=type(F.rawRequest)=="function"and F.rawRequest("GET","/api/profile?list=1")or nil
+    if type(data)=="table"and data.ok and type(data.users)=="table"then
+      for _,p in ipairs(data.users)do
+        if type(p)=="table"and p.u then
+          local isOn=(p.online==true)
+          p._allowClear=true;p._fromProfileApi=true
+          local st=F.rememberProfile(p.u,p,isOn)
+          if p.pt~=nil or isOn then S.profFullLoaded=S.profFullLoaded or{};S.profFullLoaded[tostring(p.u):lower()]=true end
+          if isOn and st then
+            local cur=S.users[st.u]or{}
+            for k,v in pairs(st)do cur[k]=v end
+            cur.age=0;cur.recvAt=os.clock();cur.isScript=true
+            S.users[st.u]=cur
+          end
+        end
+      end
+      S.knownUsersFetchedAt=os.clock()
+    end
+    S.knownUsersLoading=false
+    if cb then pcall(cb,F.allKnownScriptUsers())end
+  end)
+end
+--- [F.loadRobloxFriends] Nạp danh sách bạn bè Roblox thật của người chơi (dùng cho DM bạn bè & xác thực người nhận)
+function F.loadRobloxFriends(cb,force)
+  if not force and S.friendsLoadedAt and S.friendsLoadedAt>0 and os.clock()-S.friendsLoadedAt<60 then
+    if cb then pcall(cb,S.friendsList or{})end return
+  end
+  if S.friendsLoading then
+    if cb then task.spawn(function()local t0=os.clock()while S.friendsLoading and os.clock()-t0<6 do task.wait(0.1)end pcall(cb,S.friendsList or{})end)end
+    return
+  end
+  S.friendsLoading=true
+  task.spawn(function()
+    local list,map,seen={}, {}, {}
+    local function putFriend(uname,dname,uid,isOn)
+      uname=H.trim(tostring(uname or""))
+      if uname==""or uname:lower()==P.username:lower()then return end
+      local lk=uname:lower()
+      local rec={u=uname,display=(dname and dname~=""and dname)or uname,userId=tonumber(uid)or 1,isOnline=isOn==true,isFriend=true}
+      map[lk]=rec
+      if rec.userId>1 then S.uidCache=S.uidCache or{};S.uidCache[uname]=rec.userId;S.uidCache[lk]=rec.userId end
+      if not seen[lk]then seen[lk]=true;list[#list+1]=rec else
+        for i,ex in ipairs(list)do if ex.u:lower()==lk then list[i]=rec;break end end
+      end
+    end
+    pcall(function()
+      if LP and LP.UserId and LP.UserId>0 then
+        local ok,pages=pcall(Players.GetFriendsAsync,Players,LP.UserId)
+        if ok and pages then
+          local guard=0
+          while guard<6 do
+            guard=guard+1
+            local okP,cur=pcall(function()return pages:GetCurrentPage()end)
+            if okP and type(cur)=="table"then
+              for _,f in ipairs(cur)do
+                if type(f)=="table"and f.Username then
+                  putFriend(f.Username,f.DisplayName,f.Id,f.IsOnline)
+                  if #list>=250 then break end
+                end
+              end
+            end
+            if #list>=250 or pages.IsFinished then break end
+            local okN=pcall(function()pages:AdvanceToNextPageAsync()end)
+            if not okN then break end
+          end
+        end
+      end
+    end)
+    if#list==0 and LP and LP.UserId and LP.UserId>0 then
+      for _,baseU in ipairs({"https://friends.roblox.com","https://friends.roproxy.com"})do
+        local okH,resH=pcall(httpFn,{Url=baseU.."/v1/users/"..tostring(LP.UserId).."/friends?userSort=StatusFrequents",Method="GET",Headers={["User-Agent"]="Roblox/WinInet",Accept="application/json"}})
+        local stCode=okH and type(resH)=="table"and(tonumber(resH.StatusCode or resH.Status)or 0)or 0
+        if stCode==200 and type(resH.Body)=="string"and resH.Body~=""then
+          local fd=H.jdec(resH.Body)
+          if type(fd)=="table"and type(fd.data)=="table"and#fd.data>0 then
+            for _,f in ipairs(fd.data)do
+              if type(f)=="table"and(f.name or f.username)and f.isDeleted~=true and f.isBanned~=true then
+                putFriend(f.name or f.username,f.displayName or f.display,f.id or 1,f.isOnline==true)
+                if#list>=250 then break end
+              end
+            end
+            break
+          end
+        end
+      end
+    end
+    pcall(function()
+      if LP and type(LP.IsFriendsWith)=="function"then
+        for _,pl in ipairs(Players:GetPlayers())do
+          if pl~=LP and pl.UserId and pl.UserId>0 then
+            local okF,isF=pcall(LP.IsFriendsWith,LP,pl.UserId)
+            if okF and isF==true then putFriend(pl.Name,pl.DisplayName,pl.UserId,true)end
+          end
+        end
+      end
+    end)
+    tsort(list,function(a,b)
+      if a.isOnline~=b.isOnline then return a.isOnline end
+      return tostring(a.display or a.u):lower()<tostring(b.display or b.u):lower()
+    end)
+    S.friendsMap=map;S.friendsList=list;S.friendsLoadedAt=os.clock();S.friendsLoading=false
+    if cb then pcall(cb,list)end
+  end)
+end
+--- [F.isRealScriptUser] Kiểm tra tên người dùng có phải tài khoản đã/đang dùng Chat Bridge hay không
+function F.isRealScriptUser(name)
+  local raw=H.trim(tostring(name or""):gsub("^@",""))
+  if F.isSystemActor(raw)then return nil end
+  local lk=raw:lower()
+  if lk==P.username:lower()then return P.username end
+  for _,u in ipairs(F.allKnownScriptUsers())do if u:lower()==lk then return u end end
+  return nil
+end
+--- [F.isRealOrFriendUser] Kiểm tra tên người dùng có thật trong Chat Bridge hoặc là Bạn bè Roblox của người dùng
+function F.isRealOrFriendUser(name)
+  local raw=H.trim(tostring(name or""):gsub("^@",""))
+  if F.isSystemActor(raw)then return nil end
+  local scU=F.isRealScriptUser(raw)
+  if scU then return scU,"script"end
+  local fr=S.friendsMap and S.friendsMap[raw:lower()]
+  if fr and fr.u then return fr.u,"friend"end
+  return nil
+end
+--- [F.verifyRealUser] Xác thực tên người dùng với cả hệ thống Chat Bridge (/api/profile) và danh sách bạn bè Roblox
+function F.verifyRealUser(name,cb)
+  local raw=H.trim(tostring(name or""):gsub("^@",""))
+  if F.isSystemActor(raw)then if cb then pcall(cb,nil)end return end
+  local hit,kind=F.isRealOrFriendUser(raw)
+  if hit then if cb then pcall(cb,hit,kind)end return end
+  task.spawn(function()
+    local resU,resKind=nil,nil
+    local data=type(F.rawRequest)=="function"and F.rawRequest("GET","/api/profile?u="..H.url(raw))or nil
+    if type(data)=="table"and data.ok and data.found==true and type(data.profile)=="table"and data.profile.u then
+      data.profile._allowClear=true;data.profile._fromProfileApi=true
+      local st=F.rememberProfile(data.profile.u,data.profile,data.online==true)
+      resU=(st and st.u)or tostring(data.profile.u)
+      resKind="script"
+    end
+    if not resU then
+      local done=false
+      F.loadRobloxFriends(function()done=true end,false)
+      local t0=os.clock()
+      while not done and os.clock()-t0<4 do task.wait(0.05)end
+      local fr=S.friendsMap and S.friendsMap[raw:lower()]
+      if fr and fr.u then resU=fr.u;resKind="friend"end
+    end
+    if cb then pcall(cb,resU,resKind)end
+  end)
+end
 --- [F.liveUsers] Lấy danh sách tên những người dùng đang trực tuyến, sắp xếp theo tên hiển thị
 function F.liveUsers()local out={}for u,r in pairs(S.users)do if F.isLive(r)then out[#out+1]=u end end
   tsort(out,function(a,b)return tostring(S.users[a].display or a):lower()<tostring(S.users[b].display or b):lower()end)return out end
 --- [F.userRow] Tạo một hàng giao diện hiển thị ảnh đại diện, tên, quốc kỳ, Role và trạng thái (kèm huy hiệu Warn/Mute/Ban nếu có) của người dùng `u`
 function F.userRow(parent,u,o)o=o or{}local rec=F.userRec(u)or{}
   local isMe=(tostring(u):lower()==P.username:lower())
+  local liveNow=isMe or F.isLive(rec)
+  local isFriendOnline=(not liveNow and rec.isFriend==true and rec.isOnline==true)
   local uPt=(isMe and type(P.profTheme)=="table"and P.profTheme)or(type(rec.profTheme)=="table"and rec.profTheme)or{}
   local b=mk("TextButton",{Size=u2(1,0,0,38),Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=o.layout or 0},parent)th(b,"BackgroundColor3","cardBg");corner(b,8);stroke(b,"border",1,0.5)
   local customIc=(isMe and P.profIcon~=""and P.profIcon)or(rec.profIcon and rec.profIcon~=""and rec.profIcon)or nil
   F.makeFramedAvatar(b,{px=28,pos=uo(6,5),z=2,uid=F.uidOf(u),customIc=customIc,pt=uPt})
-  local dot=mk("Frame",{Size=uo(9,9),Position=uo(26,26),BorderSizePixel=0},b)corner(dot,5);themed(dot,function(x)x.BackgroundColor3=(isMe or F.isLive(rec))and TH.ok or TH.muted end)local top=F.topRole(u)
+  local dot=mk("Frame",{Size=uo(9,9),Position=uo(26,26),BorderSizePixel=0,ZIndex=4},b)corner(dot,5);themed(dot,function(x)x.BackgroundColor3=liveNow and TH.ok or(isFriendOnline and rgb(56,189,248)or TH.muted)end)local top=F.topRole(u)
   local nm=lab(b,F.disp(rec.display or u),{size=u2(1,-(o.right or 60)-44,0,17),pos=uo(40,3),bold=true,trunc=true})
   if top then nm.TextColor3=H.hex(top.color)elseif H.safeHex(uPt.acc,nil)then nm.TextColor3=H.hex(uPt.acc)end
   if uPt.font and FONT_MAP[uPt.font]then nm.Font=FONT_MAP[uPt.font].bold end
   local sub="@"..u
   local mInfo=F.getMute(u)local wList=F.getWarns(u)local bInfo=F.getBan(u)
   local modTag=(bInfo and" · ⛔ BAN"or"")..(mInfo and" · 🔇 Mute"or"")..(#wList>0 and(" · ⚠️"..#wList)or"")
-  if o.sub then sub=o.sub..modTag elseif rec.status and rec.status~=""then sub=sub..modTag.." · "..rec.status else sub=sub..modTag end
+  if o.sub then
+    sub=o.sub..modTag
+  elseif rec.status and rec.status~=""then
+    sub=sub..modTag..(not liveNow and" · Offline"or"").." · "..rec.status
+  elseif not liveNow then
+    if rec.isFriend then
+      sub=sub..modTag..(isFriendOnline and(L=="en"and" · Friend Online"or" · Bạn bè Online")or(L=="en"and" · Friend"or" · Bạn bè"))
+    else
+      local ls=tonumber(rec.lastSeen)or 0
+      local lsStr=(ls>0 and F.fmtTimeFull)and F.fmtTimeFull(ls)or""
+      sub=sub..modTag..(lsStr~=""and(" · Offline ("..lsStr..")")or" · Offline")
+    end
+  else
+    sub=sub..modTag
+  end
   lab(b,F.disp(sub),{size=u2(1,-(o.right or 60)-44,0,14),pos=uo(40,20),ts=10,key=(bInfo or mInfo)and"danger"or(#wList>0 and"warn"or"muted"),trunc=true})
   if o.click then hook(b.MouseButton1Click,function()o.click(u)end)end return b end
---- [F.openOnline] Mở hộp thoại danh sách tất cả người dùng đang trực tuyến
-function F.openOnline()S.reopenModal=F.openOnline local scr=F.modalBox(T("users"),350,440)
-  lab(scr,T("delta_tp_short"),{wrap=true,auto=true,ts=10,key="warn",layout=0})local live=F.liveUsers()if#live==0 then lab(scr,T("off"),{key="muted"})end
-  for i,u in ipairs(live)do F.userRow(scr,u,{layout=i,click=function(x)F.openProfile(x)end})end end
---- [F.openDM] Mở kênh trò chuyện riêng (Direct Message) với người dùng `u`
-function F.openDM(u)if u==P.username then return end
-  P.dmList[u]=H.now();S.isDirty=true F.closeModal()
-  F.selectChannel(F.dmChan(P.username,u))end
+--- [F.openOnline] Mở hộp thoại danh sách & tìm kiếm toàn bộ người dùng đã/đang dùng Script (Online & Offline)
+function F.openOnline()S.reopenModal=F.openOnline local scr=F.modalBox(T("users"),360,480)
+  lab(scr,T("delta_tp_short"),{wrap=true,auto=true,ts=10,key="warn",layout=1})
+  local q=field(scr,"","",false,2)
+  q.PlaceholderText=L=="en"and"Search script users online/offline..."or"Tìm người dùng script (online / offline)..."
+  local fRow=row(scr,26,3)
+  local fMode="all"
+  local bAll=tbtn(fRow,"",{size=u2(1/3,-4,1,0),key="accent",ts=10,r=6,layout=1})
+  local bOn=tbtn(fRow,"",{size=u2(1/3,-4,1,0),key="btnBg",ts=10,r=6,layout=2})
+  local bOff=tbtn(fRow,"",{size=u2(1/3,0,1,0),key="btnBg",ts=10,r=6,layout=3})
+  local listBox=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=4},scr);list(listBox,5)
+  local function paintFilterTabs(nOn,nOff,nAll)
+    bAll.Text=(L=="en"and"👥 All ("or"👥 Tất cả (")..nAll..")"
+    bOn.Text="🟢 Online ("..nOn..")"
+    bOff.Text="⚫ Offline ("..nOff..")"
+    for _,item in ipairs({{bAll,"all"},{bOn,"online"},{bOff,"offline"}})do
+      local btn,id=item[1],item[2]
+      local on=(fMode==id)
+      btn.BackgroundColor3=on and TH.accent or TH.btnBg
+      btn.TextColor3=on and(H.lum(TH.accent)>0.42 and rgb(20,20,24)or c3(1,1,1))or TH.text
+    end
+  end
+  local function rebuild()
+    if not listBox.Parent then return end
+    for _,c in ipairs(listBox:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
+    local allU=F.allKnownScriptUsers()
+    local needle=H.trim(q.Text):lower():gsub("^@","")
+    local nOn,nOff,shown=0,0,0
+    for _,u in ipairs(allU)do
+      local rec=F.userRec(u)or{}
+      local isOn=(u:lower()==P.username:lower())or F.isLive(rec)
+      if isOn then nOn=nOn+1 else nOff=nOff+1 end
+      local passMode=(fMode=="all")or(fMode=="online"and isOn)or(fMode=="offline"and not isOn)
+      local passQ=(needle=="")or u:lower():find(needle,1,true)or tostring(rec.display or""):lower():find(needle,1,true)or tostring(rec.gameName or""):lower():find(needle,1,true)
+      if passMode and passQ then
+        shown=shown+1
+        if shown<=80 then
+          F.userRow(listBox,u,{layout=shown,click=function(x)F.openProfile(x)end})
+        end
+      end
+    end
+    paintFilterTabs(nOn,nOff,#allU)
+    if shown==0 then
+      lab(listBox,L=="en"and"No matching script users found."or"Không tìm thấy người dùng script phù hợp.",{key="muted",ts=11,wrap=true,auto=true,layout=1})
+    end
+  end
+  hook(bAll.MouseButton1Click,function()fMode="all";rebuild()end)
+  hook(bOn.MouseButton1Click,function()fMode="online";rebuild()end)
+  hook(bOff.MouseButton1Click,function()fMode="offline";rebuild()end)
+  hook(q:GetPropertyChangedSignal("Text"),rebuild)
+  rebuild()
+  F.fetchKnownUsers(function()if listBox.Parent then rebuild()end end)
+end
+--- [F.openDM] Mở kênh trò chuyện riêng (Direct Message) chỉ với người dùng thật trên Chat Bridge hoặc Bạn bè Roblox
+function F.openDM(u)
+  u=H.trim(tostring(u or"")):gsub("^@","")
+  if u==""or u:lower()==P.username:lower()or F.isSystemActor(u)then return end
+  local function cleanPush(target)
+    local tLow=target:lower()
+    for k in pairs(P.dmList or{})do if tostring(k):lower()==tLow and k~=target then P.dmList[k]=nil end end
+    P.dmList[target]=H.now();S.isDirty=true F.closeModal()
+    F.selectChannel(F.dmChan(P.username,target))
+  end
+  local realU=F.isRealOrFriendUser(u)
+  if realU then cleanPush(realU);return end
+  F.verifyRealUser(u,function(vU)
+    if not vU then
+      F.toast(L=="en"and"Can only DM real Chat Bridge users or Roblox Friends."or"Chỉ có thể DM người dùng thật trên Chat Bridge hoặc Bạn bè!",true)
+      return
+    end
+    cleanPush(vU)
+  end)
+end
 --- [F.openGroupCreate] Mở hộp thoại tạo nhóm chat mới (Group Chat) trong kênh DM
 function F.openGroupCreate()
   if F.muted(P.username)then F.toast(T("muted"),true);return end
@@ -3210,8 +4284,9 @@ function F.openGroupCreate()
     local pool,seen={},{}
     local function addCand(u)if u and u~=""and not seen[u:lower()]then seen[u:lower()]=true;pool[#pool+1]=u end end
     for u in pairs(selMap)do addCand(u)end
-    for u in pairs(P.dmList or{})do addCand(u)end
-    for u in pairs(S.users or{})do addCand(u)end
+    for u in pairs(P.dmList or{})do if F.isRealOrFriendUser(u)then addCand(F.isRealOrFriendUser(u))end end
+    for _,u in ipairs(F.allKnownScriptUsers())do addCand(u)end
+    for _,fr in ipairs(S.friendsList or{})do addCand(fr.u)end
     tsort(pool,function(a,b)if(selMap[a]==true)~=(selMap[b]==true)then return selMap[a]==true end return a:lower()<b:lower()end)
     for idx,u in ipairs(pool)do
       local isMe=(u:lower()==P.username:lower())
@@ -3226,9 +4301,23 @@ function F.openGroupCreate()
   end
   hook(addB.MouseButton1Click,function()
     local u=H.trim(addIn.Text):gsub("^@","")
-    if u~=""then selMap[u]=true;addIn.Text="";rebuildMems()end
+    if u==""then return end
+    local realU=F.isRealOrFriendUser(u)
+    if realU then
+      selMap[realU]=true;addIn.Text="";rebuildMems()
+    else
+      F.verifyRealUser(u,function(vU)
+        if not vU then
+          F.toast(L=="en"and"User not found in Chat Bridge or Friends list."or"Không tìm thấy người dùng thật hoặc bạn bè này!",true)
+          return
+        end
+        selMap[vU]=true;if addIn.Parent then addIn.Text=""end rebuildMems()
+      end)
+    end
   end)
   rebuildMems()
+  F.fetchKnownUsers(function()if memHolder.Parent then rebuildMems()end end)
+  F.loadRobloxFriends(function()if memHolder.Parent then rebuildMems()end end)
   local go=tbtn(scr,L=="en"and"✓ Create Group Chat"or"✓ Tạo Group Chat",{key="ok",h=34,ts=12})
   hook(go.MouseButton1Click,function()
     local nm=H.clip(H.trim(gName.Text)~=""and H.trim(gName.Text)or"Group Chat",40)
@@ -3271,12 +4360,18 @@ function F.openGroupManage(g)
   local addB=rbtn(addRow,L=="en"and"+ Add"or"+ Thêm",{size=u2(0.32,-3,1,0),key="ok",ts=11})
   hook(addB.MouseButton1Click,function()
     local u=H.trim(addIn.Text):gsub("^@","")if u==""then return end
-    enqueue("other","POST","/api/groups",{action="add_member",by=P.username,id=g.id,target=u},function(d,err)
-      if d and d.ok then
-        if type(d.groups)=="table"then S.groups=d.groups end
-        if type(d.group)=="table"then g=d.group;if S.chan:match("^dm:grp_")then S.chan=g.chan end end
-        S.isDirty=true;F.openGroupManage(g)
-      else F.netError((d and d.error)or err)end
+    F.verifyRealUser(u,function(vU)
+      if not vU then
+        F.toast(L=="en"and"User not found in Chat Bridge or Friends list."or"Không tìm thấy người dùng thật hoặc bạn bè này!",true)
+        return
+      end
+      enqueue("other","POST","/api/groups",{action="add_member",by=P.username,id=g.id,target=vU},function(d,err)
+        if d and d.ok then
+          if type(d.groups)=="table"then S.groups=d.groups end
+          if type(d.group)=="table"then g=d.group;if S.chan:match("^dm:grp_")then S.chan=g.chan end end
+          S.isDirty=true;F.openGroupManage(g)
+        else F.netError((d and d.error)or err)end
+      end)
     end)
   end)
   F.section(scr,L=="en"and"Members"or"Thành viên trong nhóm")
@@ -3316,38 +4411,144 @@ function F.openGroupManage(g)
     end)
   end
 end
---- [F.openDMList] Mở hộp thoại danh sách các cuộc trò chuyện riêng (DM 1-1 & Group Chat)
-function F.openDMList()S.reopenModal=F.openDMList local scr=F.modalBox(T("dm"),360,460)
-  local topR=row(scr,32)
-  local nb=rbtn(topR,"+ "..T("pick_user"),{key="accent",ts=11})
-  hook(nb.MouseButton1Click,function()F.pickUser({title=T("dm"),onPick=function(u)F.openDM(u)end})end)
-  local gb=rbtn(topR,L=="en"and"+ Group Chat"or"+ Tạo Group Chat",{key="ok",ts=11})
+--- [F.openDMList] Mở hộp thoại danh sách & tìm kiếm cuộc trò chuyện riêng (chỉ người dùng thật hoặc Bạn bè Roblox)
+function F.openDMList()S.reopenModal=F.openDMList local scr=F.modalBox(T("dm"),370,500)
+  local topR=row(scr,32,1)
+  local nb=rbtn(topR,"+ "..T("pick_user"),{size=u2(0.36,-4,1,0),key="accent",ts=10})
+  hook(nb.MouseButton1Click,function()F.pickUser({title=T("dm"),mode="script",excludeSelf=true,onPick=function(u)F.openDM(u)end})end)
+  local fb=rbtn(topR,L=="en"and"💚 Friends"or"💚 Bạn bè",{size=u2(0.32,-4,1,0),key="btnBg",ts=10})
+  hook(fb.MouseButton1Click,function()F.pickUser({title=T("dm").." · "..(L=="en"and"Friends"or"Bạn bè"),mode="friends",excludeSelf=true,onPick=function(u)F.openDM(u)end})end)
+  local gb=rbtn(topR,L=="en"and"+ Group"or"+ Nhóm",{size=u2(0.32,0,1,0),key="ok",ts=10})
   hook(gb.MouseButton1Click,function()F.openGroupCreate()end)
-  local myGroups={}
-  for _,g in ipairs(S.groups or{})do
-    local isMem=false
-    for _,m in ipairs(g.members or{})do if tostring(m):lower()==P.username:lower()then isMem=true;break end end
-    if isMem or F.isStaff(P.username)then myGroups[#myGroups+1]=g end
-  end
-  if #myGroups>0 then
-    F.section(scr,"👥 GROUP CHAT ("..#myGroups..")")
-    for idx,g in ipairs(myGroups)do
-      local un=S.dmUnread[g.chan]or 0
-      local rowCard=mk("Frame",{Size=u2(1,0,0,38),BorderSizePixel=0,LayoutOrder=idx},scr)
-      th(rowCard,"BackgroundColor3","cardBg");corner(rowCard,8);stroke(rowCard,un>0 and"accent"or"border",1,0.45)
-      local openB=mk("TextButton",{Size=u2(1,-38,1,0),BackgroundTransparency=1,Text="",BorderSizePixel=0},rowCard)
-      lab(openB,"👥 "..F.disp(F.locText(g.name or"Group"))..(un>0 and("  ["..un.." "..T("jump_new").."]")or""),{size=u2(1,-12,0,18),pos=uo(10,3),ts=12,bold=true,key=un>0 and"accent"or"text",trunc=true})
-      lab(openB,#(g.members or{})..(L=="en"and" members · @"or" thành viên · @")..F.disp(g.owner or"?"),{size=u2(1,-12,0,14),pos=uo(10,20),ts=10,key="muted",trunc=true})
-      hook(openB.MouseButton1Click,function()F.closeModal();F.selectChannel(g.chan)end)
-      local cfgB=tbtn(rowCard,"⚙️",{size=uo(30,28),pos=u2(1,-34,0.5,-14),ts=11,key="btnBg",r=6})
-      hook(cfgB.MouseButton1Click,function()F.openGroupManage(g)end)
+  local q=field(scr,"","",false,2)
+  q.PlaceholderText=L=="en"and"Search verified script users or Roblox Friends..."or"Tìm người dùng thật hoặc Bạn bè Roblox để DM..."
+  local fRow=row(scr,26,3)
+  local fMode="recent"
+  local bRec=tbtn(fRow,"",{size=u2(1/3,-4,1,0),key="accent",ts=10,r=6,layout=1})
+  local bScr=tbtn(fRow,"",{size=u2(1/3,-4,1,0),key="btnBg",ts=10,r=6,layout=2})
+  local bFri=tbtn(fRow,"",{size=u2(1/3,0,1,0),key="btnBg",ts=10,r=6,layout=3})
+  local body=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=4},scr);list(body,5)
+  local function paintTabs(nRec,nScr,nFri)
+    bRec.Text=(L=="en"and"💬 Recent ("or"💬 Gần đây (")..nRec..")"
+    bScr.Text="👥 Script ("..nScr..")"
+    bFri.Text=(L=="en"and"💚 Friends ("or"💚 Bạn bè (")..nFri..")"
+    for _,it in ipairs({{bRec,"recent"},{bScr,"script"},{bFri,"friends"}})do
+      local btn,id=it[1],it[2]
+      local on=(fMode==id)
+      btn.BackgroundColor3=on and TH.accent or TH.btnBg
+      btn.TextColor3=on and(H.lum(TH.accent)>0.42 and rgb(20,20,24)or c3(1,1,1))or TH.text
     end
   end
-  F.section(scr,L=="en"and"💬 DIRECT MESSAGES"or"💬 TIN NHẮN RIÊNG (1-1)")
-  local names={}for u in pairs(P.dmList)do names[#names+1]=u end
-  tsort(names,function(a,b)return(P.dmList[a]or 0)>(P.dmList[b]or 0)end)
-  if#names==0 then lab(scr,T("no_dm"),{wrap=true,auto=true,key="muted"})end for i,u in ipairs(names)do
-    local un=S.dmUnread[F.dmChan(P.username,u)]or 0 F.userRow(scr,u,{layout=i+100,sub=un>0 and("• "..un.." "..T("jump_new"))or nil,click=function(x)F.openDM(x)end})end end
+  local function rebuildDM()
+    if not body.Parent then return end
+    for _,c in ipairs(body:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
+    local needle=H.trim(q.Text):lower():gsub("^@","")
+    local meLow=P.username:lower()
+    local scriptAll={}
+    for _,su in ipairs(F.allKnownScriptUsers())do if su:lower()~=meLow then scriptAll[#scriptAll+1]=su end end
+    local friendAll=S.friendsList or{}
+    local myGroups={}
+    for _,g in ipairs(S.groups or{})do
+      local isMem=false
+      for _,m in ipairs(g.members or{})do if tostring(m):lower()==meLow then isMem=true;break end end
+      if isMem or F.isStaff(P.username)then myGroups[#myGroups+1]=g end
+    end
+    local cleanDm,dmNames={},{}
+    for u,ts in pairs(P.dmList or{})do
+      local realU=F.isRealOrFriendUser(u)
+      if realU and realU:lower()~=meLow then
+        cleanDm[realU]=max(tonumber(cleanDm[realU])or 0,tonumber(ts)or H.now())
+      end
+    end
+    for u in pairs(cleanDm)do dmNames[#dmNames+1]=u end
+    tsort(dmNames,function(a,b)return(cleanDm[a]or 0)>(cleanDm[b]or 0)end)
+    paintTabs(#myGroups+#dmNames,#scriptAll,#friendAll)
+    local lo,shown=0,0
+    if fMode=="recent"and needle==""then
+      if#myGroups>0 then
+        lo=lo+1;F.section(body,"👥 GROUP CHAT ("..#myGroups..")").LayoutOrder=lo
+        for _,g in ipairs(myGroups)do
+          local un=S.dmUnread[g.chan]or 0
+          for uk,uv in pairs(S.dmUnread or{})do if F.chanKey(uk)==F.chanKey(g.chan)then un=max(un,tonumber(uv)or 0)end end
+          lo=lo+1;shown=shown+1
+          local rowCard=mk("Frame",{Size=u2(1,0,0,38),BorderSizePixel=0,LayoutOrder=lo},body)
+          th(rowCard,"BackgroundColor3","cardBg");corner(rowCard,8);stroke(rowCard,un>0 and"accent"or"border",1,0.45)
+          local openB=mk("TextButton",{Size=u2(1,-38,1,0),BackgroundTransparency=1,Text="",BorderSizePixel=0},rowCard)
+          lab(openB,"👥 "..F.disp(F.locText(g.name or"Group"))..(un>0 and("  ["..un.." "..T("jump_new").."]")or""),{size=u2(1,-12,0,18),pos=uo(10,3),ts=12,bold=true,key=un>0 and"accent"or"text",trunc=true})
+          lab(openB,#(g.members or{})..(L=="en"and" members · @"or" thành viên · @")..F.disp(g.owner or"?"),{size=u2(1,-12,0,14),pos=uo(10,20),ts=10,key="muted",trunc=true})
+          hook(openB.MouseButton1Click,function()F.closeModal();F.selectChannel(g.chan)end)
+          local cfgB=tbtn(rowCard,"⚙️",{size=uo(30,28),pos=u2(1,-34,0.5,-14),ts=11,key="btnBg",r=6})
+          hook(cfgB.MouseButton1Click,function()F.openGroupManage(g)end)
+        end
+      end
+      lo=lo+1;F.section(body,L=="en"and"💬 DIRECT MESSAGES"or"💬 TIN NHẮN RIÊNG (1-1)").LayoutOrder=lo
+      if#dmNames==0 then
+        lo=lo+1;lab(body,T("no_dm"),{wrap=true,auto=true,key="muted",layout=lo})
+      else
+        for _,u in ipairs(dmNames)do
+          local un=0
+          local ck=F.chanKey(F.dmChan(P.username,u))
+          for uk,uv in pairs(S.dmUnread or{})do if F.chanKey(uk)==ck then un=max(un,tonumber(uv)or 0)end end
+          lo=lo+1;shown=shown+1
+          F.userRow(body,u,{layout=lo,sub=un>0 and("• "..un.." "..T("jump_new"))or nil,click=function(x)F.openDM(x)end})
+        end
+      end
+    else
+      local pool,seen={},{}
+      local function addC(u)
+        u=H.trim(tostring(u or""))
+        if u==""or u:lower()==meLow then return end
+        local lk=u:lower()
+        if not seen[lk]then seen[lk]=true;pool[#pool+1]=u end
+      end
+      if fMode=="friends"then
+        for _,fr in ipairs(friendAll)do addC(fr.u)end
+      elseif fMode=="script"then
+        for _,su in ipairs(scriptAll)do addC(su)end
+      else
+        for _,u in ipairs(dmNames)do addC(u)end
+        for _,su in ipairs(scriptAll)do addC(su)end
+        for _,fr in ipairs(friendAll)do addC(fr.u)end
+      end
+      for _,u in ipairs(pool)do
+        local rec=F.userRec(u)or{}
+        if needle==""or u:lower():find(needle,1,true)or tostring(rec.display or""):lower():find(needle,1,true)then
+          shown=shown+1;lo=lo+1
+          if shown<=80 then
+            F.userRow(body,u,{layout=lo,click=function(x)F.openDM(x)end})
+          end
+        end
+      end
+      if shown==0 then
+        lo=lo+1
+        local msg=(fMode=="friends"and S.friendsLoading)and(L=="en"and"Loading Roblox friends list..."or"Đang tải danh sách bạn bè Roblox...")
+          or(L=="en"and"No real Chat Bridge users or Roblox Friends match this search."or"Không tìm thấy người dùng thật hoặc Bạn bè Roblox phù hợp.")
+        lab(body,msg,{key="muted",ts=11,wrap=true,auto=true,layout=lo})
+        if needle:match("^[%w_%-]+$")and#needle>=3 and not F.isSystemActor(needle)and fMode~="friends"then
+          lo=lo+1
+          local vB=tbtn(body,(L=="en"and"🔍 Check @"or"🔍 Kiểm tra @")..needle.." (Cloud/Friends)",{key="btnBg",h=30,ts=11,layout=lo})
+          hook(vB.MouseButton1Click,function()
+            vB.Text=L=="en"and"Checking..."or"Đang kiểm tra..."
+            F.verifyRealUser(needle,function(vU)
+              if vU then F.openDM(vU)
+              else
+                F.toast(L=="en"and"User does not exist on Chat Bridge or in your Friends list."or"Người dùng không tồn tại trên Chat Bridge hoặc danh sách Bạn bè!",true)
+                if body.Parent then rebuildDM()end
+              end
+            end)
+          end)
+        end
+      end
+    end
+  end
+  hook(bRec.MouseButton1Click,function()fMode="recent";rebuildDM()end)
+  hook(bScr.MouseButton1Click,function()fMode="script";rebuildDM()end)
+  hook(bFri.MouseButton1Click,function()fMode="friends";rebuildDM()end)
+  hook(q:GetPropertyChangedSignal("Text"),rebuildDM)
+  rebuildDM()
+  F.fetchKnownUsers(function()if body.Parent then rebuildDM()end end)
+  F.loadRobloxFriends(function()if body.Parent then rebuildDM()end end)
+end
 --- [F.searchRobloxStore] Truy vấn trực tiếp kho ảnh Decal/Image trên Roblox Creator Store / Catalog thông qua Executor HTTP
 function F.searchRobloxStore(keyword,page,cat,cb)
   page=max(1,tonumber(page)or 1)
@@ -3789,11 +4990,88 @@ F._NAME_EFFS={
   {id="ice",name="Ice"},
 }
 
+F._PROF_DEF={
+  card=rgb(31,35,48),box=rgb(24,27,38),acc=rgb(88,101,242),txt=rgb(242,243,247),
+  muted=rgb(148,155,166),sub=rgb(38,43,58),inpBg=rgb(18,20,28),inpTxt=rgb(242,243,247),
+  cBorder=rgb(52,58,78),iBorder=rgb(62,68,90),
+  ok=rgb(35,165,90),warn=rgb(240,178,50),danger=rgb(242,63,67),
+}
+
+function F._PROF.computeCols(st,bgHex,accHex,txtHex)
+  local def=F._PROF_DEF
+  local pt=st.pTheme
+  if bgHex~=nil then pt.bg=bgHex end
+  if accHex~=nil then pt.acc=accHex end
+  if txtHex~=nil then pt.txt=txtHex end
+  local vBg=H.safeHex(pt.bg,nil);local vAcc=H.safeHex(pt.acc,nil);local vTxt=H.safeHex(pt.txt,nil)
+  local vG1=H.safeHex(pt.g1,nil);local vG2=H.safeHex(pt.g2,nil);local vG3=H.safeHex(pt.g3,nil)
+  local mode=pt.mode or"solid"
+  local hasCustom=(vBg and pt.bg~="")or(vG1 and pt.g1~="")or(vG2 and pt.g2~="")or(vG3 and pt.g3~="")or mode~="solid"
+  local cols=st.cols or{}
+  if not hasCustom and not vAcc and not vTxt then
+    cols.card=def.card;cols.box=def.box
+  else
+    cols.card=(vBg and pt.bg~=""and H.hex(vBg))or(vG1 and pt.g1~=""and H.hex(vG1))or def.card
+    cols.box=(H.lum(cols.card)<0.45)and H.mix(cols.card,c3(0,0,0),0.22)or H.mix(cols.card,c3(1,1,1),0.22)
+  end
+  cols.acc=(vAcc and pt.acc~=""and H.hex(vAcc))or(st.top and H.hex(st.top.color))or(st.isDevU and H.hex(F.DEVROLE.color))or def.acc
+  local rawTxt=(vTxt and pt.txt~=""and H.hex(vTxt))or(hasCustom and(H.lum(cols.card)<0.45 and rgb(244,245,248)or rgb(18,20,28))or def.txt)
+  cols.txt=H.ensureContrast(rawTxt,cols.card,4.6)
+  cols.muted=H.ensureContrast(H.mix(cols.txt,cols.card,0.38),cols.card,3.2)
+  cols.sub=(H.lum(cols.card)<0.45)and H.mix(cols.card,c3(0,0,0),0.28)or H.mix(cols.card,c3(1,1,1),0.65)
+  cols.inpBg=(H.lum(cols.card)<0.45)and H.mix(cols.card,c3(0,0,0),0.42)or H.mix(cols.card,c3(1,1,1),0.85)
+  cols.inpTxt=H.ensureContrast(cols.txt,cols.inpBg,4.6)
+  cols.cBorder=H.mix(cols.card,cols.acc,0.36)
+  cols.iBorder=H.mix(cols.inpBg,cols.acc,0.42)
+  cols.ok=def.ok;cols.warn=def.warn;cols.danger=def.danger
+  local gMix=clamp((tonumber(pt.gMix)or 65)/100,0.15,1)
+  cols.g1=H.mix(cols.box,(vG1 and pt.g1~=""and H.hex(vG1))or cols.box,gMix)
+  cols.g2=H.mix(cols.box,(vG2 and pt.g2~=""and H.hex(vG2))or H.mix(cols.box,cols.acc,0.38),gMix)
+  cols.g3=H.mix(cols.card,(vG3 and pt.g3~=""and H.hex(vG3))or H.mix(cols.card,def.ok,0.28),gMix)
+  st.cols=cols
+  return cols,hasCustom,vBg,vAcc,vTxt,mode
+end
+
+function F._PROF.ic(st,parent,key,sz,role,o)
+  o=o or{}
+  local cols=st.cols
+  local col=(role=="acc"and cols.acc)or(role=="txt"and cols.txt)or(role=="muted"and cols.muted)
+    or(role=="onAcc"and(H.lum(cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1)))
+    or(role=="ok"and cols.ok)or(role=="warn"and cols.warn)or(role=="danger"and cols.danger)or o.col or cols.txt
+  local im=F.lucide(parent,key,sz,{pos=o.pos,anc=o.anc,col=col,themed=false,trans=o.trans,z=o.z,layout=o.layout})
+  if role=="acc"then st.icAcc[#st.icAcc+1]=im
+  elseif role=="txt"then st.icTxt[#st.icTxt+1]=im
+  elseif role=="muted"then st.icMuted[#st.icMuted+1]=im
+  elseif role=="onAcc"then st.icOnAcc[#st.icOnAcc+1]=im end
+  return im
+end
+
+function F._PROF.btn(st,parent,text,o)
+  o=o or{}
+  local cols=st.cols
+  local k=o.key or"btnBg"
+  local fm=FONT_MAP[(st.pTheme and st.pTheme.font)or"gotham"]or FONT_MAP.gotham
+  local bg=(k=="accent"or k=="acc")and cols.acc or(k=="ok"and cols.ok)or(k=="warn"and cols.warn)or(k=="danger"and cols.danger)or cols.sub
+  local tc=(k=="accent"or k=="acc"or k=="ok"or k=="warn"or k=="danger")and H.ensureContrast(rgb(255,255,255),bg,4.5)or cols.txt
+  local bc=(k=="accent"or k=="acc"or k=="ok"or k=="warn"or k=="danger")and bg or cols.cBorder
+  local b=mk("TextButton",{
+    Size=o.size or u2(1,0,0,o.h or 30),Position=o.pos or uo(0,0),
+    BackgroundColor3=bg,Text=text or"",TextColor3=tc,Font=fm.bold,TextSize=o.ts or 11,
+    AutoButtonColor=true,BorderSizePixel=0,LayoutOrder=o.layout or 0,TextTruncate=trEnd,
+  },parent)
+  corner(b,o.r or 7);mk("UIStroke",{Color=bc,Thickness=1,Transparency=0.4,ApplyStrokeMode=smBorder},b)
+  if o.track~=false then
+    if k=="accent"or k=="acc"then st.accents[#st.accents+1]=b
+    elseif k=="btnBg"or k=="sub"or o.key==nil then st.chips[#st.chips+1]=b end
+  end
+  return b
+end
+
 function F._PROF.initState(u,initTab)
   local isSelf=(tostring(u):lower()==P.username:lower())
   local isPov=isSelf and(S.viewAs==true)
   local canEdit=isSelf and not isPov
-  local rec=S.users[u]or F.userRec(u)or{}
+  local rec=F.userRec(u)or S.users[u]or{}
   local rlist=F.userRoles(u)
   local rawPt=(isSelf and type(P.profTheme)=="table"and P.profTheme)or(type(rec.profTheme)=="table"and rec.profTheme)or{}
   local mode=(rawPt.mode=="solid"or rawPt.mode=="gradient"or rawPt.mode=="mesh"or rawPt.mode=="glass"or rawPt.mode=="image")and rawPt.mode
@@ -3817,13 +5095,16 @@ function F._PROF.initState(u,initTab)
     wa=F._ASPECT[rawPt.wa or""]and rawPt.wa or"auto",
     avDec=tostring(rawPt.avDec or"none"),nEff=tostring(rawPt.nEff or"solid"),
     tag=H.clip(H.trim(tostring(rawPt.tag or"")),36),
+    abLbl=H.clip(H.trim(tostring(rawPt.abLbl or"")),40),
+    hiTxt=H.clip(H.trim(tostring(rawPt.hiTxt or"")),70),
     pinSc=tostring(rawPt.pinSc or""),
+    music=H.clip(H.trim(tostring(rawPt.music or"")),160),
     wOrder=tostring(rawPt.wOrder or"bio,scripts,game,stats"),
   }
   local mappedTab=tonumber(initTab)or 1
   if not canEdit and mappedTab>2 then mappedTab=1 end
   if canEdit and initTab==3 then mappedTab=5 elseif canEdit and initTab==2 then mappedTab=3 end
-  return{
+  local st={
     u=u,uLower=tostring(u):lower(),isSelf=isSelf,isPov=isPov,canEdit=canEdit,rec=rec,
     isDevU=F.isDev(u),rlist=rlist,top=rlist[1],
     live=(tostring(u):lower()==P.username:lower())or F.isLive(rec),
@@ -3832,10 +5113,12 @@ function F._PROF.initState(u,initTab)
     muteInfo=F.getMute(u),warnList=F.getWarns(u),banInfo=F.getBan(u),punishHist=F.getUserPunishments(u),
     pTheme=pTheme,curTab=mappedTab,
     cards={},subCards={},inputs={},texts={},muted={},accents={},chips={},dividers={},
+    icAcc={},icTxt={},icMuted={},icOnAcc={},accStrokes={},
     cardCorners={},subCorners={},cardStrokes={},tabBtns={},modeBtns={},fontBtns={},gStopBtns={},decBtns={},neffBtns={},
-    cols={card=TH.cardBg,box=TH.bg2,acc=TH.accent,txt=TH.text,muted=TH.muted,sub=TH.bg3,inpBg=TH.inputBg,inpTxt=TH.text,cBorder=TH.border,iBorder=TH.inputBorder,g1=TH.g1 or TH.bg,g2=TH.g2 or TH.bg2,g3=TH.g3 or TH.bg3},
-    ui={},fields={},fn={},
+    cols={},ui={},fields={},fn={},
   }
+  F._PROF.computeCols(st)
+  return st
 end
 
 function F._PROF.makeCard(st,parent,order,padX,padY)
@@ -3853,7 +5136,7 @@ function F._PROF.section(st,parent,title,ord,icKey)
   local bar=mk("Frame",{Size=uo(3,12),Position=uo(0,4),BackgroundColor3=st.cols.acc,BorderSizePixel=0},s)corner(bar,2)
   st.accents[#st.accents+1]=bar
   local xOff=8
-  if icKey then F.lucide(s,icKey,13,{pos=uo(8,3),col=st.cols.acc,themed=false});xOff=25 end
+  if icKey then F._PROF.ic(st,s,icKey,13,"acc",{pos=uo(8,3)});xOff=25 end
   local l=lab(s,string.upper(title),{size=u2(1,-xOff,1,0),pos=uo(xOff,0),ts=10,bold=true})
   l.TextColor3=st.cols.muted;st.muted[#st.muted+1]=l
   return s
@@ -3902,34 +5185,7 @@ end
 
 function F._PROF.applyColors(st,bgHex,accHex,txtHex)
   local pt=st.pTheme
-  if bgHex~=nil then pt.bg=bgHex end
-  if accHex~=nil then pt.acc=accHex end
-  if txtHex~=nil then pt.txt=txtHex end
-  local vBg=H.safeHex(pt.bg,nil);local vAcc=H.safeHex(pt.acc,nil);local vTxt=H.safeHex(pt.txt,nil)
-  local vG1=H.safeHex(pt.g1,nil);local vG2=H.safeHex(pt.g2,nil);local vG3=H.safeHex(pt.g3,nil)
-  local mode=pt.mode or"solid"
-  local hasCustom=(vBg and pt.bg~="")or(vG1 and pt.g1~="")or(vG2 and pt.g2~="")or(vG3 and pt.g3~="")or mode~="solid"
-  local cols=st.cols
-  if not hasCustom and not vAcc and not vTxt then
-    cols.card=TH.cardBg;cols.box=TH.bg2
-  else
-    cols.card=(vBg and pt.bg~=""and H.hex(vBg))or(vG1 and pt.g1~=""and H.hex(vG1))or TH.cardBg
-    cols.box=(H.lum(cols.card)<0.45)and H.mix(cols.card,c3(0,0,0),0.22)or H.mix(cols.card,c3(1,1,1),0.22)
-  end
-  cols.acc=(vAcc and pt.acc~=""and H.hex(vAcc))or(st.top and H.hex(st.top.color))or(st.isDevU and H.hex(F.DEVROLE.color))or TH.accent
-  local rawTxt=(vTxt and pt.txt~=""and H.hex(vTxt))or(hasCustom and(H.lum(cols.card)<0.45 and rgb(244,245,248)or rgb(18,20,28))or TH.text)
-  cols.txt=H.ensureContrast(rawTxt,cols.card,4.6)
-  cols.muted=H.ensureContrast(H.mix(cols.txt,cols.card,0.38),cols.card,3.2)
-  cols.sub=(H.lum(cols.card)<0.45)and H.mix(cols.card,c3(0,0,0),0.28)or H.mix(cols.card,c3(1,1,1),0.65)
-  cols.inpBg=(H.lum(cols.card)<0.45)and H.mix(cols.card,c3(0,0,0),0.42)or H.mix(cols.card,c3(1,1,1),0.85)
-  cols.inpTxt=H.ensureContrast(cols.txt,cols.inpBg,4.6)
-  cols.cBorder=H.mix(cols.card,cols.acc,0.36)
-  cols.iBorder=H.mix(cols.inpBg,cols.acc,0.42)
-
-  local gMix=clamp((tonumber(pt.gMix)or 65)/100,0.15,1)
-  cols.g1=H.mix(cols.box,(vG1 and pt.g1~=""and H.hex(vG1))or cols.box,gMix)
-  cols.g2=H.mix(cols.box,(vG2 and pt.g2~=""and H.hex(vG2))or H.mix(cols.box,cols.acc,0.38),gMix)
-  cols.g3=H.mix(cols.card,(vG3 and pt.g3~=""and H.hex(vG3))or H.mix(cols.card,TH.ok,0.28),gMix)
+  local cols,hasCustom,vBg,vAcc,vTxt,mode=F._PROF.computeCols(st,bgHex,accHex,txtHex)
 
   local rad=clamp(tonumber(pt.rad)or 12,3,16)
   local gRot=clamp(tonumber(pt.gRot)or 28,0,360)
@@ -3973,7 +5229,15 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
     end
     for _,ch in ipairs(u.box:GetChildren())do
       if ch:IsA("Frame")and ch.Size.Y.Offset==34 then
-        for _,lbl in ipairs(ch:GetChildren())do if lbl:IsA("TextLabel")then lbl.TextColor3=cols.txt;lbl.Font=pBold end end
+        for _,subCh in ipairs(ch:GetChildren())do
+          if subCh:IsA("TextLabel")then subCh.TextColor3=cols.txt;subCh.Font=pBold
+          elseif subCh:IsA("Frame")and subCh.Size.X.Offset==3 then subCh.BackgroundColor3=cols.acc
+          elseif subCh:IsA("TextButton")then
+            subCh.BackgroundColor3=cols.sub
+            local xst=subCh:FindFirstChildOfClass("UIStroke");if xst then xst.Color=cols.cBorder end
+            local xim=subCh:FindFirstChildOfClass("ImageLabel");if xim then xim.ImageColor3=cols.txt end
+          end
+        end
       elseif ch:IsA("Frame")and ch.Size.Y.Offset==1 then ch.BackgroundColor3=cols.cBorder end
     end
   end
@@ -4007,14 +5271,20 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
   end
   for _,lbl in ipairs(st.texts)do if lbl and lbl.Parent then lbl.TextColor3=cols.txt;local isB=(lbl.Font==fGB or lbl.Font==Enum.Font.GothamBold or lbl.Font==Enum.Font.SourceSansBold or lbl.Font==Enum.Font.RobotoMono or lbl.Font==Enum.Font.FredokaOne);lbl.Font=isB and pBold or pReg end end
   for _,lbl in ipairs(st.muted)do if lbl and lbl.Parent then lbl.TextColor3=cols.muted;local isB=(lbl.Font==fGB or lbl.Font==Enum.Font.GothamBold or lbl.Font==Enum.Font.SourceSansBold or lbl.Font==Enum.Font.RobotoMono or lbl.Font==Enum.Font.FredokaOne);lbl.Font=isB and pBold or pReg end end
+  local onAccTxt=H.lum(cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1)
   for _,item in ipairs(st.accents)do
     if item and item.Parent then
       if item:IsA("UIStroke")then item.Color=cols.acc
       elseif item:IsA("TextLabel")then item.TextColor3=H.ensureContrast(cols.acc,cols.card,4.2);item.Font=pBold
-      elseif item:IsA("TextButton")then item.BackgroundColor3=cols.acc;item.TextColor3=H.ensureContrast(rgb(255,255,255),cols.acc,4.5);item.Font=pBold
+      elseif item:IsA("TextButton")then item.BackgroundColor3=cols.acc;item.TextColor3=onAccTxt;item.Font=pBold;local so=item:FindFirstChildOfClass("UIStroke");if so then so.Color=cols.acc end
       else item.BackgroundColor3=cols.acc end
     end
   end
+  for _,so in ipairs(st.accStrokes or{})do if so and so.Parent then so.Color=cols.acc end end
+  for _,im in ipairs(st.icAcc or{})do if im and im.Parent then im.ImageColor3=cols.acc end end
+  for _,im in ipairs(st.icTxt or{})do if im and im.Parent then im.ImageColor3=cols.txt end end
+  for _,im in ipairs(st.icMuted or{})do if im and im.Parent then im.ImageColor3=cols.muted end end
+  for _,im in ipairs(st.icOnAcc or{})do if im and im.Parent then im.ImageColor3=onAccTxt end end
   for _,chip in ipairs(st.chips)do
     if chip and chip.Parent then chip.BackgroundColor3=cols.sub;chip.TextColor3=cols.txt;chip.Font=pBold;local so=chip:FindFirstChildOfClass("UIStroke");if so then so.Color=cols.cBorder end end
   end
@@ -4104,7 +5374,7 @@ function F._PROF.buildLeftIdentity(st,parent)
 
   if st.canEdit then
     local qCrop=mk("TextButton",{Size=uo(72,22),Position=u2(1,-78,0,8),BackgroundColor3=rgb(14,16,22),BackgroundTransparency=0.28,Text="",AutoButtonColor=true,BorderSizePixel=0,ZIndex=6},hdTop)
-    corner(qCrop,11);stroke(qCrop,"border",1,0.3)
+    corner(qCrop,11);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.3,ApplyStrokeMode=smBorder},qCrop)
     F.lucide(qCrop,"crop",11,{pos=uo(7,5),col=c3(1,1,1),themed=false})
     local qcl=lab(qCrop,L=="en"and"Frame"or"Căn bìa",{size=u2(1,-22,1,0),pos=uo(20,0),ts=9,bold=true});qcl.TextColor3=c3(1,1,1)
     hook(qCrop.MouseButton1Click,function()
@@ -4142,7 +5412,7 @@ function F._PROF.buildLeftIdentity(st,parent)
   u.avImgCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},u.avImg)
   if st.iconId~=""then F.setAsset(u.avImg,st.iconId)end
 
-  local dotCol=st.banInfo and TH.danger or(st.muteInfo and TH.warn or(st.live and rgb(35,165,90)or rgb(128,132,142)))
+  local dotCol=st.banInfo and st.cols.danger or(st.muteInfo and st.cols.warn or(st.live and st.cols.ok or rgb(128,132,142)))
   local dot=mk("Frame",{Size=uo(16,16),Position=u2(1,-16,1,-16),BackgroundColor3=dotCol,BorderSizePixel=0,ZIndex=11},avWrap)
   corner(dot,8);u.avDotStroke=mk("UIStroke",{Thickness=2.6,Color=st.cols.card,ApplyStrokeMode=smBorder},dot)
 
@@ -4171,7 +5441,7 @@ function F._PROF.buildLeftIdentity(st,parent)
   local nameCol=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=1},body)
   list(nameCol,2)
   local dStr=F.disp((st.isSelf and P.display)or st.rec.display or st.u)
-  u.dnameLbl=mk("TextLabel",{Size=u2(1,0,0,22),BackgroundTransparency=1,Text=dStr,Font=fGB,TextSize=16,TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0,LayoutOrder=1},nameCol)
+  u.dnameLbl=mk("TextLabel",{Size=u2(1,0,0,22),BackgroundTransparency=1,Text=dStr,TextColor3=st.cols.txt,Font=fGB,TextSize=16,TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0,LayoutOrder=1},nameCol)
   u.dnameGrad=mk("UIGradient",{Rotation=15,Enabled=false},u.dnameLbl)
   local okCtx,ctxMode=pcall(function()return Enum.ApplyStrokeMode.Contextual end)
   u.dnameStroke=mk("UIStroke",{Thickness=1.2,Transparency=1,Color=rgb(12,14,20),ApplyStrokeMode=okCtx and ctxMode or smBorder},u.dnameLbl)
@@ -4197,7 +5467,7 @@ function F._PROF.buildLeftIdentity(st,parent)
   st.fn.refreshFlag(cc)
 
   u.flairPill=mk("Frame",{Size=uo(70,18),BackgroundColor3=st.cols.sub,BorderSizePixel=0,LayoutOrder=3,Visible=(pt.tag~="")},handleRow)
-  corner(u.flairPill,9);mk("UIStroke",{Color=st.cols.acc,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},u.flairPill)
+  corner(u.flairPill,9);st.accStrokes[#st.accStrokes+1]=mk("UIStroke",{Color=st.cols.acc,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},u.flairPill)
   st.subCards[#st.subCards+1]=u.flairPill
   u.flairLbl=lab(u.flairPill,"",{size=us(1,1),ts=9,bold=true,align=txC,trunc=true})
   st.accents[#st.accents+1]=u.flairLbl
@@ -4221,14 +5491,14 @@ function F._PROF.buildLeftIdentity(st,parent)
     return p,pl
   end
   local bOrd=1
-  badgePill(st.live and T("live")or T("off"),st.live and TH.ok or TH.muted,"activity",bOrd);bOrd=bOrd+1
+  badgePill(st.live and T("live")or T("off"),st.live and st.cols.ok or st.cols.muted,"activity",bOrd);bOrd=bOrd+1
   if st.isDevU then badgePill("DEV",rgb(250,168,26),"crown",bOrd);bOrd=bOrd+1 end
   local scCount=0
   for _,sc in ipairs(S.scripts or{})do if tostring(sc.author or""):lower()==st.uLower then scCount=scCount+1 end end
   if scCount>0 then badgePill(scCount.." Script"..(scCount>1 and"s"or""),st.cols.acc,"code",bOrd);bOrd=bOrd+1 end
-  if st.muteInfo then badgePill("MUTED",TH.danger,"volumeX",bOrd);bOrd=bOrd+1 end
-  if st.banInfo then badgePill("BANNED",TH.danger,"ban",bOrd);bOrd=bOrd+1 end
-  if#st.warnList>0 then badgePill(#st.warnList.." "..T("warnings"),TH.warn,"alertTri",bOrd);bOrd=bOrd+1 end
+  if st.muteInfo then badgePill("MUTED",st.cols.danger,"volumeX",bOrd);bOrd=bOrd+1 end
+  if st.banInfo then badgePill("BANNED",st.cols.danger,"ban",bOrd);bOrd=bOrd+1 end
+  if#st.warnList>0 then badgePill(#st.warnList.." "..T("warnings"),st.cols.warn,"alertTri",bOrd);bOrd=bOrd+1 end
   local chromaP,chromaPL=badgePill("CHROMA",st.cols.acc,"sparkles",bOrd);bOrd=bOrd+1
   st.fn.refreshThemeBadges=function()
     local m=pt.mode or"solid";local isCh=(m=="gradient"or m=="mesh"or m=="glass")
@@ -4240,42 +5510,47 @@ function F._PROF.buildLeftIdentity(st,parent)
   end
   st.fn.refreshThemeBadges()
 
-  -- Hàng nút hành động chính kiểu Discord [Edit / Studio / POV] hoặc [DM / Join / More]
+  -- Hàng nút hành động chính kiểu Discord [Edit / Studio / POV / Share] hoặc [DM / Card / Share / Report]
   local actRow=row(body,30,3)
   if st.canEdit then
-    local edB=tbtn(actRow,"  "..(L=="en"and"Edit Profile"or"Sửa hồ sơ"),{size=u2(1,-104,1,0),key="accent",ts=11,r=7,layout=1})
-    st.accents[#st.accents+1]=edB
-    F.lucide(edB,"pencil",13,{pos=uo(10,8),col=H.lum(st.cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
+    local edB=F._PROF.btn(st,actRow,"  "..(L=="en"and"Edit Profile"or"Sửa hồ sơ"),{size=u2(1,-138,1,0),key="accent",ts=11,r=7,layout=1})
+    F._PROF.ic(st,edB,"pencil",13,"onAcc",{pos=uo(10,8)})
     hook(edB.MouseButton1Click,function()if st.fn.setTab then st.fn.setTab(3)end end)
 
-    local imgB=tbtn(actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=2})
-    st.chips[#st.chips+1]=imgB;F.lucide(imgB,"crop",14,{pos=uo(8,8),col=st.cols.txt,themed=false})
+    local imgB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=2})
+    F._PROF.ic(st,imgB,"crop",14,"txt",{pos=uo(8,8)})
     hook(imgB.MouseButton1Click,function()if st.fn.setTab then st.fn.setTab(4)end end)
 
-    local povB=tbtn(actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=3})
-    st.chips[#st.chips+1]=povB;F.lucide(povB,S.viewAs and"eyeOff"or"eye",14,{pos=uo(8,8),col=st.cols.txt,themed=false})
+    local povB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=3})
+    F._PROF.ic(st,povB,S.viewAs and"eyeOff"or"eye",14,"txt",{pos=uo(8,8)})
     hook(povB.MouseButton1Click,function()S.viewAs=not S.viewAs;F.openProfile(st.u,1)end)
 
-    local setB=tbtn(actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=4})
-    st.chips[#st.chips+1]=setB;F.lucide(setB,"settings",14,{pos=uo(8,8),col=st.cols.txt,themed=false})
+    local shB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=4})
+    F._PROF.ic(st,shB,"forward",14,"ok",{pos=uo(8,8)})
+    hook(shB.MouseButton1Click,function()F.shareProfileCard(st.u)end)
+
+    local setB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=5})
+    F._PROF.ic(st,setB,"settings",14,"txt",{pos=uo(8,8)})
     hook(setB.MouseButton1Click,function()F.openSettings()end)
   else
-    local dmB=tbtn(actRow,"  "..T("dm"),{size=u2(1,-70,1,0),key="accent",ts=11,r=7,layout=1})
-    st.accents[#st.accents+1]=dmB
-    F.lucide(dmB,"msgCircle",13,{pos=uo(10,8),col=H.lum(st.cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
+    local dmB=F._PROF.btn(st,actRow,"  "..T("dm"),{size=u2(1,-104,1,0),key="accent",ts=11,r=7,layout=1})
+    F._PROF.ic(st,dmB,"msgCircle",13,"onAcc",{pos=uo(10,8)})
     hook(dmB.MouseButton1Click,function()F.openDM(st.u)end)
 
-    local copyB=tbtn(actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=2})
-    st.chips[#st.chips+1]=copyB;F.lucide(copyB,"copy",13,{pos=uo(8,8),col=st.cols.txt,themed=false})
+    local copyB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=2})
+    F._PROF.ic(st,copyB,"copy",13,"txt",{pos=uo(8,8)})
     hook(copyB.MouseButton1Click,function()F.copyText("@"..st.u)end)
 
-    local thirdB=tbtn(actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=3})
-    st.chips[#st.chips+1]=thirdB
+    local shB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=3})
+    F._PROF.ic(st,shB,"forward",13,"ok",{pos=uo(8,8)})
+    hook(shB.MouseButton1Click,function()F.shareProfileCard(st.u)end)
+
+    local thirdB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=4})
     if st.isSelf then
-      F.lucide(thirdB,"eyeOff",14,{pos=uo(8,8),col=TH.ok,themed=false})
+      F._PROF.ic(st,thirdB,"eyeOff",14,"ok",{pos=uo(8,8)})
       hook(thirdB.MouseButton1Click,function()S.viewAs=false;F.openProfile(st.u,1)end)
     else
-      F.lucide(thirdB,"flag",13,{pos=uo(8,8),col=TH.warn,themed=false})
+      F._PROF.ic(st,thirdB,"flag",13,"warn",{pos=uo(8,8)})
       hook(thirdB.MouseButton1Click,function()F.openReport(st.u)end)
     end
   end
@@ -4289,19 +5564,19 @@ function F._PROF.buildLeftIdentity(st,parent)
   local hdrMeta=lab(metaBox,L=="en"and"ROBLOX & SCRIPT INFO"or"THÔNG TIN ROBLOX",{ts=9,bold=true,layout=1});st.muted[#st.muted+1]=hdrMeta
   local uidVal=F.uidOf(st.u)
   local m1=mk("TextButton",{Size=u2(1,0,0,18),BackgroundTransparency=1,Text="",AutoButtonColor=true,LayoutOrder=2},metaBox)
-  F.lucide(m1,"hash",12,{pos=uo(0,3),col=st.cols.muted,themed=false})
+  F._PROF.ic(st,m1,"hash",12,"muted",{pos=uo(0,3)})
   local m1l=lab(m1,"UserId: "..tostring(uidVal).." ("..(L=="en"and"tap copy"or"chạm sao chép")..")",{size=u2(1,-18,1,0),pos=uo(18,0),ts=10,trunc=true})
   st.texts[#st.texts+1]=m1l
   hook(m1.MouseButton1Click,function()F.copyText(tostring(uidVal))end)
 
   if st.isSelf then
     local m2=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=3},metaBox)
-    F.lucide(m2,"terminal",12,{pos=uo(0,3),col=st.cols.muted,themed=false})
+    F._PROF.ic(st,m2,"terminal",12,"muted",{pos=uo(0,3)})
     local m2l=lab(m2,"Executor: "..tostring(EXEC).." · v"..tostring(CFG.VERSION),{size=u2(1,-18,1,0),pos=uo(18,0),ts=10,trunc=true})
     st.texts[#st.texts+1]=m2l
   elseif not st.live and tonumber(st.rec.lastSeen)and tonumber(st.rec.lastSeen)>0 then
     local m2=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=3},metaBox)
-    F.lucide(m2,"clock",12,{pos=uo(0,3),col=st.cols.muted,themed=false})
+    F._PROF.ic(st,m2,"clock",12,"muted",{pos=uo(0,3)})
     local lsTxt=F.fmtTimeFull and F.fmtTimeFull(st.rec.lastSeen)or""
     local m2l=lab(m2,(L=="en"and"Last seen: "or"Hoạt động: ")..(lsTxt~=""and lsTxt or os.date("%H:%M",tonumber(st.rec.lastSeen))),{size=u2(1,-18,1,0),pos=uo(18,0),ts=10,trunc=true})
     st.muted[#st.muted+1]=m2l
@@ -4337,14 +5612,173 @@ function F._PROF.buildLeftIdentity(st,parent)
   end)
 end
 
+function F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
+  local pt=st.pTheme
+  local abBtn=mk("TextButton",{Size=uo(20,18),Position=u2(1,-20,0,0),BackgroundColor3=st.cols.sub,Text="",AutoButtonColor=true,BorderSizePixel=0},topBar)
+  corner(abBtn,5);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.45,ApplyStrokeMode=smBorder},abBtn)
+  st.subCards[#st.subCards+1]=abBtn
+  F._PROF.ic(st,abBtn,"pencil",10,"acc",{pos=uo(5,4)})
+
+  local hiBtn=mk("TextButton",{Size=uo(20,20),Position=u2(1,-20,0,1),BackgroundColor3=st.cols.sub,Text="",AutoButtonColor=true,BorderSizePixel=0},hiRow)
+  corner(hiBtn,5);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.45,ApplyStrokeMode=smBorder},hiBtn)
+  st.subCards[#st.subCards+1]=hiBtn
+  F._PROF.ic(st,hiBtn,"pencil",10,"acc",{pos=uo(5,5)})
+
+  local edBox=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundColor3=st.cols.sub,BorderSizePixel=0,Visible=false,LayoutOrder=4},spot)
+  corner(edBox,8);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},edBox)
+  pad(edBox,8,8,8,8);list(edBox,6);st.subCards[#st.subCards+1]=edBox
+
+  local edHdr=lab(edBox,"",{ts=10,bold=true,layout=1});st.muted[#st.muted+1]=edHdr
+  local edInp=mk("TextBox",{
+    Size=u2(1,0,0,28),BackgroundColor3=st.cols.inpBg,TextColor3=st.cols.inpTxt,PlaceholderColor3=st.cols.muted,
+    Text="",ClearTextOnFocus=false,Font=fG,TextSize=12,TextXAlignment=txL,BorderSizePixel=0,LayoutOrder=2
+  },edBox)
+  corner(edInp,7);mk("UIStroke",{Color=st.cols.iBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},edInp);pad(edInp,8,4,8,4)
+  st.inputs[#st.inputs+1]=edInp
+
+  local edRow=row(edBox,24,3)
+  local svB=F._PROF.btn(st,edRow,L=="en"and"Save"or"Lưu",{size=u2(0.36,-4,1,0),key="accent",ts=10,r=6,layout=1})
+  local rstB=F._PROF.btn(st,edRow,L=="en"and"Default"or"Mặc định",{size=u2(0.34,-4,1,0),key="btnBg",ts=10,r=6,layout=2})
+  local clB=F._PROF.btn(st,edRow,L=="en"and"Close"or"Đóng",{size=u2(0.30,0,1,0),key="btnBg",ts=10,r=6,layout=3})
+
+  local editMode=nil
+  local function applyPreview(rawVal)
+    local val=H.trim(rawVal or"")
+    if editMode=="abLbl"then
+      val=H.clip(val,40)
+      pt.abLbl=val
+      local defAb=L=="en"and"About Me"or"Giới thiệu"
+      tl.Text="@"..st.u.." · "..F.disp(val~=""and val or defAb)
+      if st.fields.tAboutLbl and st.fields.tAboutLbl.Text~=val then st.fields.tAboutLbl.Text=val end
+    elseif editMode=="hiTxt"then
+      val=H.clip(val,70)
+      pt.hiTxt=val
+      local liveName=st.fields.tName and H.trim(st.fields.tName.Text)or""
+      local ds=F.disp(liveName~=""and liveName or dStr)
+      local defHi=(L=="en"and"Hi, I'm "or"Xin chào, mình là ")..ds.."!"
+      hiL.Text=val~=""and F.disp(val)or defHi
+      if st.fields.tHiTxt and st.fields.tHiTxt.Text~=val then st.fields.tHiTxt.Text=val end
+    end
+  end
+
+  local function persistNow()
+    P.profTheme=F.compactProfTheme(pt)
+    if S.users[P.username]then S.users[P.username].profTheme=P.profTheme end
+    F.rememberProfile(P.username,{u=P.username,display=P.display,userId=LP.UserId,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,_allowClear=true,_fromProfileApi=true},true)
+    S.isDirty=true;F.save(true);F.heartbeat(false);F.pushMyProfileSync()
+    if F.rebuildFeed then pcall(F.rebuildFeed,true)end
+  end
+
+  local function openEditor(mode)
+    if edBox.Visible and editMode==mode then edBox.Visible=false;editMode=nil;return end
+    editMode=mode
+    if mode=="abLbl"then
+      edHdr.Text=L=="en"and"Edit Section Label (replaces 'About Me', max 40 chars)"or"Sửa nhãn mục (thay 'About Me', tối đa 40 ký tự)"
+      edInp.PlaceholderText=L=="en"and"About Me"or"About Me / Giới thiệu..."
+      edInp.Text=pt.abLbl or""
+    else
+      edHdr.Text=L=="en"and"Edit Greeting Headline (replaces 'Hi, I'm ...!', max 70 chars)"or"Sửa tiêu đề chào hỏi (thay 'Hi, I'm ...!', tối đa 70 ký tự)"
+      edInp.PlaceholderText=(L=="en"and"Hi, I'm "or"Xin chào, mình là ")..dStr.."!"
+      edInp.Text=pt.hiTxt or""
+    end
+    edBox.Visible=true
+    pcall(function()edInp:CaptureFocus()end)
+  end
+
+  hook(edInp:GetPropertyChangedSignal("Text"),function()if edBox.Visible and editMode then applyPreview(edInp.Text)end end)
+  hook(abBtn.MouseButton1Click,function()openEditor("abLbl")end)
+  hook(hiBtn.MouseButton1Click,function()openEditor("hiTxt")end)
+  hook(svB.MouseButton1Click,function()
+    if not editMode then return end
+    applyPreview(edInp.Text)
+    persistNow()
+    edBox.Visible=false;editMode=nil
+    F.toast(T("saved_ok"),true)
+  end)
+  hook(rstB.MouseButton1Click,function()
+    if not editMode then return end
+    edInp.Text=""
+    applyPreview("")
+    persistNow()
+    edBox.Visible=false;editMode=nil
+    F.toast(T("saved_ok"),true)
+  end)
+  hook(clB.MouseButton1Click,function()edBox.Visible=false;editMode=nil end)
+end
+
+function F.shareProfileCard(uName)
+  local target=H.trim(tostring(uName or P.username)):gsub("^@","")
+  if target==""then return end
+  F.closeModal()
+  if S.chan=="scripts"or S.chan=="punish"then F.selectChannel("general")end
+  U.input.Text="[profile:"..target.."]"
+  F.sendNow()
+end
+function F.parseProfileMusic(rawStr)
+  local listM={}
+  for part in tostring(rawStr or""):gmatch("[^,\n;]+")do
+    local s=H.trim(part)
+    if s~=""then
+      s=s:gsub("%[sound:(%d+)%]","%1")
+      local id,ttl=s:match("^(%d+)%s*|%s*(.*)$")
+      if not id then id=H.assetId(s)or s:match("(%d+)")end
+      if id and#id>=5 and#id<=15 then
+        listM[#listM+1]={id=id,title=H.clip(H.trim(ttl or""),36)}
+        if#listM>=4 then break end
+      end
+    end
+  end
+  return listM
+end
+function F.normalizeMusicInput(rawStr)
+  local items=F.parseProfileMusic(rawStr)
+  local out={}
+  for _,it in ipairs(items)do out[#out+1]=(it.title~=""and(it.id.."|"..it.title)or it.id)end
+  return H.clip(tconcat(out,", "),160)
+end
+function F._PROF.buildMusicCard(st,parent,wOrd)
+  local pt=st.pTheme
+  local tracks=F.parseProfileMusic(pt.music or"")
+  if#tracks==0 and not st.canEdit then return false end
+  local mCard=F._PROF.makeCard(st,parent,wOrd,12,10)
+  local mh=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},mCard)
+  F._PROF.ic(st,mh,"play",13,"acc",{pos=uo(0,2)})
+  local mhl=lab(mh,L=="en"and("FAVORITE MUSIC ("..#tracks..")")or("SỞ THÍCH ÂM NHẠC ("..#tracks..")"),{size=u2(1,-20,1,0),pos=uo(18,0),ts=10,bold=true});st.muted[#st.muted+1]=mhl
+  if#tracks==0 then
+    local noM=lab(mCard,L=="en"and"No favorite tracks added — open Edit Profile to add Roblox Sound IDs!"or"Chưa thêm nhạc yêu thích — vào Sửa hồ sơ để gắn Sound ID Roblox!",{ts=10,wrap=true,auto=true,layout=2})
+    st.muted[#st.muted+1]=noM
+    return true
+  end
+  for ti,tr in ipairs(tracks)do
+    local rowF=mk("Frame",{Size=u2(1,0,0,32),BackgroundColor3=st.cols.sub,BorderSizePixel=0,LayoutOrder=ti+1},mCard)
+    corner(rowF,7);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.45,ApplyStrokeMode=smBorder},rowF)
+    st.subCards[#st.subCards+1]=rowF
+    local cachedNm=(S.soundNameCache and S.soundNameCache[tr.id]~=""and S.soundNameCache[tr.id])or""
+    local dispTitle=(tr.title~=""and tr.title)or(cachedNm~=""and cachedNm)or("Audio #"..tr.id)
+    local tLbl=lab(rowF,"🎵 "..F.disp(dispTitle),{size=u2(1,-108,1,0),pos=uo(8,0),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=tLbl
+    if tr.title==""and cachedNm==""then F.resolveSoundName(tr.id,function(nm)if tLbl.Parent then tLbl.Text="🎵 "..F.disp(nm)end end)end
+    local isOn=(S.activeSoundId==tr.id and S.activeSound and S.activeSound.IsPlaying)
+    local plB=tbtn(rowF,isOn and("⏹ "..T("sound_stop"))or("▶ "..T("sound_play")),{size=uo(62,24),pos=u2(1,-98,0,4),key=isOn and"danger"or"accent",ts=10,r=6})
+    S.soundBtns=S.soundBtns or{};S.soundBtns[tr.id]=S.soundBtns[tr.id]or{}
+    tinsert(S.soundBtns[tr.id],{btn=plB})
+    hook(plB.MouseButton1Click,function()F.playInlineSound(tr.id)end)
+    local shB=F._PROF.btn(st,rowF,"💬",{size=uo(28,24),pos=u2(1,-32,0,4),key="btnBg",ts=10,r=6})
+    hook(shB.MouseButton1Click,function()
+      F.closeModal();if S.chan=="scripts"or S.chan=="punish"then F.selectChannel("general")end
+      U.input.Text="[sound:"..tr.id.."]";F.sendNow()
+    end)
+  end
+  return true
+end
+
 function F._PROF.buildBoardTab(st,parent)
   local pt=st.pTheme
   local u=st.ui
   local headerRow=row(parent,24,1)
   local bHdr=lab(headerRow,L=="en"and"Profile Board & Widgets"or"Bảng Hồ Sơ & Tiện Ích",{size=u2(1,-120,1,0),ts=11,bold=true});st.muted[#st.muted+1]=bHdr
   if st.canEdit then
-    local addW=tbtn(headerRow,"  "..(L=="en"and"Widgets"or"Tuỳ chỉnh"),{size=uo(106,24),pos=u2(1,-106,0,0),key="btnBg",ts=10,r=6})
-    st.chips[#st.chips+1]=addW;F.lucide(addW,"grid",12,{pos=uo(8,6),col=st.cols.txt,themed=false})
+    local addW=F._PROF.btn(st,headerRow,"  "..(L=="en"and"Widgets"or"Tuỳ chỉnh"),{size=uo(106,24),pos=u2(1,-106,0,0),key="btnBg",ts=10,r=6})
+    F._PROF.ic(st,addW,"grid",12,"txt",{pos=uo(8,6)})
     hook(addW.MouseButton1Click,function()if st.fn.openWidgetModal then st.fn.openWidgetModal()end end)
   end
 
@@ -4372,14 +5806,26 @@ function F._PROF.buildBoardTab(st,parent)
   local inGame=(tonumber(gPlace)and tonumber(gPlace)>0 and gName~="")or(st.isSelf and game.PlaceId>0)
 
   local wOrd=2
+  local renderedMusic=false
   for _,wKey in ipairs(wList)do
-    if wKey=="bio"then
+    if wKey=="music"then
+      if F._PROF.buildMusicCard(st,parent,wOrd)then wOrd=wOrd+1;renderedMusic=true end
+    elseif wKey=="bio"then
       local spot=F._PROF.makeCard(st,parent,wOrd,12,10);wOrd=wOrd+1
       local topBar=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},spot)
-      F.lucide(topBar,"userRound",13,{pos=uo(0,2),col=st.cols.acc,themed=false})
-      local tl=lab(topBar,"@"..st.u.." · "..(L=="en"and"About Me"or"Giới thiệu"),{size=u2(1,-20,1,0),pos=uo(18,0),ts=10,bold=true});st.muted[#st.muted+1]=tl
-      local hiL=lab(spot,(L=="en"and"Hi, I'm "or"Xin chào, mình là ")..dStr.."!",{ts=15,bold=true,wrap=true,auto=true,layout=2})
-      st.texts[#st.texts+1]=hiL;u.spotTitle=hiL
+      F._PROF.ic(st,topBar,"userRound",13,"acc",{pos=uo(0,2)})
+      local abText=(H.trim(pt.abLbl or"")~="")and pt.abLbl or(L=="en"and"About Me"or"Giới thiệu")
+      local tl=lab(topBar,"@"..st.u.." · "..F.disp(abText),{size=u2(1,st.canEdit and -44 or -20,1,0),pos=uo(18,0),ts=10,bold=true,trunc=true});st.muted[#st.muted+1]=tl;u.aboutLbl=tl
+      local hiText=(H.trim(pt.hiTxt or"")~="")and pt.hiTxt or((L=="en"and"Hi, I'm "or"Xin chào, mình là ")..dStr.."!")
+      if st.canEdit then
+        local hiRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=2},spot)
+        local hiL=lab(hiRow,F.disp(hiText),{size=u2(1,-26,0,0),ts=15,bold=true,wrap=true,auto=true})
+        st.texts[#st.texts+1]=hiL;u.spotTitle=hiL
+        F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
+      else
+        local hiL=lab(spot,F.disp(hiText),{ts=15,bold=true,wrap=true,auto=true,layout=2})
+        st.texts[#st.texts+1]=hiL;u.spotTitle=hiL
+      end
       local emptyBio=st.isSelf and(L=="en"and"No bio yet — switch to the Edit tab to customize your intro."or"Chưa có tiểu sử — chọn tab Sửa hồ sơ để viết giới thiệu.")or(L=="en"and"No bio written."or"Chưa viết tiểu sử.")
       local bl=lab(spot,bioText~=""and F.disp(bioText)or emptyBio,{ts=11,wrap=true,auto=true,layout=3})
       u.spotBio=bl
@@ -4387,7 +5833,7 @@ function F._PROF.buildBoardTab(st,parent)
     elseif wKey=="scripts"then
       local scCard=F._PROF.makeCard(st,parent,wOrd,12,10);wOrd=wOrd+1
       local sh=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},scCard)
-      F.lucide(sh,"code",13,{pos=uo(0,2),col=st.cols.acc,themed=false})
+      F._PROF.ic(st,sh,"code",13,"acc",{pos=uo(0,2)})
       local shL=lab(sh,L=="en"and("Shared Scripts Showcase ("..#userScripts..")")or("Kho Script Đã Chia Sẻ ("..#userScripts..")"),{size=u2(1,-20,1,0),pos=uo(18,0),ts=10,bold=true})
       st.muted[#st.muted+1]=shL
       if#userScripts==0 then
@@ -4402,14 +5848,16 @@ function F._PROF.buildBoardTab(st,parent)
           local tile=mk("TextButton",{Size=u2(1,0,1,0),BackgroundColor3=st.cols.sub,Text="",AutoButtonColor=true,BorderSizePixel=0,LayoutOrder=idx,ClipsDescendants=true},sGrid)
           corner(tile,8);mk("UIStroke",{Color=isPin and st.cols.acc or st.cols.cBorder,Thickness=isPin and 1.4 or 1,Transparency=0.35,ApplyStrokeMode=smBorder},tile)
           st.subCards[#st.subCards+1]=tile
-          F.lucide(tile,isPin and"pin"or"scroll",14,{pos=uo(8,9),col=st.cols.acc,themed=false})
+          F._PROF.ic(st,tile,isPin and"pin"or"scroll",14,"acc",{pos=uo(8,9)})
           local ttl=lab(tile,F.disp(sc.title or"Script"),{size=u2(1,-58,0,16),pos=uo(26,7),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=ttl
-          local metaS=F.disp((sc.tag or"Universal").." · "..(sc.gameName~=""and sc.gameName or"All Games"))
+          local gnTxt=tostring(sc.gameName or"")
+          local metaS=F.disp((sc.tag or"Universal").." · "..(gnTxt~=""and gnTxt or"All Games"))
           local ml=lab(tile,metaS,{size=u2(1,-34,0,13),pos=uo(26,24),ts=9,trunc=true});st.muted[#st.muted+1]=ml
-          local subS=H.clip(tostring(sc.desc~=""and sc.desc or sc.code or""),40)
+          local dcTxt=tostring(sc.desc or"")
+          local subS=H.clip(dcTxt~=""and dcTxt or tostring(sc.code or""),40)
           local sl=lab(tile,F.disp(subS),{size=u2(1,-16,0,14),pos=uo(8,42),ts=9,trunc=true});st.muted[#st.muted+1]=sl
           local cpB=mk("TextButton",{Size=uo(22,22),Position=u2(1,-26,0,5),BackgroundColor3=st.cols.card,Text="",AutoButtonColor=true,BorderSizePixel=0,ZIndex=4},tile)
-          corner(cpB,6);F.lucide(cpB,"copy",11,{pos=uo(5,5),col=st.cols.acc,themed=false})
+          corner(cpB,6);F._PROF.ic(st,cpB,"copy",11,"acc",{pos=uo(5,5)})
           hook(cpB.MouseButton1Click,function()F.copyText(tostring(sc.code or""))end)
           hook(tile.MouseButton1Click,function()F.openScriptDetail(sc)end)
         end
@@ -4417,7 +5865,7 @@ function F._PROF.buildBoardTab(st,parent)
     elseif wKey=="game"and inGame then
       local gCard=F._PROF.makeCard(st,parent,wOrd,12,10);wOrd=wOrd+1
       local gh=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},gCard)
-      F.lucide(gh,"gamepad",13,{pos=uo(0,2),col=TH.ok,themed=false})
+      F._PROF.ic(st,gh,"gamepad",13,"ok",{pos=uo(0,2)})
       local ghl=lab(gh,L=="en"and"ACTIVE ROBLOX SESSION"or"ĐANG TRONG GAME ROBLOX",{size=u2(1,-20,1,0),pos=uo(18,0),ts=10,bold=true});st.muted[#st.muted+1]=ghl
       local gRow=mk("Frame",{Size=u2(1,0,0,46),BackgroundTransparency=1,LayoutOrder=2},gCard)
       local gIc=mk("ImageLabel",{Size=uo(44,44),Position=uo(0,1),BackgroundColor3=st.cols.sub,BorderSizePixel=0,Image="rbxthumb://type=GameIcon&id="..tostring(gPlace).."&w=150&h=150",ScaleType=Enum.ScaleType.Crop},gRow)
@@ -4425,8 +5873,7 @@ function F._PROF.buildBoardTab(st,parent)
       local gnLbl=lab(gRow,F.disp(gName),{size=u2(1,-164,0,18),pos=uo(52,3),ts=12,bold=true,trunc=true});st.texts[#st.texts+1]=gnLbl
       local gpLbl=lab(gRow,"PlaceId: "..tostring(gPlace)..(gJob~=""and(" · "..gJob:sub(1,8).."...")or""),{size=u2(1,-164,0,14),pos=uo(52,23),ts=9,trunc=true});st.muted[#st.muted+1]=gpLbl
       local isSame=(tonumber(gPlace)==game.PlaceId and gJob==tostring(game.JobId or""))
-      local jBtn=tbtn(gRow,isSame and(L=="en"and"Same Server"or"Cùng Server")or(" "..T("join")),{pos=u2(1,-108,0,9),size=uo(108,28),key=isSame and"btnBg"or"ok",ts=10,r=6})
-      if isSame then st.chips[#st.chips+1]=jBtn end
+      local jBtn=F._PROF.btn(st,gRow,isSame and(L=="en"and"Same Server"or"Cùng Server")or(" "..T("join")),{pos=u2(1,-108,0,9),size=uo(108,28),key=isSame and"btnBg"or"ok",ts=10,r=6,track=isSame})
       hook(jBtn.MouseButton1Click,function()
         if isSame then F.toast(T("join_srv_self"),true);return end
         if F.armAutoTeleport then F.armAutoTeleport(true)end
@@ -4439,7 +5886,7 @@ function F._PROF.buildBoardTab(st,parent)
     elseif wKey=="stats"then
       local sCard=F._PROF.makeCard(st,parent,wOrd,12,10);wOrd=wOrd+1
       local sh=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},sCard)
-      F.lucide(sh,"award",13,{pos=uo(0,2),col=st.cols.acc,themed=false})
+      F._PROF.ic(st,sh,"award",13,"acc",{pos=uo(0,2)})
       local shl=lab(sh,L=="en"and"COMMUNITY HIGHLIGHTS"or"CHỈ SỐ CỘNG ĐỒNG",{size=u2(1,-20,1,0),pos=uo(18,0),ts=10,bold=true});st.muted[#st.muted+1]=shl
       local stGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=2},sCard)
       mk("UIGridLayout",{CellSize=u2(0.5,-4,0,42),CellPadding=uo(6,6),SortOrder=soLO},stGrid)
@@ -4457,11 +5904,14 @@ function F._PROF.buildBoardTab(st,parent)
         local tile=mk("Frame",{Size=u2(1,0,1,0),BackgroundColor3=st.cols.sub,BorderSizePixel=0,LayoutOrder=idx},stGrid)
         corner(tile,7);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.45,ApplyStrokeMode=smBorder},tile)
         st.subCards[#st.subCards+1]=tile
-        F.lucide(tile,si.ic,14,{pos=uo(8,14),col=st.cols.acc,themed=false})
+        F._PROF.ic(st,tile,si.ic,14,"acc",{pos=uo(8,14)})
         local vl=lab(tile,F.disp(si.val),{size=u2(1,-34,0,16),pos=uo(28,4),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=vl
         local ll=lab(tile,si.lbl,{size=u2(1,-34,0,13),pos=uo(28,22),ts=9,trunc=true});st.muted[#st.muted+1]=ll
       end
     end
+  end
+  if not renderedMusic and H.trim(pt.music or"")~=""then
+    F._PROF.buildMusicCard(st,parent,wOrd)
   end
 end
 
@@ -4475,12 +5925,12 @@ function F._PROF.buildActivityTab(st,parent)
   if inGame then
     local gc=F._PROF.makeCard(st,parent,1,12,10)
     local gh=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},gc)
-    F.lucide(gh,"gamepad",13,{pos=uo(0,2),col=TH.ok,themed=false})
-    local gl=lab(gh,T("playing")..F.disp(gName),{size=u2(1,-20,1,0),pos=uo(18,0),ts=11,bold=true,trunc=true});gl.TextColor3=TH.ok
+    F._PROF.ic(st,gh,"gamepad",13,"ok",{pos=uo(0,2)})
+    local gl=lab(gh,T("playing")..F.disp(gName),{size=u2(1,-20,1,0),pos=uo(18,0),ts=11,bold=true,trunc=true});gl.TextColor3=st.cols.ok
     local aRow=row(gc,28,2)
-    local bCpPlace=rbtn(aRow,"Copy PlaceId",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6});st.chips[#st.chips+1]=bCpPlace
+    local bCpPlace=F._PROF.btn(st,aRow,"Copy PlaceId",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
     hook(bCpPlace.MouseButton1Click,function()F.copyText(tostring(gPlace))end)
-    local bCpJob=rbtn(aRow,gJob~=""and"Copy JobId"or"No JobId",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6});st.chips[#st.chips+1]=bCpJob
+    local bCpJob=F._PROF.btn(st,aRow,gJob~=""and"Copy JobId"or"No JobId",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
     hook(bCpJob.MouseButton1Click,function()if gJob~=""then F.copyText(gJob)end end)
   end
 
@@ -4493,7 +5943,7 @@ function F._PROF.buildActivityTab(st,parent)
       corner(bc,6);pad(bc,8,6,8,6);list(bc,3);st.subCards[#st.subCards+1]=bc
       lab(bc,T("active_ban_hdr"),{ts=11,bold=true,key="danger",layout=1})
       local lr=lab(bc,T("reason_lbl")..F.disp(st.banInfo.reason~=""and F.locText(st.banInfo.reason)or T("no_reason")),{ts=10,wrap=true,auto=true,layout=2});st.texts[#st.texts+1]=lr
-      if F.canAct(P.username,u)then local ubb=tbtn(bc,T("unban"),{key="ok",h=24,ts=10,layout=3});hook(ubb.MouseButton1Click,function()F.openUnban(u)end)end
+      if F.canAct(P.username,u)then local ubb=F._PROF.btn(st,bc,T("unban"),{key="ok",h=24,ts=10,layout=3});hook(ubb.MouseButton1Click,function()F.openUnban(u)end)end
       mOrd=mOrd+1
     end
     if st.muteInfo then
@@ -4502,7 +5952,7 @@ function F._PROF.buildActivityTab(st,parent)
       lab(mc,T("active_mute_hdr"),{ts=11,bold=true,key="danger",layout=1})
       lab(mc,T("duration_lbl")..F.fmtExpire(st.muteInfo.exp).." · @"..F.disp(st.muteInfo.by~=""and st.muteInfo.by or"Staff"),{ts=10,bold=true,key="warn",wrap=true,auto=true,layout=2})
       local lr=lab(mc,T("reason_lbl")..F.disp(st.muteInfo.reason~=""and F.locText(st.muteInfo.reason)or T("no_reason")),{ts=10,wrap=true,auto=true,layout=3});st.texts[#st.texts+1]=lr
-      if F.canAct(P.username,u)then local ub=tbtn(mc,T("unmute"),{key="ok",h=24,ts=10,layout=4});hook(ub.MouseButton1Click,function()F.openUnmute(u)end)end
+      if F.canAct(P.username,u)then local ub=F._PROF.btn(st,mc,T("unmute"),{key="ok",h=24,ts=10,layout=4});hook(ub.MouseButton1Click,function()F.openUnmute(u)end)end
       mOrd=mOrd+1
     end
     if#st.warnList>0 then
@@ -4513,7 +5963,7 @@ function F._PROF.buildActivityTab(st,parent)
         local w=st.warnList[idx]
         local lw=lab(wc,"• #"..idx..": "..F.disp(w.reason~=""and F.locText(w.reason)or T("no_reason")).." (@"..F.disp(w.by~=""and w.by or"Staff")..")",{ts=10,wrap=true,auto=true,layout=2});st.texts[#st.texts+1]=lw
       end
-      if F.canAct(P.username,u)then local cwb=tbtn(wc,T("clear_warn"),{key="ok",h=24,ts=10,layout=3});hook(cwb.MouseButton1Click,function()F.openClearWarn(u)end)end
+      if F.canAct(P.username,u)then local cwb=F._PROF.btn(st,wc,T("clear_warn"),{key="ok",h=24,ts=10,layout=3});hook(cwb.MouseButton1Click,function()F.openClearWarn(u)end)end
       mOrd=mOrd+1
     end
     if#st.punishHist>0 then
@@ -4531,8 +5981,7 @@ function F._PROF.buildActivityTab(st,parent)
     local utilC=F._PROF.makeCard(st,parent,3,12,10)
     local isBlocked=P.blockedUsers and P.blockedUsers[st.uLower]==true
     local ar=row(utilC,30,1)
-    local blkB=rbtn(ar,isBlocked and(L=="en"and"Unblock Locally"or"Bỏ chặn tin")or(L=="en"and"Block User Locally"or"Chặn tin cục bộ"),{size=u2(0.5,-3,1,0),key=isBlocked and"ok"or"btnBg",ts=10,r=6})
-    if not isBlocked then st.chips[#st.chips+1]=blkB end
+    local blkB=F._PROF.btn(st,ar,isBlocked and(L=="en"and"Unblock Locally"or"Bỏ chặn tin")or(L=="en"and"Block User Locally"or"Chặn tin cục bộ"),{size=u2(0.5,-3,1,0),key=isBlocked and"ok"or"btnBg",ts=10,r=6,track=not isBlocked})
     hook(blkB.MouseButton1Click,function()
       P.blockedUsers=P.blockedUsers or{}
       if P.blockedUsers[st.uLower]then P.blockedUsers[st.uLower]=nil else P.blockedUsers[st.uLower]=true end
@@ -4540,28 +5989,47 @@ function F._PROF.buildActivityTab(st,parent)
       F.toast(P.blockedUsers[st.uLower]and(L=="en"and"Blocked @"..u or"Đã ẩn tin nhắn @"..u)or(L=="en"and"Unblocked @"..u or"Đã bỏ chặn @"..u),true)
       F.openProfile(u,2)
     end)
-    local rpB=rbtn(ar,T("report"),{size=u2(0.5,-3,1,0),key="warn",ts=10,r=6})
+    local rpB=F._PROF.btn(st,ar,T("report"),{size=u2(0.5,-3,1,0),key="warn",ts=10,r=6})
     hook(rpB.MouseButton1Click,function()F.openReport(u)end)
 
     if F.canAct(P.username,u)then
       F._PROF.section(st,parent,T("admin"),4,"shieldAlert")
       local admC=F._PROF.makeCard(st,parent,5,10,8)
       local r2=row(admC,28,1)
-      local m1=rbtn(r2,T("mute"),{key="danger",ts=10});hook(m1.MouseButton1Click,function()F.openMute(u)end)
-      local m2=rbtn(r2,T("warn"),{key="warn",ts=10});hook(m2.MouseButton1Click,function()F.openWarn(u)end)
+      local m1=F._PROF.btn(st,r2,T("mute"),{size=u2(0.5,-3,1,0),key="danger",ts=10});hook(m1.MouseButton1Click,function()F.openMute(u)end)
+      local m2=F._PROF.btn(st,r2,T("warn"),{size=u2(0.5,-3,1,0),key="warn",ts=10});hook(m2.MouseButton1Click,function()F.openWarn(u)end)
       local r3=row(admC,28,2)
-      local u1=rbtn(r3,T("unmute"),{key="ok",ts=10});hook(u1.MouseButton1Click,function()F.openUnmute(u)end)
-      local u2=rbtn(r3,T("clear_warn"),{key="ok",ts=10});hook(u2.MouseButton1Click,function()F.openClearWarn(u)end)
+      local umB=F._PROF.btn(st,r3,T("unmute"),{size=u2(0.5,-3,1,0),key="ok",ts=10});hook(umB.MouseButton1Click,function()F.openUnmute(u)end)
+      local cwB=F._PROF.btn(st,r3,T("clear_warn"),{size=u2(0.5,-3,1,0),key="ok",ts=10});hook(cwB.MouseButton1Click,function()F.openClearWarn(u)end)
       local r4=row(admC,28,3)
-      local b1=rbtn(r4,T("ban"),{key="danger",ts=10});hook(b1.MouseButton1Click,function()F.openBan(u)end)
-      local b2=rbtn(r4,T("unban"),{key="ok",ts=10});hook(b2.MouseButton1Click,function()F.openUnban(u)end)
+      local b1=F._PROF.btn(st,r4,T("ban"),{size=u2(0.5,-3,1,0),key="danger",ts=10});hook(b1.MouseButton1Click,function()F.openBan(u)end)
+      local b2=F._PROF.btn(st,r4,T("unban"),{size=u2(0.5,-3,1,0),key="ok",ts=10});hook(b2.MouseButton1Click,function()F.openUnban(u)end)
+      local r5=row(admC,28,4)
+      local dpBusy=false
+      local dpB=F._PROF.btn(st,r5,L=="en"and"Clear Profile Data (Dev/Admin)"or"Xóa Data Profile (Dev/Admin)",{size=u2(1,0,1,0),key="danger",ts=10})
+      hook(dpB.MouseButton1Click,function()
+        if dpBusy then return end
+        dpBusy=true
+        F.toast(L=="en"and"Clearing profile data..."or"Đang xóa Data Profile...",true)
+        task.spawn(function()
+          local d,err=F.rawRequest("POST","/api/profile",{action="delete",target=u,by=P.username,reason="Sensitive profile data cleared by "..P.username})
+          dpBusy=false
+          if type(d)=="table"and d.ok then
+            F.rememberProfile(u,{_forceReset=true},F.isLive(u))
+            F.toast(L=="en"and("Cleared profile data for @"..u)or("Đã xóa Data Profile của @"..u),true)
+            F.openProfile(u,1,true)
+          else
+            F.netError(type(d)=="table"and d.error or err)
+          end
+        end)
+      end)
     end
     if F.isDev(P.username)then
       local devC=F._PROF.makeCard(st,parent,6,10,8)
       local r5=row(devC,28,1)
-      local rl=rbtn(r5,T("roles"),{key="accent",ts=10});hook(rl.MouseButton1Click,function()F.openUserRoles(u)end)
+      local rl=F._PROF.btn(st,r5,T("roles"),{size=u2(#st.rlist>0 and 0.5 or 1,#st.rlist>0 and -3 or 0,1,0),key="accent",ts=10});hook(rl.MouseButton1Click,function()F.openUserRoles(u)end)
       if#st.rlist>0 then
-        local rv=rbtn(r5,T("revoke"),{key="danger",ts=10})
+        local rv=F._PROF.btn(st,r5,T("revoke"),{size=u2(0.5,-3,1,0),key="danger",ts=10})
         hook(rv.MouseButton1Click,function()
           enqueue("other","POST","/api/revoke",{by=P.username,u=u},function(d2,e2)
             if d2 and d2.ok then
@@ -4576,13 +6044,34 @@ function F._PROF.buildActivityTab(st,parent)
   else
     local selfC=F._PROF.makeCard(st,parent,3,10,8)
     local sr=row(selfC,28,1)
-    local rqB=rbtn(sr,T("request_title"),{key="btnBg",ts=10});st.chips[#st.chips+1]=rqB
+    local rqB=F._PROF.btn(st,sr,T("request_title"),{size=u2(0.5,-3,1,0),key="btnBg",ts=10})
     hook(rqB.MouseButton1Click,function()F.openRequest()end)
-    local hdRefB=rbtn(sr,L=="en"and"Refresh HD Assets"or"Làm nét lại ảnh",{key="btnBg",ts=10});st.chips[#st.chips+1]=hdRefB
+    local hdRefB=F._PROF.btn(st,sr,L=="en"and"Refresh HD Assets"or"Làm nét lại ảnh",{size=u2(0.5,-3,1,0),key="btnBg",ts=10})
     hook(hdRefB.MouseButton1Click,function()
       if st.bannerId~=""then S.assetUrl[st.bannerId]=nil;S.textureMap[st.bannerId]=nil;F.setAsset(st.ui.bImg,st.bannerId,nil,0,{force=true})end
       if st.iconId~=""then S.assetUrl[st.iconId]=nil;S.textureMap[st.iconId]=nil;F.setAsset(st.ui.avImg,st.iconId,nil,0,{force=true})end
       F.toast(L=="en"and"Re-fetching full-res textures..."or"Đang tải lại ảnh độ phân giải gốc...",true)
+    end)
+    local sr2=row(selfC,28,2)
+    local myDelBusy=false
+    local clrMyB=F._PROF.btn(st,sr2,L=="en"and"Reset My Cloud Profile Data"or"Xóa sạch Data Profile của tôi",{size=u2(1,0,1,0),key="danger",ts=10})
+    hook(clrMyB.MouseButton1Click,function()
+      if myDelBusy then return end
+      myDelBusy=true
+      F.toast(L=="en"and"Clearing your profile data..."or"Đang xóa Data Profile của bạn...",true)
+      task.spawn(function()
+        local d,err=F.rawRequest("POST","/api/profile",{action="delete",target=P.username,by=P.username,reason="Self reset profile data"})
+        myDelBusy=false
+        if type(d)=="table"and d.ok then
+          P.status="";P.bio="";P.profBanner="";P.profIcon="";P.profTheme={}
+          F.rememberProfile(P.username,{_forceReset=true},true)
+          S.isDirty=true;F.save(true);F.heartbeat(false)
+          F.toast(L=="en"and"Cleared your profile data!"or"Đã xóa sạch Data Profile của bạn!",true)
+          F.openProfile(P.username,1,true)
+        else
+          F.netError(type(d)=="table"and d.error or err)
+        end
+      end)
     end)
   end
 end
@@ -4609,26 +6098,33 @@ function F._PROF.buildEditTab(st,parent)
   local stRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3},infoCard)
   mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO},stRow)
   for idx,preset in ipairs({"Gaming","Coding","Scripting","AFK","Busy","X"})do
-    local sb=tbtn(stRow,preset,{size=uo(preset=="X"and 28 or 66,22),ts=10,key="btnBg",r=6,layout=idx})
-    st.chips[#st.chips+1]=sb;hook(sb.MouseButton1Click,function()tStatus.Text=(preset=="X"and""or preset)end)
+    local sb=F._PROF.btn(st,stRow,preset,{size=uo(preset=="X"and 28 or 66,22),ts=10,key="btnBg",r=6,layout=idx})
+    hook(sb.MouseButton1Click,function()tStatus.Text=(preset=="X"and""or preset)end)
   end
   local tBio=profField(T("bio"),P.bio,true,4);tBio.PlaceholderText=T("bio_ph")
   local tTag=profField(L=="en"and"Profile Flair / Tag Badge (max 36 chars)"or"Nhãn cá nhân / Flair Badge (tối đa 36 ký tự)",pt.tag,false,5)
   tTag.PlaceholderText=L=="en"and"e.g. Script Dev, Trade King, Chill..."or"vd: Script Dev, Collector, Chill..."
-  local tCountry=profField(L=="en"and"Country (ISO Code or Full Name)"or"Quốc gia (Mã 2 chữ hoặc Tên đầy đủ)",P.country,false,6)
-  local ccPv=lab(infoCard,"",{ts=10,key="ok",h=16,layout=7})
+  local tAboutLbl=profField(L=="en"and"Board Section Label (replaces 'About Me', max 40 chars)"or"Nhãn mục Giới thiệu trên Board (thay 'About Me', tối đa 40 ký tự)",pt.abLbl,false,6)
+  tAboutLbl.PlaceholderText=L=="en"and"e.g. About Me, Info, Bio..."or"vd: About Me, Giới thiệu, Info..."
+  local tHiTxt=profField(L=="en"and"Board Greeting Headline (replaces 'Hi, I'm ...!', max 70 chars)"or"Tiêu đề chào hỏi trên Board (thay 'Hi, I'm ...!', tối đa 70 ký tự)",pt.hiTxt,false,7)
+  tHiTxt.PlaceholderText=L=="en"and"e.g. Hi, I'm Dumb!"or"vd: Hi, I'm Dumb!"
+  local tCountry=profField(L=="en"and"Country (ISO Code or Full Name)"or"Quốc gia (Mã 2 chữ hoặc Tên đầy đủ)",P.country,false,8)
+  local ccPv=lab(infoCard,"",{ts=10,key="ok",h=16,layout=9})
   local function updCc()
     local res=H.resolveCountry(tCountry.Text)
     ccPv.Text="-> "..H.flag(res).." "..H.countryName(res).." ("..res..")"
     if st.fn.refreshFlag then st.fn.refreshFlag(res)end
   end
   hook(tCountry:GetPropertyChangedSignal("Text"),updCc);updCc()
-  local ccRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=8},infoCard)
+  local ccRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=10},infoCard)
   mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO},ccRow)
   for idx,ccode in ipairs({"VN","US","IL","UA","JP","KR","GB","SG","??"})do
-    local cb=tbtn(ccRow,ccode=="??"and"Global ??"or(H.flag(ccode).." "..ccode),{size=uo(54,22),ts=10,key="btnBg",r=6,layout=idx})
-    st.chips[#st.chips+1]=cb;hook(cb.MouseButton1Click,function()tCountry.Text=ccode end)
+    local cb=F._PROF.btn(st,ccRow,ccode=="??"and"Global ??"or(H.flag(ccode).." "..ccode),{size=uo(54,22),ts=10,key="btnBg",r=6,layout=idx})
+    hook(cb.MouseButton1Click,function()tCountry.Text=ccode end)
   end
+  local tMusic=profField(L=="en"and"Favorite Music (Sound IDs or [sound:ID]|Name, max 4)"or"Nhạc Roblox yêu thích (Sound ID hoặc [sound:ID]|Tên, tối đa 4)",pt.music,false,11)
+  tMusic.PlaceholderText=L=="en"and"e.g. 1837879082|Chill Beat, 9043887091"or"VD: 1837879082|Chill Beat, [sound:9043887091]"
+  st.fields.tMusic=tMusic
 
   -- Ghim Script nổi bật lên Profile Board
   F._PROF.section(st,parent,L=="en"and"PIN SCRIPT TO PROFILE BOARD"or"GHIM SCRIPT NỔI BẬT LÊN BOARD",2,"pin")
@@ -4644,11 +6140,11 @@ function F._PROF.buildEditTab(st,parent)
     local function paintPinBtns()
       for sid,b in pairs(pBtns)do local on=(pt.pinSc==sid);b.BackgroundColor3=on and st.cols.acc or st.cols.sub;b.TextColor3=on and H.ensureContrast(rgb(255,255,255),st.cols.acc,4.5)or st.cols.txt end
     end
-    local noneB=tbtn(pinWrap,L=="en"and"Auto Latest"or"Tự động mới nhất",{size=uo(106,24),ts=10,r=6,layout=0});pBtns[""]=noneB
+    local noneB=F._PROF.btn(st,pinWrap,L=="en"and"Auto Latest"or"Tự động mới nhất",{size=uo(106,24),ts=10,r=6,layout=0,track=false});pBtns[""]=noneB
     hook(noneB.MouseButton1Click,function()pt.pinSc="";paintPinBtns()end)
     for idx=1,min(8,#myScripts)do
       local sc=myScripts[idx];local sid=tostring(sc.id)
-      local b=tbtn(pinWrap,H.clip(sc.title or sid,18),{size=uo(clamp(H.textW(H.clip(sc.title or sid,18),10,fGB)+16,64,160),24),ts=10,r=6,layout=idx})
+      local b=F._PROF.btn(st,pinWrap,H.clip(sc.title or sid,18),{size=uo(clamp(H.textW(H.clip(sc.title or sid,18),10,fGB)+16,64,160),24),ts=10,r=6,layout=idx,track=false})
       pBtns[sid]=b;hook(b.MouseButton1Click,function()pt.pinSc=sid;paintPinBtns()end)
     end
     paintPinBtns()
@@ -4657,7 +6153,7 @@ function F._PROF.buildEditTab(st,parent)
   hook(tName:GetPropertyChangedSignal("Text"),function()
     local s=H.trim(tName.Text);local ds=F.disp(s~=""and s or LP.DisplayName)
     if u.dnameLbl then u.dnameLbl.Text=ds end
-    if u.spotTitle then u.spotTitle.Text=(L=="en"and"Hi, I'm "or"Xin chào, mình là ")..ds.."!"end
+    if u.spotTitle and H.trim(pt.hiTxt or"")==""then u.spotTitle.Text=(L=="en"and"Hi, I'm "or"Xin chào, mình là ")..ds.."!"end
   end)
   hook(tStatus:GetPropertyChangedSignal("Text"),function()
     local s=H.trim(tStatus.Text)
@@ -4671,7 +6167,16 @@ function F._PROF.buildEditTab(st,parent)
     if u.spotBio then u.spotBio.Text=s~=""and F.disp(s)or(L=="en"and"No bio yet."or"Chưa có tiểu sử.");u.spotBio.TextColor3=s~=""and st.cols.txt or st.cols.muted end
   end)
   hook(tTag:GetPropertyChangedSignal("Text"),function()if st.fn.refreshFlair then st.fn.refreshFlair(tTag.Text)end end)
-  st.fields.tName=tName;st.fields.tStatus=tStatus;st.fields.tBio=tBio;st.fields.tCountry=tCountry;st.fields.tTag=tTag
+  hook(tAboutLbl:GetPropertyChangedSignal("Text"),function()
+    local s=H.clip(H.trim(tAboutLbl.Text),40);pt.abLbl=s
+    if u.aboutLbl then u.aboutLbl.Text="@"..st.u.." · "..F.disp(s~=""and s or(L=="en"and"About Me"or"Giới thiệu"))end
+  end)
+  hook(tHiTxt:GetPropertyChangedSignal("Text"),function()
+    local s=H.clip(H.trim(tHiTxt.Text),70);pt.hiTxt=s
+    local dn=H.trim(tName.Text);local ds=F.disp(dn~=""and dn or LP.DisplayName)
+    if u.spotTitle then u.spotTitle.Text=s~=""and F.disp(s)or((L=="en"and"Hi, I'm "or"Xin chào, mình là ")..ds.."!")end
+  end)
+  st.fields.tName=tName;st.fields.tStatus=tStatus;st.fields.tBio=tBio;st.fields.tCountry=tCountry;st.fields.tTag=tTag;st.fields.tAboutLbl=tAboutLbl;st.fields.tHiTxt=tHiTxt
 end
 
 function F._PROF.buildImagesTab(st,parent)
@@ -4679,7 +6184,7 @@ function F._PROF.buildImagesTab(st,parent)
   local u=st.ui
   local noteC=F._PROF.makeCard(st,parent,0,10,8)
   local nRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},noteC)
-  F.lucide(nRow,"sparkles",15,{pos=uo(0,2),col=st.cols.acc,themed=false})
+  F._PROF.ic(st,nRow,"sparkles",15,"acc",{pos=uo(0,2)})
   local nl=lab(nRow,L=="en"
     and"Roblox Store decals are automatically resolved to native HD textures. Tap 'Crop / Frame' to drag, zoom (100-300%), change Fit mode (Crop/Fit/Stretch/Tile), or adjust aspect ratio!"
     or"Ảnh Decal từ Roblox Store được tự động tải ở độ phân giải gốc. Bấm 'Căn khung' để kéo ảnh, phóng to/nhỏ, đổi chế độ Fit (không cắt ảnh) hoặc chỉnh tỉ lệ!",
@@ -4691,15 +6196,15 @@ function F._PROF.buildImagesTab(st,parent)
     local tw=mk("Frame",{Size=uo(40,40),Position=uo(0,0),BackgroundColor3=st.cols.sub,BorderSizePixel=0,ClipsDescendants=true},topR)
     corner(tw,8);st.subCards[#st.subCards+1]=tw
     local ti=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0},tw)
-    local emp=lab(tw,"", {size=us(1,1),ts=12,align=txC});F.lucide(emp,"image",16,{pos=uo(12,12),col=st.cols.muted,themed=false})
+    local emp=lab(tw,"", {size=us(1,1),ts=12,align=txC});F._PROF.ic(st,emp,"image",16,"muted",{pos=uo(12,12)})
     local tl=lab(topR,titleTxt,{size=u2(1,-212,0,18),pos=uo(48,2),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=tl
     local infoL=lab(topR,"",{size=u2(1,-212,0,14),pos=uo(48,22),ts=9,trunc=true});st.muted[#st.muted+1]=infoL
 
-    local storeB=tbtn(topR," Store",{size=uo(72,28),pos=u2(1,-172,0,6),key="accent",ts=10,r=6})
-    st.accents[#st.accents+1]=storeB;F.lucide(storeB,"store",12,{pos=uo(7,8),col=H.lum(st.cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
-    local cropB=tbtn(topR," "..(L=="en"and"Crop"or"Căn"),{size=uo(64,28),pos=u2(1,-96,0,6),key="btnBg",ts=10,r=6})
-    st.chips[#st.chips+1]=cropB;F.lucide(cropB,"crop",12,{pos=uo(7,8),col=st.cols.txt,themed=false})
-    local clrB=tbtn(topR,"X",{size=uo(28,28),pos=u2(1,-28,0,6),key="danger",ts=11,r=6})
+    local storeB=F._PROF.btn(st,topR," Store",{size=uo(72,28),pos=u2(1,-172,0,6),key="accent",ts=10,r=6})
+    F._PROF.ic(st,storeB,"store",12,"onAcc",{pos=uo(7,8)})
+    local cropB=F._PROF.btn(st,topR," "..(L=="en"and"Crop"or"Căn"),{size=uo(64,28),pos=u2(1,-96,0,6),key="btnBg",ts=10,r=6})
+    F._PROF.ic(st,cropB,"crop",12,"txt",{pos=uo(7,8)})
+    local clrB=F._PROF.btn(st,topR,"X",{size=uo(28,28),pos=u2(1,-28,0,6),key="danger",ts=11,r=6})
 
     local boxInp=mk("TextBox",{
       Size=u2(1,0,0,26),BackgroundColor3=st.cols.inpBg,TextColor3=st.cols.inpTxt,PlaceholderColor3=st.cols.muted,
@@ -4868,7 +6373,7 @@ function F._PROF.buildStyleTab(st,parent)
   st.fn.refreshColorPickBtns=function(vBg,vAcc,vTxt)
     local c1=(vBg and pt.bg~=""and H.hex(vBg))or cols.card;bPkBg.BackgroundColor3=c1;bPkBg.TextColor3=H.ensureContrast(rgb(255,255,255),c1,4.5)
     local c2=(vAcc and pt.acc~=""and H.hex(vAcc))or cols.acc;bPkAcc.BackgroundColor3=c2;bPkAcc.TextColor3=H.ensureContrast(rgb(255,255,255),c2,4.5)
-    local c3=(vTxt and pt.txt~=""and H.hex(vTxt))or cols.txt;bPkTxt.BackgroundColor3=c3;bPkTxt.TextColor3=H.ensureContrast(rgb(255,255,255),c3,4.5)
+    local cTxt=(vTxt and pt.txt~=""and H.hex(vTxt))or cols.txt;bPkTxt.BackgroundColor3=cTxt;bPkTxt.TextColor3=H.ensureContrast(rgb(255,255,255),cTxt,4.5)
   end
   local pkWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false,LayoutOrder=3},colC)
   local actBox,pkObj
@@ -4884,8 +6389,8 @@ function F._PROF.buildStyleTab(st,parent)
   hook(tBg:GetPropertyChangedSignal("Text"),refresh);hook(tAcc:GetPropertyChangedSignal("Text"),refresh);hook(tTxt:GetPropertyChangedSignal("Text"),refresh)
 
   local tr1=row(colC,26,4)
-  local bHarm=rbtn(tr1,T("harmonize_btn"),{size=u2(0.5,-3,1,0),key="ok",ts=10,r=6})
-  local bAutoC=rbtn(tr1,T("auto_contrast"),{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6});st.chips[#st.chips+1]=bAutoC
+  local bHarm=F._PROF.btn(st,tr1,T("harmonize_btn"),{size=u2(0.5,-3,1,0),key="ok",ts=10,r=6})
+  local bAutoC=F._PROF.btn(st,tr1,T("auto_contrast"),{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
   hook(bHarm.MouseButton1Click,function()
     local hb=math.random();local ha=(hb+0.08+math.random()*0.22)%1;local hs=(ha+0.33)%1
     tBg.Text=H.tohex(Color3.fromHSV(hb,0.36,0.14));tAcc.Text=H.tohex(Color3.fromHSV(ha,0.80,0.96));tTxt.Text=H.tohex(Color3.fromHSV(hb,0.06,0.96))
@@ -4898,8 +6403,8 @@ function F._PROF.buildStyleTab(st,parent)
   end)
 
   local tr2=row(colC,26,5)
-  local bFromApp=rbtn(tr2,L=="en"and"From App Theme"or"Lấy từ App",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6});st.chips[#st.chips+1]=bFromApp
-  local bToApp=rbtn(tr2,L=="en"and"Apply to App"or"Đặt làm App",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6});st.chips[#st.chips+1]=bToApp
+  local bFromApp=F._PROF.btn(st,tr2,L=="en"and"From App Theme"or"Lấy từ App",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
+  local bToApp=F._PROF.btn(st,tr2,L=="en"and"Apply to App"or"Đặt làm App",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
   hook(bFromApp.MouseButton1Click,function()
     F.computeTheme();tBg.Text=H.tohex(TH.bg2);tAcc.Text=H.tohex(TH.accent);tTxt.Text=H.tohex(TH.text)
     pt.g1=H.tohex(TH.g1);pt.g2=H.tohex(TH.g2);pt.g3=H.tohex(TH.g3);pt.mode=P.backgroundMode or"gradient";pt.font=P.fontFamily or"gotham"
@@ -4935,7 +6440,7 @@ function F._PROF.buildStyleTab(st,parent)
   end)
 
   local codeR=row(colC,26,6)
-  local bCopyT=rbtn(codeR,T("theme_copy"),{size=u2(0.45,-3,1,0),key="btnBg",ts=10,r=6});st.chips[#st.chips+1]=bCopyT
+  local bCopyT=F._PROF.btn(st,codeR,T("theme_copy"),{size=u2(0.45,-3,1,0),key="btnBg",ts=10,r=6})
   local codeInp=mk("TextBox",{Size=u2(0.55,-3,1,0),BackgroundColor3=cols.inpBg,TextColor3=cols.inpTxt,PlaceholderColor3=cols.muted,Text="",PlaceholderText=T("theme_paste"),ClearTextOnFocus=false,Font=fCode,TextSize=10,BorderSizePixel=0,TextXAlignment=txL},codeR)
   corner(codeInp,6);pad(codeInp,6,2,6,2);mk("UIStroke",{Color=cols.iBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},codeInp);st.inputs[#st.inputs+1]=codeInp
   hook(bCopyT.MouseButton1Click,function()
@@ -5014,6 +6519,9 @@ function F._PROF.saveProfile(st)
   if f.tBio then P.bio=H.clip(H.trim(f.tBio.Text),180)end
   if f.tCountry then P.country=H.resolveCountry(f.tCountry.Text)end
   if f.tTag then pt.tag=H.clip(H.trim(f.tTag.Text),36)end
+  if f.tAboutLbl then pt.abLbl=H.clip(H.trim(f.tAboutLbl.Text),40)end
+  if f.tHiTxt then pt.hiTxt=H.clip(H.trim(f.tHiTxt.Text),70)end
+  if f.tMusic then pt.music=F.normalizeMusicInput(f.tMusic.Text)end
   if f.tBanner then P.profBanner=H.assetId(f.tBanner.Text)or""end
   if f.tIcon then P.profIcon=H.assetId(f.tIcon.Text)or""end
   if f.tBg then pt.bg=H.safeHex(f.tBg.Text,nil)or""end
@@ -5022,7 +6530,8 @@ function F._PROF.saveProfile(st)
   if f.tBgImg then pt.bgImg=H.assetId(f.tBgImg.Text)or""end
   P.profTheme=F.compactProfTheme(pt)
   if S.users[P.username]then S.users[P.username].profTheme=P.profTheme;S.users[P.username].profBanner=P.profBanner;S.users[P.username].profIcon=P.profIcon end
-  S.isDirty=true;F.save(true);F.heartbeat(false)
+  F.rememberProfile(P.username,{u=P.username,display=P.display,userId=LP.UserId,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,_allowClear=true,_fromProfileApi=true},true)
+  S.isDirty=true;F.save(true);F.heartbeat(false);F.pushMyProfileSync()
   if F.rebuildFeed then pcall(F.rebuildFeed,true)end
   F.toast(T("saved_ok"),true);F.closeModal()
 end
@@ -5042,8 +6551,14 @@ function F.openProfile(u,initTab,_noFetch)
   local mw=isWide and min(770,v.X-24)or min(425,v.X-16)
   local mh=isWide and min(565,v.Y-24)or min(650,v.Y-16)
 
-  local scr,_,box=F.modalBox(T("profile"),mw,mh)
+  local scr,_,box=F.modalBox(T("profile"),mw,mh,{noAppTheme=true,cols=st.cols,pt=st.pTheme})
   box.ClipsDescendants=true
+  for _,ch in ipairs(box:GetChildren())do
+    if ch:IsA("UIGradient")then ch:Destroy()
+    elseif(ch:IsA("CanvasGroup")or ch:IsA("Frame"))and ch.Size==us(1,1)and ch~=scr then
+      if ch:FindFirstChildOfClass("ImageLabel")~=nil then ch:Destroy()end
+    end
+  end
 
   local uSt=st.ui
   uSt.box=box
@@ -5131,8 +6646,8 @@ function F.openProfile(u,initTab,_noFetch)
     local curOrder={}
     for p in tostring(pt.wOrder or"bio,scripts,game,stats"):gmatch("[^,]+")do curOrder[#curOrder+1]=H.trim(p:lower())end
     local enabled={};for _,k in ipairs(curOrder)do enabled[k]=true end
-    for _,k in ipairs({"bio","scripts","game","stats"})do if not enabled[k]then curOrder[#curOrder+1]=k end end
-    local wNames={bio=L=="en"and"About Me / Bio"or"Giới thiệu (Bio)",scripts=L=="en"and"Shared Scripts Showcase"or"Kho Script Chia Sẻ",game=L=="en"and"Live Roblox Game Card"or"Game Roblox Đang Chơi",stats=L=="en"and"Community Stats"or"Chỉ số Cộng đồng"}
+    for _,k in ipairs({"bio","music","scripts","game","stats"})do if not enabled[k]then curOrder[#curOrder+1]=k end end
+    local wNames={bio=L=="en"and"About Me / Bio"or"Giới thiệu (Bio)",music=L=="en"and"Favorite Music"or"Sở thích Âm nhạc",scripts=L=="en"and"Shared Scripts Showcase"or"Kho Script Chia Sẻ",game=L=="en"and"Live Roblox Game Card"or"Game Roblox Đang Chơi",stats=L=="en"and"Community Stats"or"Chỉ số Cộng đồng"}
     local listWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},wScr);list(listWrap,6)
     local function redraw()
       for _,c in ipairs(listWrap:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
@@ -5190,10 +6705,11 @@ function F.openProfile(u,initTab,_noFetch)
   if st.canEdit and saveParent then
     local sv=mk("TextButton",{Size=u2(1,0,0,34),BackgroundColor3=st.cols.acc,Text="  "..T("save_profile"),Font=fGB,TextSize=12,TextColor3=H.ensureContrast(rgb(255,255,255),st.cols.acc,4.5),BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=90},saveParent)
     corner(sv,8);st.accents[#st.accents+1]=sv
-    F.lucide(sv,"save",14,{pos=uo(14,10),col=H.lum(st.cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
+    F._PROF.ic(st,sv,"save",14,"onAcc",{pos=uo(14,10)})
     hook(sv.MouseButton1Click,function()F._PROF.saveProfile(st)end)
   end
 
+  F.unthemeTree(box)
   st.fn.refreshThemeBadges()
   F._PROF.applyColors(st,pt.bg or"",pt.acc or"",pt.txt or"")
   if not _noFetch and not st.isSelf then
@@ -5215,25 +6731,108 @@ end
 -- =============================================================================
 --- [F.resolveUser] Tìm kiếm tài khoản Roblox theo tên qua `Players:GetUserIdFromNameAsync` để lấy tên chuẩn và UserId
 function F.resolveUser(text,cb)text=H.trim(text):gsub("^@","")task.spawn(function()local uid,name
+    if F.isSystemActor(text)then cb(nil);return end
     if text:match("^%d+$")then uid=tonumber(text)local ok,n=pcall(Players.GetNameFromUserIdAsync,Players,uid)name=ok and n or nil else local ok,id=pcall(Players.GetUserIdFromNameAsync,Players,text)if ok and id then uid=id
-        local ok2,n=pcall(Players.GetNameFromUserIdAsync,Players,id)name=ok2 and n or text end end if name and uid then S.users[name]=S.users[name]or{display=name,userId=uid}S.users[name].userId=S.users[name].userId or uid end
+        local ok2,n=pcall(Players.GetNameFromUserIdAsync,Players,id)name=ok2 and n or text end end
+    if name and uid and not F.isSystemActor(name)then
+      S.uidCache=S.uidCache or{}
+      S.uidCache[name]=tonumber(uid)
+      S.uidCache[tostring(name):lower()]=tonumber(uid)
+    end
     cb(name and{u=name,id=uid}or nil)end)end
 --- [F.pickUser] Mở hộp thoại tìm kiếm và chọn người dùng (hỗ trợ chọn đơn hoặc chọn nhiều người để gán Role)
-function F.pickUser(o)local scr,close=F.popup(o.title or T("pick_user"),340,450)local q=field(scr,"","")q.PlaceholderText=T("search_user")
-  local box=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3},scr)list(box,3)
-  local function candidates()local seen,out={},{}
-    local function add(u)if u and not seen[u]then seen[u]=true;out[#out+1]=u end end add(P.username)for u in pairs(S.users)do add(u)end if o.assigned then for u in pairs(S.assign)do add(u)end end
-    for u in pairs(P.dmList)do add(u)end tsort(out,function(a,b)local la,lb=(a==P.username or F.isLive(S.users[a])),(b==P.username or F.isLive(S.users[b]))if la~=lb then return la end return a:lower()<b:lower()end)
-    return out end
-  local function build()for _,c in ipairs(box:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
-    local needle=H.trim(q.Text):lower():gsub("^@","")local n,exact=0,false
-    for _,u in ipairs(candidates())do local rec=S.users[u]or{}if needle==""or u:lower():find(needle,1,true)or tostring(rec.display or""):lower():find(needle,1,true)then n=n+1 if n>60 then break end
-        if u:lower()==needle then exact=true end
-        local rowB rowB=F.userRow(box,u,{layout=n,right=o.multi and 30 or 0,click=function(x)if o.multi then local on=not o.isOn(x)o.onToggle(x,on)
-              rowB:FindFirstChild("chk").Text=o.isOn(x)and"[x]"or""else close();o.onPick(x)end end})if o.multi then local c=lab(rowB,o.isOn(u)and"[x]"or"",{size=uo(24,38),pos=u2(1,-28,0,0),bold=true,ts=15,align=txC,key="ok"})
-          c.Name="chk"end end end if needle~=""and not exact and#needle>=3 then local fb=tbtn(box,T("roblox_find")..needle,{key="accent",h=32,layout=999})hook(fb.MouseButton1Click,function()fb.Text="…"
-        F.resolveUser(needle,function(r)if not r then if fb.Parent then fb.Text=T("not_found")end return end if o.multi then o.onToggle(r.u,true);if box.Parent then build()end else close();o.onPick(r.u)end end)end)end end
-  hook(q:GetPropertyChangedSignal("Text"),build)build()end
+function F.pickUser(o)o=o or{}
+  local scr,close=F.popup(o.title or T("pick_user"),360,480)
+  local excludeSelf=(o.excludeSelf~=nil)and o.excludeSelf or(not o.assigned)
+  local mode=o.mode or"script"
+  local q=field(scr,"","",false,1)q.PlaceholderText=L=="en"and"Search real users or friends..."or"Tìm người dùng thật hoặc bạn bè..."
+  local tabRow=row(scr,26,2)
+  local bScr=tbtn(tabRow,"",{size=u2(1/3,-4,1,0),key=mode=="script"and"accent"or"btnBg",ts=10,r=6,layout=1})
+  local bFr=tbtn(tabRow,"",{size=u2(1/3,-4,1,0),key=mode=="friends"and"accent"or"btnBg",ts=10,r=6,layout=2})
+  local bAll=tbtn(tabRow,"",{size=u2(1/3,0,1,0),key=mode=="all"and"accent"or"btnBg",ts=10,r=6,layout=3})
+  local box=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3},scr)list(box,4)
+  local function candidates()
+    local seen,out={},{}
+    local function add(u)
+      u=H.trim(tostring(u or""))
+      if u==""or u=="?"then return end
+      local lk=u:lower()
+      if excludeSelf and lk==P.username:lower()then return end
+      if not seen[lk]then seen[lk]=true;out[#out+1]=u end
+    end
+    if mode=="script"or mode=="all"then
+      if o.assigned then
+        add(P.username)
+        for u in pairs(S.assign or{})do add(u)end
+      end
+      for _,u in ipairs(F.allKnownScriptUsers())do add(u)end
+    end
+    if mode=="friends"or mode=="all"then
+      for _,fr in ipairs(S.friendsList or{})do add(fr.u)end
+    end
+    tsort(out,function(a,b)
+      local la,lb=(a:lower()==P.username:lower()or F.isLive(F.userRec(a))),(b:lower()==P.username:lower()or F.isLive(F.userRec(b)))
+      if la~=lb then return la end
+      local fa,fb=(S.friendsMap and S.friendsMap[a:lower()]),(S.friendsMap and S.friendsMap[b:lower()])
+      local fona,fonb=(fa and fa.isOnline==true),(fb and fb.isOnline==true)
+      if fona~=fonb then return fona end
+      return a:lower()<b:lower()
+    end)
+    return out
+  end
+  local function paintTabs(nS,nF)
+    bScr.Text="👥 Script ("..nS..")"
+    bFr.Text=(L=="en"and"💚 Friends ("or"💚 Bạn bè (")..nF..")"
+    bAll.Text=L=="en"and"🌐 All"or"🌐 Tất cả"
+    for _,item in ipairs({{bScr,"script"},{bFr,"friends"},{bAll,"all"}})do
+      local btn,id=item[1],item[2]
+      local on=(mode==id)
+      btn.BackgroundColor3=on and TH.accent or TH.btnBg
+      btn.TextColor3=on and(H.lum(TH.accent)>0.42 and rgb(20,20,24)or c3(1,1,1))or TH.text
+    end
+  end
+  local function build()
+    if not box.Parent then return end
+    for _,c in ipairs(box:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
+    local scriptAll=F.allKnownScriptUsers()
+    local nS=0
+    for _,u in ipairs(scriptAll)do if not excludeSelf or u:lower()~=P.username:lower()then nS=nS+1 end end
+    local nF=#(S.friendsList or{})
+    paintTabs(nS,nF)
+    local needle=H.trim(q.Text):lower():gsub("^@","")local n=0
+    for _,u in ipairs(candidates())do
+      local rec=F.userRec(u)or{}
+      if needle==""or u:lower():find(needle,1,true)or tostring(rec.display or""):lower():find(needle,1,true)then
+        n=n+1 if n>80 then break end
+        local rowB
+        rowB=F.userRow(box,u,{layout=n,right=o.multi and 30 or 0,click=function(x)
+          if o.multi then
+            local on=not o.isOn(x)o.onToggle(x,on)
+            rowB:FindFirstChild("chk").Text=o.isOn(x)and"[x]"or""
+          else
+            close();o.onPick(x)
+          end
+        end})
+        if o.multi then
+          local c=lab(rowB,o.isOn(u)and"[x]"or"",{size=uo(24,38),pos=u2(1,-28,0,0),bold=true,ts=15,align=txC,key="ok"})
+          c.Name="chk"
+        end
+      end
+    end
+    if n==0 then
+      local emptyMsg=(mode=="friends"and S.friendsLoading)and(L=="en"and"Loading Roblox friends list..."or"Đang tải danh sách bạn bè Roblox...")
+        or(L=="en"and"No real users or friends match your search."or"Không tìm thấy người dùng thật hoặc bạn bè phù hợp.")
+      lab(box,emptyMsg,{key="muted",ts=11,wrap=true,auto=true,layout=1})
+    end
+  end
+  hook(bScr.MouseButton1Click,function()mode="script";build()end)
+  hook(bFr.MouseButton1Click,function()mode="friends";build()end)
+  hook(bAll.MouseButton1Click,function()mode="all";build()end)
+  hook(q:GetPropertyChangedSignal("Text"),build)
+  build()
+  F.fetchKnownUsers(function()if box.Parent then build()end end)
+  F.loadRobloxFriends(function()if box.Parent then build()end end)
+end
 --- [F.userField] Tạo ô nhập tên người dùng kèm nút mở nhanh danh sách chọn người dùng (`F.pickUser`)
 function F.userField(parent,label,value)lab(parent,label,{h=14,ts=10,bold=true,key="muted"})
   local r=mk("Frame",{Size=u2(1,0,0,30),BackgroundTransparency=1},parent)local b=mk("TextBox",{Size=u2(1,-36,1,0),Text=value or"",ClearTextOnFocus=false,Font=fG,TextSize=12,BorderSizePixel=0,TextXAlignment=txL},r)
@@ -6024,7 +7623,16 @@ function F.openTheme()
     F.paintTheme();if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end;S.isDirty=true;F.openTheme()
   end)
   local cp=tbtn(scr,T("theme_copy"),{h=30,ts=11})
-  hook(cp.MouseButton1Click,function()F.copyText(F.themeCode())end)local imp=field(scr,"","")imp.PlaceholderText=T("theme_paste")local ib=tbtn(scr,T("theme_import"),{key="accent",h=30,ts=11})
+  hook(cp.MouseButton1Click,function()F.copyText(F.themeCode())end)
+  local shT=tbtn(scr,"📤 "..T("theme_share"),{key="ok",h=30,ts=11})
+  hook(shT.MouseButton1Click,function()
+    local tc=F.themeCode()
+    F.closeModal()
+    if S.chan=="scripts"or S.chan=="punish"then F.selectChannel("general")end
+    U.input.Text=H.clip("🎨 Theme: "..tc,CFG.MAX_CONTENT)
+    F.sendNow()
+  end)
+  local imp=field(scr,"","")imp.PlaceholderText=T("theme_paste")local ib=tbtn(scr,T("theme_import"),{key="accent",h=30,ts=11})
   hook(ib.MouseButton1Click,function()if F.importTheme(imp.Text)then F.save(true);F.toast(T("theme_ok"),true);F.openTheme()else F.toast(T("theme_bad"),true)end end)
   local svThemeBtn=tbtn(scr,"   "..(L=="en"and"Save Theme"or"Lưu Giao Diện"),{key="ok",h=36,ts=12})
   F.lucide(svThemeBtn,"save",14,{pos=uo(12,11),col=c3(1,1,1),themed=false})
@@ -6043,17 +7651,17 @@ function F.openRequest()
       elseif d and d.error=="pending"then F.toast(T("request_pending"),true)else F.netError(d and d.error or e)end end)end)end
 --- [F.exportSettings] Xuất toàn bộ cài đặt cá nhân, Theme và danh sách Emoji cục bộ ra chuỗi mã sao lưu (`CBS1:...`)
 function F.exportSettings()
-  local t={lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,autoExecute=P.autoExecute,scriptUrl=P.scriptUrl,msgCount=P.msgCount,themeName=P.themeName,custom=P.custom,alpha=P.alpha,backgroundMode=P.backgroundMode,backgroundImage=P.backgroundImage,backgroundOpacity=P.backgroundOpacity,backgroundDim=P.backgroundDim,bgFrame=P.bgFrame,gradAngle=P.gradAngle,gradMix=P.gradMix,uiRadius=P.uiRadius,fontFamily=P.fontFamily,msgStyle=P.msgStyle,borderGlow=P.borderGlow,savedThemes=P.savedThemes,userNotes=P.userNotes,blockedUsers=P.blockedUsers,notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,showTyping=P.showTyping,showSeen=P.showSeen,textSize=P.textSize,toastPos=P.toastPos,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,dmList=P.dmList}
+  local t={lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profMusic=P.profMusic,profTheme=P.profTheme,autoExecute=P.autoExecute,scriptUrl=P.scriptUrl,msgCount=P.msgCount,themeName=P.themeName,custom=P.custom,alpha=P.alpha,backgroundMode=P.backgroundMode,backgroundImage=P.backgroundImage,backgroundOpacity=P.backgroundOpacity,backgroundDim=P.backgroundDim,bgFrame=P.bgFrame,gradAngle=P.gradAngle,gradMix=P.gradMix,uiRadius=P.uiRadius,fontFamily=P.fontFamily,msgStyle=P.msgStyle,borderGlow=P.borderGlow,savedThemes=P.savedThemes,userNotes=P.userNotes,blockedUsers=P.blockedUsers,savedBookmarks=P.savedBookmarks,drafts=P.drafts,mutedToasts=P.mutedToasts,transLang=P.transLang,notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,showTyping=P.showTyping,showSeen=P.showSeen,textSize=P.textSize,toastPos=P.toastPos,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,dmList=P.dmList}
   return"CBS1:"..H.jenc(t)end
 --- [F.importSettings] Khôi phục cài đặt cá nhân từ chuỗi mã sao lưu (`CBS1:...`)
 function F.importSettings(code)local j=H.trim(code):match("^CBS1:(.+)$")local d=j and H.jdec(j)if type(d)~="table"then return false end
-  for _,k in ipairs({"display","status","bio","country","profBanner","profIcon","autoExecute","scriptUrl","themeName","alpha","backgroundMode","backgroundOpacity","backgroundDim","gradAngle","gradMix","uiRadius","fontFamily","msgStyle","borderGlow","notify","sound","bubble","safeEmoji","showGame","preview","compact","sameUser","group","showTyping","showSeen","textSize","toastPos"})do if d[k]~=nil then P[k]=d[k]end
+  for _,k in ipairs({"display","status","bio","country","profBanner","profIcon","profMusic","autoExecute","scriptUrl","themeName","alpha","backgroundMode","backgroundOpacity","backgroundDim","gradAngle","gradMix","uiRadius","fontFamily","msgStyle","borderGlow","transLang","notify","sound","bubble","safeEmoji","showGame","preview","compact","sameUser","group","showTyping","showSeen","textSize","toastPos"})do if d[k]~=nil then P[k]=d[k]end
   end
   P.msgCount=max(P.msgCount or 0,floor(tonumber(d.msgCount)or 0))
   P.scriptUrl=H.trim(tostring(P.scriptUrl or""))
-  if P.scriptUrl~=""then ENV.CB46_SCRIPT_URL=P.scriptUrl ENV.CB45_SCRIPT_URL=P.scriptUrl end
+  if P.scriptUrl~=""then ENV.CB47_SCRIPT_URL=P.scriptUrl ENV.CB46_SCRIPT_URL=P.scriptUrl ENV.CB45_SCRIPT_URL=P.scriptUrl end
   P.country=H.resolveCountry(P.country)
-  if not THEMES[P.themeName]then P.themeName="midnight"end for _,k in ipairs({"custom","customEmojis","recentEmoji","dmList","profTheme","bgFrame","savedThemes","userNotes","blockedUsers"})do if type(d[k])=="table"then P[k]=d[k]end end
+  if not THEMES[P.themeName]then P.themeName="midnight"end for _,k in ipairs({"custom","customEmojis","recentEmoji","dmList","profTheme","bgFrame","savedThemes","userNotes","blockedUsers","savedBookmarks","drafts","mutedToasts"})do if type(d[k])=="table"then P[k]=d[k]end end
   P.backgroundImage=H.assetId(d.backgroundImage or P.backgroundImage or"")or""
   local validModes={solid=true,gradient=true,mesh=true,glass=true,image=true}
   if not validModes[P.backgroundMode]then P.backgroundMode="solid"end
@@ -6527,8 +8135,8 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
     hook(saveUrlB.MouseButton1Click,function()
       local u=H.trim(urlIn.Text)
       if u~=""and not u:match("^https?://")then F.toast(L=="en"and"URL must start with https://"or"Link phải bắt đầu bằng https://",true);return end
-      P.scriptUrl=u;ENV.CB46_SCRIPT_URL=u~=""and u or nil ENV.CB45_SCRIPT_URL=ENV.CB46_SCRIPT_URL
-      if hasIO then S._savedUrl=u;pcall(writefile,"cb46_script_url.txt",u)end
+      P.scriptUrl=u;ENV.CB47_SCRIPT_URL=u~=""and u or nil ENV.CB46_SCRIPT_URL=ENV.CB47_SCRIPT_URL ENV.CB45_SCRIPT_URL=ENV.CB47_SCRIPT_URL
+      if hasIO then S._savedUrl=u;pcall(writefile,"cb47_script_url.txt",u)end
       S.isDirty=true;F.save(true)
       S.tpCheck=false;S.teleportQueued=false
       if P.autoExecute~=false then F.armAutoTeleport(false)end
@@ -6546,7 +8154,51 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
   end)
   sw("showSeen","show_seen",function()
     if P.showSeen and S.booted then F.markChannelSeen(S.chan)end
-  end)local app=sectionCard("",T("sec_appear"))lab(app,T("quick_theme"),{ts=10,bold=true,key="muted"})
+  end)
+  do
+    lab(gen,L=="en"and"Mute Toasts Per Channel (still unread-counted):"or"Tắt thông báo nổi theo kênh (những kênh khác vẫn báo):",{ts=10,bold=true,key="muted",wrap=true,auto=true})
+    local muteGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},gen)
+    mk("UIGridLayout",{CellSize=u2(1/3,-4,0,26),CellPadding=uo(4,4),SortOrder=soLO},muteGrid)
+    local mChans={{k="general",lbl="#general"},{k="game",lbl="#game"},{k="announce",lbl="#announce"},{k="scripts",lbl="#scripts"}}
+    if F.isStaff(P.username)then mChans[#mChans+1]={k="staff",lbl="#staff"}end
+    P.mutedToasts=type(P.mutedToasts)=="table"and P.mutedToasts or{}
+    for idx,mc in ipairs(mChans)do
+      local isM=P.mutedToasts[mc.k]==true
+      local mb=tbtn(muteGrid,(isM and"🔕 "or"🔔 ")..mc.lbl,{key=isM and"danger"or"btnBg",ts=10,r=6,layout=idx})
+      hook(mb.MouseButton1Click,function()
+        P.mutedToasts=type(P.mutedToasts)=="table"and P.mutedToasts or{}
+        local nxt=not(P.mutedToasts[mc.k]==true)
+        P.mutedToasts[mc.k]=nxt and true or nil
+        S.isDirty=true;F.save(true);F.updateInfo();F.openSettings()
+      end)
+    end
+    if type(S.chan)=="string"and S.chan:sub(1,3)=="dm:"then
+      local dmKey=F.chanKey(S.chan)
+      local dmM=P.mutedToasts[dmKey]==true
+      local dmB=tbtn(muteGrid,(dmM and"🔕 "or"🔔 ")..(L=="en"and"Current DM"or"DM đang mở"),{key=dmM and"danger"or"btnBg",ts=10,r=6,layout=#mChans+1})
+      hook(dmB.MouseButton1Click,function()
+        local nxt=not(P.mutedToasts[dmKey]==true)
+        P.mutedToasts[dmKey]=nxt and true or nil
+        S.isDirty=true;F.save(true);F.updateInfo();F.openSettings()
+      end)
+    end
+    local v47Row=row(gen,28)
+    local curPref=tostring(P.transLang or"")
+    local curLbl=(curPref==""and(L=="en"and"Auto ("..L:upper()..")"or"Tự động ("..L:upper()..")"))
+      or(curPref=="country"and((L=="en"and"Flag: "or"Cờ: ")..tostring(P.country or"VN")))
+      or curPref:upper()
+    local trBtn=rbtn(v47Row,"🌐 "..(L=="en"and"Translate: "or"Dịch: ")..curLbl,{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6,layout=1})
+    hook(trBtn.MouseButton1Click,function()
+      local seq={"","country"}
+      for _,opt in ipairs(F._TRANS_OPTS or{})do seq[#seq+1]=opt.code end
+      local nx=seq[1]
+      for i,code in ipairs(seq)do if code==curPref then nx=seq[(i%#seq)+1];break end end
+      P.transLang=nx;S.isDirty=true;F.save(true);F.openSettings()
+    end)
+    local bmBtn=rbtn(v47Row,"🔖 "..T("bookmarks_title").." ("..#(P.savedBookmarks or{})..")",{size=u2(0.5,-3,1,0),key="accent",ts=10,r=6,layout=2})
+    hook(bmBtn.MouseButton1Click,function()F.openBookmarks()end)
+  end
+  local app=sectionCard("",T("sec_appear"))lab(app,T("quick_theme"),{ts=10,bold=true,key="muted"})
   local qThemes={{"aurora","Aurora ✨"},{"synthwave","Synthwave ✨"},{"tokyo_night","Tokyo Night"},{"obsidian_gold","Obsidian Gold"},{"cotton_candy","Cotton Candy"},{"midnight","Midnight"},}
   local qGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},app)mk("UIGridLayout",{CellSize=u2(1/3,-4,0,28),CellPadding=uo(4,4),SortOrder=soLO},qGrid)for i,qt in ipairs(qThemes)do
     local t=THEMES[qt[1]]local b=mk("TextButton",{Text=qt[2],Font=fGB,TextSize=10,BackgroundColor3=H.hex(t.bg2),TextColor3=H.hex(t.text),BorderSizePixel=0,LayoutOrder=i,},qGrid)corner(b,6)
@@ -6613,7 +8265,7 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
     hook(scB.MouseButton1Click,function()F.closeModal()F.selectChannel("scripts")end)else local misc=sectionCard("",T("sec_dev"))local r1=row(misc,30)
     local hb=rbtn(r1,"/ "..T("help_title"),{size=u2(1/3,-3,1,0),ts=10});hook(hb.MouseButton1Click,function()F.openHelp()end)local db=rbtn(r1,T("diag"),{size=u2(1/3,-3,1,0),ts=10});hook(db.MouseButton1Click,function()F.openDiag()end)
     local rq=rbtn(r1,S.myRequest and T("request_pending")or T("request_title"),{size=u2(1/3,-3,1,0),key=S.myRequest and"warn"or"accent",ts=10});hook(rq.MouseButton1Click,F.openRequest)end
-  local st=tbtn(wrap,T("stop"),{key="danger",h=34})hook(st.MouseButton1Click,function()F.stop()end)lab(wrap,"CB46.0 · "..EXEC.." · "..(S.lpOn and"long-poll"or"poll"),{ts=10,key="muted",align=txC})end
+  local st=tbtn(wrap,T("stop"),{key="danger",h=34})hook(st.MouseButton1Click,function()F.stop()end)lab(wrap,"CB47.0 · "..EXEC.." · "..(S.lpOn and"long-poll"or"poll"),{ts=10,key="muted",align=txC})end
 --- [F.openHelp] Mở hộp thoại Hướng dẫn sử dụng và danh sách các lệnh Slash (`/cmd`)
 function F.openHelp()S.reopenModal=F.openHelp local scr=F.modalBox(T("help_title"),360,480)for i,c in ipairs(F.cmdList)do if(not c.staff or F.isStaff(P.username))and(not c.dev or F.isDev(P.username))then
       local b=mk("TextButton",{Size=u2(1,0,0,40),Text="",BorderSizePixel=0,LayoutOrder=i},scr)th(b,"BackgroundColor3","cardBg");corner(b,8);stroke(b,"border",1,0.5)
@@ -6624,7 +8276,7 @@ function F.diagText()local nM,nF=0,0 for _ in pairs(S.msgs)do nM=nM+1 end
   for _ in pairs(S.frames)do nF=nF+1 end
   local roleTag=H.proxyRoleLabel(CFG.PROXY,NET.idx)
   return tconcat({
-    "CB46.0 · "..EXEC.." · "..(IS_MOBILE and"mobile"or"pc"),
+    "CB47.0 · "..EXEC.." · "..(IS_MOBILE and"mobile"or"pc"),
     "user: "..P.username.." ("..P.userId..")",
     "server: "..roleTag.." · "..CFG.PROXY,
     "mode: "..(S.lpOn and"long-poll"or"poll").." · fails "..S.pollFail.." · lastOk "..string.format("%.1f",os.clock()-S.lastPollOk).."s ago",
@@ -6964,19 +8616,21 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
     end
     local m={type="msg",packetId=id,chan=chan,author=tostring(pkt.author or"?"),display=pkt.display,uid=tonumber(pkt.uid),content=tostring(pkt.content or""),ts=pktTs,sending=false,sent=true,failed=false,replyTo=pkt.replyTo,replyAuthor=pkt.replyAuthor,replySnippet=pkt.replySnippet,fwdFrom=pkt.fwdFrom,fwdChan=pkt.fwdChan,place=pktPlace,job=pktJob}
     if m.uid and m.uid>1 then S.uidCache=S.uidCache or{};S.uidCache[m.author]=m.uid;S.uidCache[m.author:lower()]=m.uid end
-    F.rememberProfile(m.author,{display=m.display,userId=m.uid,mc=tonumber(pkt.mc),lastSeen=pktTs,placeId=pktPlace,gameName=pkt.gameName,jobId=pktJob},false)
+    if not F.isSystemActor(m.author,pkt)then
+      F.rememberProfile(m.author,{display=m.display,userId=m.uid,mc=tonumber(pkt.mc),lastSeen=pktTs,placeId=pktPlace,gameName=pkt.gameName,jobId=pktJob},false)
+    end
     if m.author:lower()==me:lower()and tonumber(pkt.mc)and tonumber(pkt.mc)>(P.msgCount or 0)then P.msgCount=tonumber(pkt.mc);S.isDirty=true end
     F.addMsg(m)if other and not F.isGroupChan(chan)then P.dmList[other]=P.dmList[other]or H.now()end
     if chan=="game"or chan=="general"or chan=="announce"then S.isDirty=true end
-    local mine=m.author==me
-    if S.booted and chan==S.chan and F.visibleIn(m,S.chan)and F.matchSearch(m)and U.main.Visible then local was=F.nearBottom()F.renderMessage(m)
+    local mine=m.author:lower()==me:lower()
+    if S.booted and F.chanKey(chan)==F.chanKey(S.chan)and F.visibleIn(m,S.chan)and F.matchSearch(m)and U.main.Visible then local was=F.nearBottom()F.renderMessage(m)
       if was or mine then F.scrollBottom()else S.newBelow=S.newBelow+1;task.defer(F.updateJump)end
       if not mine then F.markChannelSeen(chan)end
     elseif not mine and not stale then if other then S.dmUnread[chan]=(S.dmUnread[chan]or 0)+1
       elseif S.unread[chan]~=nil then S.unread[chan]=S.unread[chan]+1 end
-      F.paintTabs()end if not mine and not stale then F.touchUser(m.author,m.uid,m.display)local ping=F.mentions(m.content)if ping or other then
+      F.paintTabs()end if not mine and not stale then if not F.isSystemActor(m.author,pkt)then F.touchUser(m.author,m.uid,m.display)end local ping=F.mentions(m.content)if ping or other then
         local head=F.disp(m.display or m.author)local body=P.preview and(": "..F.disp(H.clip(F.plain(m.content),70)))or""
-        F.toast((ping and"@ "or"DM ")..head..body,false,function()U.main.Visible=true;U.mini.Visible=false;F.selectChannel(chan)end)F.pingSound()end
+        F.chanToast(chan,(ping and"@ "or"DM ")..head..body,false,function()U.main.Visible=true;U.mini.Visible=false;F.selectChannel(chan)end)if not F.isToastMuted(chan)then F.pingSound()end end
       F.bubble(m.author,m.content,chan)if not U.main.Visible then
         S.miniUnread=(S.miniUnread or 0)+1 U.miniBadge.Text=tostring(min(S.miniUnread,9));U.miniBadge.Visible=true end if S.typing[chan]then S.typing[chan][m.author]=nil;if chan==S.chan then F.refreshTypingLabel()end end end
     F.emit("message",m,stale)elseif t=="edit"then
@@ -7013,6 +8667,24 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
     F.rememberProfile(topic.author,{display=topic.display,userId=topic.uid,lastSeen=topic.ts,placeId=topic.placeId,gameName=topic.gameName},false)
     if S.chan=="scripts"and U.main.Visible then F.rebuildFeed(true)
     elseif pkt.author~=me and not stale then S.unread.scripts=(S.unread.scripts or 0)+1 F.paintTabs()end
+  elseif t=="script_edit"then
+    local sid=tostring(pkt.scriptId or pkt.target or"")
+    if sid==""then return end
+    for _,sc in ipairs(S.scripts or{})do
+      if tostring(sc.id)==sid then
+        if pkt.title~=nil then sc.title=tostring(pkt.title)end
+        if pkt.tag~=nil then sc.tag=tostring(pkt.tag)end
+        if pkt.desc~=nil then sc.desc=tostring(pkt.desc)end
+        if pkt.code~=nil then sc.code=tostring(pkt.code)end
+        if pkt.ver~=nil then sc.ver=tonumber(pkt.ver)or((tonumber(sc.ver)or 1)+1)else sc.ver=(tonumber(sc.ver)or 1)+1 end
+        if pkt.changelog~=nil then sc.changelog=tostring(pkt.changelog)end
+        sc.editedAt=tonumber(pkt.editedAt or pkt.ts)or H.now()
+        if pkt.editedBy or pkt.author then sc.editedBy=tostring(pkt.editedBy or pkt.author)end
+        S.isDirty=true
+        if S.chan=="scripts"and U.main.Visible then F.rebuildFeed(true)end
+        break
+      end
+    end
   elseif t=="script_del"then local delSet={}for _,did in ipairs(type(pkt.ids)=="table"and pkt.ids or{pkt.id})do
       if did then delSet[tostring(did)]=true end end
     local keep={}for _,sc in ipairs(S.scripts or{})do if not delSet[tostring(sc.id)]then keep[#keep+1]=sc end end
@@ -7105,8 +8777,9 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
       if chan==S.chan then F.refreshTypingLabel()end
     end
   elseif t=="seen"then
-    local viewer=tostring(pkt.by or pkt.author or"")
-    if viewer~=""then
+    local viewer=H.trim(tostring(pkt.by or pkt.author or""))
+    if viewer~=""and not F.isSystemActor(viewer,pkt)then
+      local vLow=viewer:lower()
       local rawIds=type(pkt.ids)=="table"and pkt.ids or(pkt.target and{pkt.target}or{})
       local ts=tonumber(pkt.ts)or H.now()
       for _,rawId in ipairs(rawIds)do
@@ -7114,8 +8787,14 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
         if mid~=""then
           S.seenBy[mid]=type(S.seenBy[mid])=="table"and S.seenBy[mid]or{}
           local m=S.msgs[mid]
-          if not m or tostring(m.author or""):lower()~=viewer:lower()then
-            S.seenBy[mid][viewer]=ts
+          if not m or tostring(m.author or""):lower()~=vLow then
+            local exKey
+            for k in pairs(S.seenBy[mid])do if tostring(k):lower()==vLow then exKey=k;break end end
+            if exKey then
+              S.seenBy[mid][exKey]=max(tonumber(S.seenBy[mid][exKey])or 0,ts)
+            else
+              S.seenBy[mid][viewer]=ts
+            end
             F.updateMsgStatus(mid)
           end
         end
@@ -7222,6 +8901,28 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
         rec._allowClear=true;F.rememberProfile(pu,rec,true);rec._allowClear=nil
       end
       S.users[pu]=rec
+      F.updateInfo()
+    end
+  elseif t=="profile_sync"then
+    local pu=tostring(pkt.u or pkt.author or"")
+    if pu~=""then
+      pkt._allowClear=true;pkt._fromProfileApi=true
+      local liveNow=F.isLive(pu)
+      local stored=F.rememberProfile(pu,pkt,liveNow)
+      if stored and S.users[pu]then S.users[pu]=stored end
+      if pu:lower()==me:lower()and stored and stored.display then
+        P.display=stored.display
+      end
+      F.updateInfo()
+    end
+  elseif t=="profile_del"then
+    local pu=tostring(pkt.target or pkt.u or"")
+    if pu~=""then
+      F.rememberProfile(pu,{_forceReset=true},F.isLive(pu))
+      if pu:lower()==me:lower()then
+        P.status="";P.bio="";P.profBanner="";P.profIcon="";P.profTheme={};S.isDirty=true;F.save(true)
+        F.toast(L=="en"and"Your profile data was cleared by Admin/Dev."or"Data Profile của bạn đã bị Dev/Admin xóa.",true)
+      end
       F.updateInfo()
     end
   elseif t=="req_presence"then if pkt.author~=me and not stale then task.delay(0.4+math.random()*1.4,function()if NET.alive then F.heartbeat(false)end end)end end end
@@ -7332,18 +9033,42 @@ function F.ingest(data,first)
     S.punishments=data.punishments
     if S.modSeq~=oldMs then S.isDirty=true if S.chan=="punish"and S.booted and U.main.Visible then pcall(F.rebuildFeed,true)end end
   end
+  if type(data.profiles)=="table"then
+    for _,p in ipairs(data.profiles)do
+      if type(p)=="table"and p.u and not F.isSystemActor(p.u,p)then
+        p._allowClear=false
+        F.rememberProfile(p.u,p,false)
+        if type(p.pt)=="table"and next(p.pt)~=nil then
+          S.profFullLoaded=S.profFullLoaded or{}
+          S.profFullLoaded[tostring(p.u):lower()]=true
+        end
+      end
+    end
+  end
   if type(data.seenBy)=="table"then
-    S.seenSeq=tonumber(data.seenSeq)or S.seenSeq
+    S.seenSeq=max(tonumber(S.seenSeq)or 0,tonumber(data.seenSeq)or 0)
     for mid,vmap in pairs(data.seenBy)do
       if type(vmap)=="table"then
         local smid=tostring(mid)
         S.seenBy[smid]=type(S.seenBy[smid])=="table"and S.seenBy[smid]or{}
         for viewer,ts in pairs(vmap)do
-          S.seenBy[smid][tostring(viewer)]=tonumber(ts)or H.now()
+          local vStr=H.trim(tostring(viewer))
+          if vStr~=""and not F.isSystemActor(vStr)then
+            local vLow=vStr:lower()
+            local exKey
+            for k in pairs(S.seenBy[smid])do if tostring(k):lower()==vLow then exKey=k;break end end
+            local nTs=tonumber(ts)or H.now()
+            if exKey then
+              S.seenBy[smid][exKey]=max(tonumber(S.seenBy[smid][exKey])or 0,nTs)
+            else
+              S.seenBy[smid][vStr]=nTs
+            end
+          end
         end
         F.updateMsgStatus(smid)
       end
     end
+    for smid in pairs(S.statusLabels or{})do F.updateMsgStatus(smid)end
     S.isDirty=true
   end
   if type(data.roles)=="table"then
@@ -7354,12 +9079,12 @@ function F.ingest(data,first)
     local pkt=F.decode(m.c)if pkt then
       local stale if nowMs>0 and seq>0 then stale=first or(nowMs-seq>30000)else stale=first or(tonumber(pkt.ts)~=nil and now-pkt.ts>30)end
       local ok,err=pcall(F.process,pkt,stale)
-      if not ok then warn("[CB46] process: "..tostring(err))end end end
+      if not ok then warn("[CB47] process: "..tostring(err))end end end
   if S.lastSeq==0 then S.lastSeq=1 end
   if S.booted and U.main and U.main.Visible then F.markChannelSeen(S.chan)end end
 --- [F.sendNow] Xử lý gửi nội dung trong ô nhập chat (thực thi lệnh `/slash`, lưu nội dung sửa, hoặc gửi tin nhắn mới)
 function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then return end
-  if rawInput:sub(1,1)=="/"and F.slash(rawInput)then U.input.Text="";F.updateSuggest();return end if S.chan=="scripts"then F.openScriptComposer()return end if S.chan=="punish"then
+  if rawInput:sub(1,1)=="/"and F.slash(rawInput)then if P.drafts then P.drafts[F.chanKey(S.chan)]=nil end;U.input.Text="";F.updateSuggest();F.updateInfo();return end if S.chan=="scripts"then F.openScriptComposer()return end if S.chan=="punish"then
     if F.isStaff(P.username)then F.openWarn("")else F.toast(T("punish_ro"),true)end return end if S.chan=="announce"and not F.canAnnounce(P.username)then
     F.toast(T("announce_ro"),true)return end
   local text=F.expandShortcodes(rawInput)if#text>CFG.MAX_CONTENT then F.toast(T("too_long"),true);return end if F.muted(P.username)then F.toast(T("muted"),true);return end
@@ -7368,7 +9093,7 @@ function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then retur
   if S.editing then local m=S.msgs[S.editing]if m and m.author==P.username then m.content=text;m.edited=true if S.frames[m.packetId]then F.dropFrame(m.packetId);F.renderMessage(m)end
       F.bubble(P.username,text,m.chan)
       F.publish({type="edit",target=m.packetId,author=P.username,content=text,chan=m.chan})end
-    F.cancelCompose();U.input.Text="";return end
+    if P.drafts then P.drafts[F.chanKey(S.chan)]=nil end;F.cancelCompose();U.input.Text="";F.updateInfo();return end
   local id=H.uuid()
   local isGame=(S.chan=="game")
   if isGame then S.hasChattedInGame=true end
@@ -7379,7 +9104,8 @@ function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then retur
   if S.reply then m.replyTo,m.replyAuthor,m.replySnippet=S.reply.id,S.reply.author,S.reply.snippet end
   F.addMsg(m)local other=F.dmOther(S.chan)if other and not F.isGroupChan(S.chan)then P.dmList[other]=H.now()end
   F.renderMessage(m);F.scrollBottom()
-  F.bubble(P.username,text,m.chan)U.input.Text="";F.cancelCompose();F.updateSuggest()S.activityAt=os.clock()
+  if P.drafts then P.drafts[F.chanKey(S.chan)]=nil end
+  F.bubble(P.username,text,m.chan)U.input.Text="";F.cancelCompose();F.updateSuggest();F.updateInfo()S.activityAt=os.clock()
   if isGame or m.chan=="general"then S.isDirty=true;F.save(true)end
   F.publish({type="msg",packetId=id,chan=m.chan,author=m.author,display=m.display,uid=m.uid,content=text,ts=m.ts,mc=P.msgCount,replyTo=m.replyTo,replyAuthor=m.replyAuthor,replySnippet=m.replySnippet,place=m.place,job=m.job},"send",function(ok)
     m.sending=false
@@ -7420,7 +9146,7 @@ F.command("help","c_help",function()F.openHelp()end,{alias={"?","commands"}})
 -- Lệnh /online: Mở hộp thoại danh sách người dùng đang trực tuyến
 F.command("online","c_online",function()F.openOnline()end,{alias={"who"}})
 F.command("find","c_find",function(a)U.searchBox.Visible=true;U.searchBox.Text=a;F.layout()end,{alias={"search"},arg="<text>"})
-F.command("dm","c_dm",function(a)if a==""then F.openDMList()else withUser(a,function(u)if u then F.openDM(u)end end)end end,{alias={"w","msg"},arg="<name>"})
+F.command("dm","c_dm",function(a)if a==""then F.openDMList()else F.verifyRealUser(a,function(u)if u then F.openDM(u)else F.toast(L=="en"and"Can only DM real Chat Bridge users or Roblox Friends."or"Chỉ có thể DM người dùng thật trên Chat Bridge hoặc Bạn bè!",true)end end)end end,{alias={"w","msg"},arg="<name>"})
 F.command("general","c_general",function()F.selectChannel("general")end)
 F.command("announce","announcetab",function()F.selectChannel("announce")end,{alias={"tb","thongbao"}})
 F.command("punish","c_punish",function()F.selectChannel("punish")end,{alias={"warns","xuphat","vipham","modlog"}})
@@ -7469,6 +9195,14 @@ F.command("diag","c_diag",function()F.openDiag()end,{alias={"debug"}})
 F.command("suggest","c_suggest",function()F.openSuggestions(1)end,{alias={"gopy","idea","suggestions"}})
 -- Lệnh /bug: Mở hộp thoại Báo cáo lỗi (Report Bugs)
 F.command("bug","c_bug",function()F.openBugReport(1)end,{alias={"bugs","reportbug","baoloi"}})
+-- Lệnh /saved: Mở Kho tin nhắn đã lưu (Bookmarks)
+F.command("saved","c_saved",function()F.openBookmarks()end,{alias={"bookmarks","bm"}})
+-- Lệnh /sound: Nghe thử âm thanh Roblox ([sound:ID])
+F.command("sound","c_sound",function(a)local id=H.assetId(a)or tostring(a):match("(%d+)")if id then F.playInlineSound(id)else F.toast("Usage: /sound <AudioID>",true)end end,{arg="<id>"})
+-- Lệnh /card: Chia sẻ danh thiếp hồ sơ vào kênh chat hiện tại
+F.command("card","c_card",function(a)F.shareProfileCard(a~=""and a or P.username)end,{alias={"profilecard"},arg="[name]"})
+-- Lệnh /sharetheme: Chia sẻ thẻ giao diện hiện tại lên chat
+F.command("sharetheme","c_sharetheme",function()local tc=F.themeCode and F.themeCode()if tc and U and U.input then U.input.Text=tc;F.sendNow()end end)
 --- [F._missing] Hàm kiểm tra kiểu dữ liệu theo chuẩn mã nguồn mở Infinite Yield (`EdgeIY/infiniteyield`)
 function F._missing(t,f,fallback)
   if type(f)==t then return f end
@@ -7489,14 +9223,14 @@ function F._queueteleport()
   return F._missing("function",q)
 end
 do
-local AUTO_PATHS={"cb46_source.lua","cb46_autorun.lua","cb45_source.lua","cb45_autorun.lua","CB.lua","CB.lua.txt","Scripts/CB.lua","Scripts/CB.txt","scripts/CB.lua","Delta/Scripts/CB.lua","Delta/Autoexecute/CB.lua","CB (Note ver 46.0) - Updated.lua","CB (Note ver 46.0).lua","CB (Note ver 45.0) - Updated.lua","CB (Note ver 45.0).lua","ChatBridge.lua","autoexec/cb46_autorun.lua","autoexec/cb45_autorun.lua","autoexec/CB.lua","cb44_source.lua","cb44_autorun.lua"}
+local AUTO_PATHS={"cb47_source.lua","cb47_autorun.lua","cb46_source.lua","cb46_autorun.lua","cb45_source.lua","cb45_autorun.lua","CB.lua","CB.lua.txt","Scripts/CB.lua","Scripts/CB.txt","scripts/CB.lua","Delta/Scripts/CB.lua","Delta/Autoexecute/CB.lua","CB (Note ver 47.0) - Updated.lua","CB (Note ver 47.0).lua","CB (Note ver 46.0) - Updated.lua","CB (Note ver 46.0).lua","CB (Note ver 45.0) - Updated.lua","CB (Note ver 45.0).lua","ChatBridge.lua","autoexec/cb47_autorun.lua","autoexec/cb46_autorun.lua","autoexec/cb45_autorun.lua","autoexec/CB.lua","cb44_source.lua","cb44_autorun.lua"}
 local function isFullCBSource(s)
-  return type(s)=="string"and #s>5000 and(s:find("CHAT BRIDGE CLIENT SCRIPT",1,true)~=nil or s:find("Chat Bridge v46",1,true)~=nil or s:find("Chat Bridge v45",1,true)~=nil or s:find("Chat Bridge v44",1,true)~=nil)and s:sub(1,60):find("__CB46_LOADER_STUB",1,true)==nil and s:sub(1,60):find("__CB45_LOADER_STUB",1,true)==nil
+  return type(s)=="string"and #s>5000 and(s:find("CHAT BRIDGE CLIENT SCRIPT",1,true)~=nil or s:find("Chat Bridge v47",1,true)~=nil or s:find("Chat Bridge v46",1,true)~=nil or s:find("Chat Bridge v45",1,true)~=nil or s:find("Chat Bridge v44",1,true)~=nil)and s:sub(1,60):find("__CB47_LOADER_STUB",1,true)==nil and s:sub(1,60):find("__CB46_LOADER_STUB",1,true)==nil and s:sub(1,60):find("__CB45_LOADER_STUB",1,true)==nil
 end
 --- [F.autoExecStatus] Kiểm tra nhanh khả năng Auto-Execute thực tế (queue_on_teleport + mã nguồn/URL hợp lệ)
 function F.autoExecStatus()
   if type(F._queueteleport())~="function"then return false,"No queue_on_teleport"end
-  local src=rawget(ENV,"CB46_SOURCE")or rawget(ENV,"CB45_SOURCE")or rawget(ENV,"CB44_SOURCE")
+  local src=rawget(ENV,"CB47_SOURCE")or rawget(ENV,"CB46_SOURCE")or rawget(ENV,"CB45_SOURCE")or rawget(ENV,"CB44_SOURCE")
   if isFullCBSource(src)then return true,"Local Cache"end
   if hasIO then
     for _,fn in ipairs(AUTO_PATHS)do
@@ -7504,7 +9238,7 @@ function F.autoExecStatus()
       if ok and isFullCBSource(r)then return true,"Workspace File"end
     end
   end
-  local u=H.trim(tostring((P and P.scriptUrl)or ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or CFG.SCRIPT_URL or""))
+  local u=H.trim(tostring((P and P.scriptUrl)or ENV.CB47_SCRIPT_URL or ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or CFG.SCRIPT_URL or""))
   if u:match("^https?://")then return true,"Script URL"end
   return false,"Missing Source/URL"
 end
@@ -7513,19 +9247,19 @@ function F.ensureAutorunFile()
   if not hasIO then return end
   pcall(function()
     local flagStr=(P.autoExecute~=false)and"1"or"0"
-    if S._savedAutoFlag~=flagStr or not isfile("cb46_autoexec_on.txt")then
-      if pcall(writefile,"cb46_autoexec_on.txt",flagStr)then S._savedAutoFlag=flagStr end
+    if S._savedAutoFlag~=flagStr or not isfile("cb47_autoexec_on.txt")then
+      if pcall(writefile,"cb47_autoexec_on.txt",flagStr)then S._savedAutoFlag=flagStr end
     end
-    local effUrl=H.trim(tostring((P and P.scriptUrl)or ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or CFG.SCRIPT_URL or""))
-    if effUrl:match("^https?://")and(S._savedUrl~=effUrl or not isfile("cb46_script_url.txt"))then
-      if pcall(writefile,"cb46_script_url.txt",effUrl)then S._savedUrl=effUrl end
+    local effUrl=H.trim(tostring((P and P.scriptUrl)or ENV.CB47_SCRIPT_URL or ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or CFG.SCRIPT_URL or""))
+    if effUrl:match("^https?://")and(S._savedUrl~=effUrl or not isfile("cb47_script_url.txt"))then
+      if pcall(writefile,"cb47_script_url.txt",effUrl)then S._savedUrl=effUrl end
     end
-    local src=rawget(ENV,"CB46_SOURCE")or rawget(ENV,"CB45_SOURCE")or rawget(ENV,"CB44_SOURCE")or rawget(ENV,"CB43_SOURCE")or rawget(ENV,"CB42_SOURCE")
+    local src=rawget(ENV,"CB47_SOURCE")or rawget(ENV,"CB46_SOURCE")or rawget(ENV,"CB45_SOURCE")or rawget(ENV,"CB44_SOURCE")or rawget(ENV,"CB43_SOURCE")or rawget(ENV,"CB42_SOURCE")
     if isFullCBSource(src)then
-      ENV.CB46_SOURCE=src ENV.CB45_SOURCE=src
-      if S._autorunLen==#src and isfile("cb46_source.lua")and isfile("cb46_autorun.lua")then return end
-      pcall(writefile,"cb46_source.lua",src)
-      pcall(writefile,"cb46_autorun.lua",src)
+      ENV.CB47_SOURCE=src ENV.CB46_SOURCE=src ENV.CB45_SOURCE=src
+      if S._autorunLen==#src and isfile("cb47_source.lua")and isfile("cb47_autorun.lua")then return end
+      pcall(writefile,"cb47_source.lua",src)
+      pcall(writefile,"cb47_autorun.lua",src)
       S._autorunLen=#src
       return
     end
@@ -7553,22 +9287,22 @@ function F.ensureAutorunFile()
       end
     end
     if isFullCBSource(src)then
-      ENV.CB46_SOURCE=src ENV.CB45_SOURCE=src
-      pcall(writefile,"cb46_source.lua",src)
-      pcall(writefile,"cb46_autorun.lua",src)
+      ENV.CB47_SOURCE=src ENV.CB46_SOURCE=src ENV.CB45_SOURCE=src
+      pcall(writefile,"cb47_source.lua",src)
+      pcall(writefile,"cb47_autorun.lua",src)
       S._autorunLen=#src
       return
     end
     local fallback=string.format([[
--- __CB46_LOADER_STUB
+-- __CB47_LOADER_STUB
 repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
 local env=(type(getgenv)=="function"and getgenv())or _G
 local rf=rawget(env,"readfile")or readfile
 local lf=rawget(env,"loadfile")or loadfile
-for _,p in ipairs({"cb46_source.lua","cb45_source.lua","CB.lua","CB.lua.txt","Scripts/CB.lua","Scripts/CB.txt","scripts/CB.lua","Delta/Scripts/CB.lua","Delta/Autoexecute/CB.lua","CB (Note ver 46.0) - Updated.lua","CB (Note ver 46.0).lua","CB (Note ver 45.0) - Updated.lua","CB (Note ver 45.0).lua","ChatBridge.lua"})do
+for _,p in ipairs({"cb47_source.lua","cb46_source.lua","cb45_source.lua","CB.lua","CB.lua.txt","Scripts/CB.lua","Scripts/CB.txt","scripts/CB.lua","Delta/Scripts/CB.lua","Delta/Autoexecute/CB.lua","CB (Note ver 47.0) - Updated.lua","CB (Note ver 47.0).lua","CB (Note ver 46.0) - Updated.lua","CB (Note ver 46.0).lua","CB (Note ver 45.0) - Updated.lua","CB (Note ver 45.0).lua","ChatBridge.lua"})do
   if type(rf)=="function"then
     local ok,code=pcall(rf,p)
-    if ok and type(code)=="string"and #code>1000 and not code:sub(1,60):find("__CB46_LOADER_STUB",1,true)and not code:sub(1,60):find("__CB45_LOADER_STUB",1,true)then
+    if ok and type(code)=="string"and #code>1000 and not code:sub(1,60):find("__CB47_LOADER_STUB",1,true)and not code:sub(1,60):find("__CB46_LOADER_STUB",1,true)and not code:sub(1,60):find("__CB45_LOADER_STUB",1,true)then
       local fn=loadstring(code)
       if fn then return fn()end
     end
@@ -7578,9 +9312,9 @@ for _,p in ipairs({"cb46_source.lua","cb45_source.lua","CB.lua","CB.lua.txt","Sc
     if ok and type(fn)=="function"then return fn()end
   end
 end
-local url=(env and(env.CB46_SCRIPT_URL or env.CB45_SCRIPT_URL or env.CB44_SCRIPT_URL or env.CB43_SCRIPT_URL))or %q
+local url=(env and(env.CB47_SCRIPT_URL or env.CB46_SCRIPT_URL or env.CB45_SCRIPT_URL or env.CB44_SCRIPT_URL or env.CB43_SCRIPT_URL))or %q
 if (type(url)~="string"or #url<=8)and type(rf)=="function"then
-  for _,uf in ipairs({"cb46_script_url.txt","cb45_script_url.txt"})do
+  for _,uf in ipairs({"cb47_script_url.txt","cb46_script_url.txt","cb45_script_url.txt"})do
     local okU,uRaw=pcall(rf,uf)
     if okU and type(uRaw)=="string"and #uRaw>8 then url=uRaw:gsub("^%%s+",""):gsub("%%s+$","")break end
   end
@@ -7593,21 +9327,21 @@ if type(url)=="string"and #url>8 then
   end
 end
 ]],tostring(effUrl or""))
-    pcall(writefile,"cb46_autorun.lua",fallback)
+    pcall(writefile,"cb47_autorun.lua",fallback)
   end)
 end
 --- [F.disarmAutoTeleport] Tắt chế độ Auto-Execute khi Rejoin (chỉ áp dụng cho Script Chat Bridge này)
 function F.disarmAutoTeleport()
-  ENV.__CB46_AUTOEXEC_OFF=true ENV.__CB45_AUTOEXEC_OFF=true
+  ENV.__CB47_AUTOEXEC_OFF=true ENV.__CB46_AUTOEXEC_OFF=true ENV.__CB45_AUTOEXEC_OFF=true
   S.tpCheck=false
   S.teleportQueued=false
   S._autorunLen=nil
   local clr=(type(ENV)=="table"and(rawget(ENV,"clear_teleport_queue")or rawget(ENV,"clearteleportqueue")))or clear_teleport_queue or clearteleportqueue
   if type(clr)=="function"then pcall(clr)end
   if hasIO then
-    pcall(writefile,"cb46_autoexec_on.txt","0")
+    pcall(writefile,"cb47_autoexec_on.txt","0")
     S._savedAutoFlag="0"
-    if type(delfile)=="function"then pcall(delfile,"cb46_autorun.lua")pcall(delfile,"cb45_autorun.lua")end
+    if type(delfile)=="function"then pcall(delfile,"cb47_autorun.lua")pcall(delfile,"cb46_autorun.lua")pcall(delfile,"cb45_autorun.lua")end
   end
 end
 --- [F.markTeleporting] Đánh dấu trạng thái đang Rejoin / Teleport để giữ lại lịch sử chat In-Game (`#game`) của phiên hiện tại
@@ -7628,18 +9362,18 @@ function F.clearGameChatOnQuit()
 end
 --- [F.buildTeleportPayload] Tạo đoạn mã nạp lại Chat Bridge theo cơ chế đợi tải trang & guard của Infinite Yield (có cache)
 function F.buildTeleportPayload()
-  local effUrl=H.trim(tostring((P and P.scriptUrl)or ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or CFG.SCRIPT_URL or""))
-  local cfgPath=tostring(FILE or"cb46_settings.json")
+  local effUrl=H.trim(tostring((P and P.scriptUrl)or ENV.CB47_SCRIPT_URL or ENV.CB46_SCRIPT_URL or ENV.CB45_SCRIPT_URL or CFG.SCRIPT_URL or""))
+  local cfgPath=tostring(FILE or"cb47_settings.json")
   if S._tpPayload and S._tpUrl==effUrl and S._tpCfg==cfgPath then return S._tpPayload end
   S._tpUrl,S._tpCfg=effUrl,cfgPath
   S._tpPayload=string.format([[
 pcall(function()
   repeat task.wait() until game:IsLoaded() and game:GetService("Players").LocalPlayer
   local env=(type(getgenv)=="function"and getgenv())or _G
-  if env.__CB46_AUTOEXEC_OFF or env.__CB45_AUTOEXEC_OFF then return end
+  if env.__CB47_AUTOEXEC_OFF or env.__CB46_AUTOEXEC_OFF or env.__CB45_AUTOEXEC_OFF then return end
   local rf=rawget(env,"readfile")or readfile
   if type(rf)=="function"then
-    for _,ff in ipairs({"cb46_autoexec_on.txt","cb45_autoexec_on.txt"})do
+    for _,ff in ipairs({"cb47_autoexec_on.txt","cb46_autoexec_on.txt","cb45_autoexec_on.txt"})do
       local okFlag,flag=pcall(rf,ff)
       if okFlag and type(flag)=="string"and flag:match("%%S")then
         if flag:match("^%%s*0%%s*$")then return end
@@ -7649,21 +9383,21 @@ pcall(function()
     local okCfg,cfgRaw=pcall(rf,%q)
     if okCfg and type(cfgRaw)=="string"and cfgRaw:find('"autoExecute"%%s*:%%s*false')then return end
   end
-  local cur=env and(env.CB46 or env.CB45)
+  local cur=env and(env.CB47 or env.CB46 or env.CB45)
   if cur and cur.U and cur.U.gui and cur.U.gui.Parent then return end
-  local paths={"cb46_source.lua","cb46_autorun.lua","cb45_source.lua","cb45_autorun.lua","CB.lua","CB.lua.txt","Scripts/CB.lua","Scripts/CB.txt","scripts/CB.lua","Delta/Scripts/CB.lua","Delta/Autoexecute/CB.lua","CB (Note ver 46.0) - Updated.lua","CB (Note ver 46.0).lua","CB (Note ver 45.0) - Updated.lua","CB (Note ver 45.0).lua","ChatBridge.lua"}
+  local paths={"cb47_source.lua","cb47_autorun.lua","cb46_source.lua","cb46_autorun.lua","cb45_source.lua","cb45_autorun.lua","CB.lua","CB.lua.txt","Scripts/CB.lua","Scripts/CB.txt","scripts/CB.lua","Delta/Scripts/CB.lua","Delta/Autoexecute/CB.lua","CB (Note ver 47.0) - Updated.lua","CB (Note ver 47.0).lua","CB (Note ver 46.0) - Updated.lua","CB (Note ver 46.0).lua","CB (Note ver 45.0) - Updated.lua","CB (Note ver 45.0).lua","ChatBridge.lua"}
   if type(rf)=="function"then
     for _,fn in ipairs(paths)do
       local ok,src=pcall(rf,fn)
-      if ok and type(src)=="string"and #src>200 and not src:sub(1,60):find("__CB46_LOADER_STUB",1,true)and not src:sub(1,60):find("__CB45_LOADER_STUB",1,true)then
+      if ok and type(src)=="string"and #src>200 and not src:sub(1,60):find("__CB47_LOADER_STUB",1,true)and not src:sub(1,60):find("__CB46_LOADER_STUB",1,true)and not src:sub(1,60):find("__CB45_LOADER_STUB",1,true)then
         local f=loadstring(src)
         if f then task.spawn(f)return end
       end
     end
   end
-  local url=(env and(env.CB46_SCRIPT_URL or env.CB45_SCRIPT_URL or env.CB44_SCRIPT_URL or env.CB43_SCRIPT_URL))or %q
+  local url=(env and(env.CB47_SCRIPT_URL or env.CB46_SCRIPT_URL or env.CB45_SCRIPT_URL or env.CB44_SCRIPT_URL or env.CB43_SCRIPT_URL))or %q
   if (type(url)~="string"or #url<=8)and type(rf)=="function"then
-    for _,uf in ipairs({"cb46_script_url.txt","cb45_script_url.txt"})do
+    for _,uf in ipairs({"cb47_script_url.txt","cb46_script_url.txt","cb45_script_url.txt"})do
       local okU,uRaw=pcall(rf,uf)
       if okU and type(uRaw)=="string"and #uRaw>8 then url=uRaw:gsub("^%%s+",""):gsub("%%s+$","")break end
     end
@@ -7686,7 +9420,7 @@ function F.armAutoTeleport(forceNow)
     F.disarmAutoTeleport()
     return false
   end
-  ENV.__CB46_AUTOEXEC_OFF=nil ENV.__CB45_AUTOEXEC_OFF=nil
+  ENV.__CB47_AUTOEXEC_OFF=nil ENV.__CB46_AUTOEXEC_OFF=nil ENV.__CB45_AUTOEXEC_OFF=nil
   F.ensureAutorunFile()
   if forceNow then F.markTeleporting()end
   if S.tpCheck then return true end
@@ -7838,6 +9572,12 @@ function F.updateTokenFeedback(text)if not U.inputStroke or not U.tokenBar then 
         richParts[#richParts+1]='<font color="'..H.tohex(info.col)..'">'..H.esc(rawToken)..'</font>'i=e+1 else richParts[#richParts+1]=H.esc(ch)i=i+1 end elseif ch=="["and text:find("^%[img:(%d+)%]",i)then
       local s,e,imgId=text:find("^%[img:(%d+)%]",i)local rawToken=text:sub(s,e)local eInfo=F.emojiInfoById(imgId)local col=F.tokColors().emo_ok tokens[#tokens+1]={kind="emoji",status="ok",col=col,icon="img:"..imgId,
         label=":"..((eInfo and eInfo.name)or("img:"..imgId))..":",raw=rawToken,}richParts[#richParts+1]='<font color="'..H.tohex(col)..'">'..H.esc(rawToken)..'</font>'i=e+1
+    elseif ch=="["and text:find("^%[sound:(%d+)%]",i)then
+      local s,e,sndId=text:find("^%[sound:(%d+)%]",i)local rawToken=text:sub(s,e)local col=F.tokColors().emo_ok tokens[#tokens+1]={kind="sound",status="ok",col=col,icon="🔊",
+        label=sndId,raw=rawToken,}richParts[#richParts+1]='<font color="'..H.tohex(col)..'">'..H.esc(rawToken)..'</font>'i=e+1
+    elseif ch=="["and text:find("^%[profile:([%w_%.%-]+)%]",i)then
+      local s,e,pName=text:find("^%[profile:([%w_%.%-]+)%]",i)local rawToken=text:sub(s,e)local col=F.tokColors().cmd_ok tokens[#tokens+1]={kind="profile",status="ok",col=col,icon="🪪",
+        label="@"..pName,raw=rawToken,}richParts[#richParts+1]='<font color="'..H.tohex(col)..'">'..H.esc(rawToken)..'</font>'i=e+1
     elseif ch==":"and not text:sub(max(1,i-10),i-1):lower():match("https?$")and not text:sub(max(1,i-12),i-1):lower():match("rbxassetid$")then local s1,e1,closedWord=text:find("^:([%w_%-]+):",i)if s1 then
         local rawToken=text:sub(s1,e1)local info=F.resolveEmojiToken(closedWord,true)info.kind="emoji"info.raw=rawToken tokens[#tokens+1]=info
         richParts[#richParts+1]='<font color="'..H.tohex(info.col)..'">'..H.esc(rawToken)..'</font>'i=e1+1 else local s2,e2,openWord=text:find("^:([%w_%-]*)",i)if s2 and e2==n then local rawToken=text:sub(s2,e2)
@@ -7858,7 +9598,9 @@ function F.updateTokenFeedback(text)if not U.inputStroke or not U.tokenBar then 
     end
     local prefix=""if active.kind=="cmd"then prefix=T(active.status=="ok"and"tok_cmd_ok"or(active.status=="wait"and"tok_cmd_wait"or"tok_cmd_bad"))elseif active.kind=="mention"then
       prefix=T(active.status=="ok"and"tok_mention_ok"or(active.status=="wait"and"tok_mention_find"or"tok_mention_bad"))elseif active.kind=="emoji"then
-      prefix=T(active.status=="ok"and"tok_emoji_ok"or(active.status=="wait"and"tok_emoji_find"or"tok_emoji_bad"))end if active.icon then U.tokenIconHolder.Visible=true F.iconBox(U.tokenIconHolder,active.icon,16)end
+      prefix=T(active.status=="ok"and"tok_emoji_ok"or(active.status=="wait"and"tok_emoji_find"or"tok_emoji_bad"))elseif active.kind=="sound"then
+      prefix=(L=="en"and"Sound ID: "or"Âm thanh: ")elseif active.kind=="profile"then
+      prefix=(L=="en"and"Profile Card: "or"Danh thiếp: ")end if active.icon then U.tokenIconHolder.Visible=true F.iconBox(U.tokenIconHolder,active.icon,16)end
     U.tokenAccent.BackgroundColor3=col U.tokenStroke.Color=col U.tokenLbl.Position=uo(U.tokenIconHolder.Visible and 28 or 10,0)U.tokenLbl.Size=u2(1,U.tokenIconHolder.Visible and-114 or-96,1,0)
     U.tokenLbl.Text=prefix..tostring(active.label or"")U.tokenLbl.TextColor3=col if U.tokenStatePill then U.tokenStatePill.BackgroundColor3=col U.tokenStatePill.TextColor3=H.lum(col)>0.6 and rgb(18,18,22)or c3(1,1,1)
       U.tokenStatePill.Text=T(active.status=="ok"and"tok_state_ok"or(active.status=="wait"and"tok_state_wait"or"tok_state_bad"))end else if U.inputRich then U.inputRich.Visible=false;U.inputRich.Text=""end
@@ -7903,7 +9645,7 @@ function F.updateSuggest()local text=U.input.Text
 --- [F.save] Lưu toàn bộ cài đặt cá nhân (`P`), vị trí cửa sổ (`winX`, `winY`) và bộ đệm tin nhắn (`S`) xuống file JSON cục bộ
 function F.save(force)
   local layoutData={winX=P.winX,winY=P.winY,W=P.W,H=P.H,prevW=P.prevW,prevH=P.prevH,miniX=P.miniX,miniY=P.miniY,minimized=P.minimized}
-  ENV.CB46_LAYOUT=layoutData ENV.CB45_LAYOUT=layoutData ENV.CB44_LAYOUT=layoutData ENV.CB43_LAYOUT=layoutData ENV.CB42_LAYOUT=layoutData
+  ENV.CB47_LAYOUT=layoutData ENV.CB46_LAYOUT=layoutData ENV.CB45_LAYOUT=layoutData ENV.CB44_LAYOUT=layoutData ENV.CB43_LAYOUT=layoutData ENV.CB42_LAYOUT=layoutData
   if not hasIO then return end
   if not force and(not S.isDirty or os.clock()-S.lastSave<CFG.SAVE_THROTTLE)then return end
   S.lastSave=os.clock();S.isDirty=false local rx={}for id,m in pairs(S.reactions)do if S.msgs[id]and next(m)then rx[id]=m end end
@@ -7934,23 +9676,32 @@ function F.save(force)
   if #generalMsgs>60 then local out={}for i=#generalMsgs-59,#generalMsgs do out[#out+1]=generalMsgs[i]end generalMsgs=out end
   local seenOut={}
   for id,vmap in pairs(S.seenBy or{})do if S.msgs[id]and type(vmap)=="table"and next(vmap)then seenOut[id]=vmap end end
+  local profOut={}
+  do local pList={}
+    for _,pr in pairs(S.profiles or{})do if type(pr)=="table"and pr.u and pr.u~=""and pr.u~="?"then pList[#pList+1]=pr end end
+    tsort(pList,function(a,b)return(tonumber(a.lastSeen)or 0)>(tonumber(b.lastSeen)or 0)end)
+    for i=1,min(#pList,150)do
+      local pr=pList[i]
+      profOut[tostring(pr.u):lower()]={u=pr.u,display=pr.display,userId=pr.userId,status=pr.status,bio=pr.bio,country=pr.country,profBanner=pr.profBanner,profIcon=pr.profIcon,profTheme=F.compactProfTheme(pr.profTheme),lastSeen=pr.lastSeen,msgCount=pr.msgCount,placeId=pr.placeId,gameName=pr.gameName}
+    end
+  end
   local gameChat=(not S.quitting and #gameMsgs>0)and{placeId=curPlace,jobId=tostring(game.JobId or""),savedAt=os.time(),joinTs=S.joinTs,msgs=gameMsgs}or nil
   local d={clientId=P.clientId,lang=L,display=P.display,status=P.status,bio=P.bio,country=P.country,
-    profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,autoExecute=P.autoExecute,scriptUrl=P.scriptUrl,msgCount=P.msgCount,
+    profBanner=P.profBanner,profIcon=P.profIcon,profMusic=P.profMusic,profTheme=P.profTheme,autoExecute=P.autoExecute,scriptUrl=P.scriptUrl,msgCount=P.msgCount,
     dmList=P.dmList,customEmojis=P.customEmojis,recentEmoji=P.recentEmoji,recentColors=P.recentColors,themeName=P.themeName,custom=P.custom,alpha=P.alpha,
     backgroundMode=P.backgroundMode,backgroundImage=P.backgroundImage,backgroundOpacity=P.backgroundOpacity,backgroundDim=P.backgroundDim,bgFrame=P.bgFrame,
-    gradAngle=P.gradAngle,gradMix=P.gradMix,uiRadius=P.uiRadius,fontFamily=P.fontFamily,msgStyle=P.msgStyle,borderGlow=P.borderGlow,savedThemes=P.savedThemes,userNotes=P.userNotes,blockedUsers=P.blockedUsers,myFeedbacks=P.myFeedbacks,mute=P.mute,
+    gradAngle=P.gradAngle,gradMix=P.gradMix,uiRadius=P.uiRadius,fontFamily=P.fontFamily,msgStyle=P.msgStyle,borderGlow=P.borderGlow,savedThemes=P.savedThemes,userNotes=P.userNotes,blockedUsers=P.blockedUsers,savedBookmarks=P.savedBookmarks,drafts=P.drafts,mutedToasts=P.mutedToasts,transLang=P.transLang,myFeedbacks=P.myFeedbacks,mute=P.mute,
     W=P.W,H=P.H,prevW=P.prevW,prevH=P.prevH,winX=P.winX,winY=P.winY,minimized=P.minimized,
     notify=P.notify,sound=P.sound,bubble=P.bubble,safeEmoji=P.safeEmoji,showGame=P.showGame,preview=P.preview,compact=P.compact,sameUser=P.sameUser,group=P.group,showTyping=P.showTyping,showSeen=P.showSeen,textSize=P.textSize,toastPos=P.toastPos,
-    miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,mutes=S.mutes,warns=S.warns,bannedMap=S.bannedMap,punishments=S.punishments,reports=S.reports,reactions=rx,seenBy=seenOut,polls=polls,
+    miniX=P.miniX,miniY=P.miniY,roles=S.roles,assign=S.assign,rolesSeq=S.rolesSeq,mutes=S.mutes,warns=S.warns,bannedMap=S.bannedMap,punishments=S.punishments,reports=S.reports,reactions=rx,seenBy=seenOut,polls=polls,profiles=profOut,
     customEmojiNames=P.customEmojiNames,sharedEmojis=S.sharedEmojis,scripts=S.scripts,groups=S.groups,savedScripts=P.savedScripts,gameChat=gameChat,generalChat=generalMsgs}local s=H.jenc(d)
   if s then pcall(writefile,FILE,s)end
   local flagStr=(P.autoExecute~=false)and"1"or"0"
-  if S._savedAutoFlag~=flagStr or not isfile("cb46_autoexec_on.txt")then
-    if pcall(writefile,"cb46_autoexec_on.txt",flagStr)then S._savedAutoFlag=flagStr end
+  if S._savedAutoFlag~=flagStr or not isfile("cb47_autoexec_on.txt")then
+    if pcall(writefile,"cb47_autoexec_on.txt",flagStr)then S._savedAutoFlag=flagStr end
   end
-  if type(P.scriptUrl)=="string"and P.scriptUrl~=""and(S._savedUrl~=P.scriptUrl or not isfile("cb46_script_url.txt"))then
-    if pcall(writefile,"cb46_script_url.txt",P.scriptUrl)then S._savedUrl=P.scriptUrl end
+  if type(P.scriptUrl)=="string"and P.scriptUrl~=""and(S._savedUrl~=P.scriptUrl or not isfile("cb47_script_url.txt"))then
+    if pcall(writefile,"cb47_script_url.txt",P.scriptUrl)then S._savedUrl=P.scriptUrl end
   end
   local ls=H.jenc(layoutData)
   if ls then pcall(writefile,LAYOUT_FILE,ls)end end
@@ -7983,6 +9734,15 @@ hook(U.sendBtn.MouseButton1Click,F.sendNow)
 hook(U.input.Focused,function()S.inputFocused=true;if U.inputRich then U.inputRich.Visible=false;U.inputRich.Text=""end;U.input.TextTransparency=0;F.updateTokenFeedback(U.input.Text)end)
 hook(U.input.FocusLost,function(enter)S.inputFocused=false;if enter then F.sendNow()else F.updateTokenFeedback(U.input.Text)end end)
 hook(U.input:GetPropertyChangedSignal("Text"),function()F.updateSuggest()local t=U.input.Text
+  if not S.editing and S.booted and S.chan then
+    P.drafts=type(P.drafts)=="table"and P.drafts or{}
+    local ck=F.chanKey(S.chan)
+    local clean=(H.trim(t)~=""and t:sub(1,1)~="/"and S.chan~="scripts"and S.chan~="punish"and t)or nil
+    if P.drafts[ck]~=clean then
+      P.drafts[ck]=clean;S.isDirty=true
+      if F.updateInfo then F.updateInfo()end
+    end
+  end
   if t~=""and t:sub(1,1)~="/"and S.chan~="scripts"and S.chan~="punish"then
     if P.showTyping and os.clock()-S.lastType>CFG.TYPING_THROTTLE and not F.muted(P.username)then
       S.lastType=os.clock();S.wasTyping=true
@@ -8016,7 +9776,7 @@ local function pollLoop()while NET.alive do
     local path=string.format("/api/feed?since=%s&limit=%d&rs=%s&ss=%s&es=%s&as=%s&ms=%s&vws=%s&gs=%s&fbs=%s&u=%s&gpl=%d&gjb=%s&wait=%d%s",H.num(since),S.lastSeq==0 and CFG.HISTORY or 100,H.num(rs),H.num(S.scriptSeq or 0),H.num(S.emojiSeq or 0),H.num(S.announceSeq or 0),H.num(S.modSeq or 0),H.num(S.seenSeq or 0),H.num(S.groupSeq or 0),H.num(S.feedbackSeq or 0),H.url(P.username),tonumber(game.PlaceId)or 0,H.url(tostring(game.JobId or"")),wait,pQuery)local t0=os.clock()
     local data,err=rawRequest("GET",path)if not NET.alive then break end if data and data.ok then if sweep then S.sweepAt=os.clock()end
       local first=S.lastSeq==0 S.pollFail,S.lpFails,S.lastPollOk=0,0,os.clock()
-      local ok,e=pcall(F.ingest,data,first)if not ok then warn("[CB46] ingest: "..tostring(e))end if first and not S.booted then F.afterBoot()end
+      local ok,e=pcall(F.ingest,data,first)if not ok then warn("[CB47] ingest: "..tostring(e))end if first and not S.booted then F.afterBoot()end
       F.paintDot()
       if not first then if#(data.messages or{})==0 and os.clock()-t0<0.35 then task.wait(lp and 0.25 or pollDelay())elseif not lp then task.wait(pollDelay())end end else S.pollFail=S.pollFail+1;S.lpFails=S.lpFails+1
       if S.lpOn and S.lpFails>=3 then S.lpOn=false;S.lpRetryAt=os.clock()+CFG.LP_RETRY end
@@ -8062,6 +9822,7 @@ local function tickLoop()local n=0 while NET.alive do task.wait(0.5)n=n+1 local 
       if now-t<CFG.TYPING_TIMEOUT then names[#names+1]=u else S.typing[S.chan][u]=nil end end
     U.typing.Text=#names>0 and(F.disp(tconcat(names,", ",1,min(#names,3)))..T("typing").."…")or""
     if next(S.bubbles)~=nil then pcall(updateBubbles)end
+    if n%6==0 and S.booted and U.main and U.main.Visible and P.showSeen then pcall(F.markChannelSeen,S.chan)end
     if n%10==0 then local alive={}
       for _,c in ipairs(conns)do if c.Connected then alive[#alive+1]=c end end conns=alive if#reg>800 then F.pruneThemeReg()end
       F.updateInfo()
@@ -8084,27 +9845,29 @@ function F.refreshSame()if not P.sameUser then
       return
     end
     if curBb then pcall(function()curBb:Destroy()end)end
-    local bb=Instance.new("BillboardGui")bb.Name="CB46Same_"..name bb.Adornee=head bb.Size=uo(44,20)
+    local bb=Instance.new("BillboardGui")bb.Name="CB47Same_"..name bb.Adornee=head bb.Size=uo(44,20)
     bb.StudsOffset=Vector3.new(0,2.35,0)bb.AlwaysOnTop=true bb.MaxDistance=140 bb.LightInfluence=0 bb.Enabled=not hasBubble bb.Parent=F.billboardContainer(head)local pill=Instance.new("Frame")pill.Size=us(1,1)pill.BackgroundColor3=TH.bg2
     pill.BackgroundTransparency=0.15 pill.BorderSizePixel=0 pill.Parent=bb corner(pill,10)mk("UIStroke",{Color=TH.accent,Thickness=1.2,Transparency=0.25},pill)local l=Instance.new("TextLabel")l.Size=us(1,1)
     l.BackgroundTransparency=1 l.Text="💬 CB"l.TextColor3=TH.accent l.TextSize=11 l.Font=fGB l.Parent=pill S.sameBb[name]=bb end for _,pl in ipairs(Players:GetPlayers())do if pl~=LP and F.isScriptUser(pl.Name)then
       local h=headOf(pl)if h then pin(pl.Name,h)end end end for u,bb in pairs(S.sameBb)do if not alive[u]then pcall(function()bb:Destroy()end);S.sameBb[u]=nil end end end
 --- [F.afterBoot] Hoàn tất quá trình khởi động sau khi nạp xong dữ liệu lần đầu từ máy chủ
 function F.afterBoot()if S.booted then return end
-  S.booted=true F.armAutoTeleport()F.layoutTabs();F.selectChannel(S.chan)F.toast(T("ready"),false)F.emit("ready")end
+  S.booted=true F.armAutoTeleport()F.layoutTabs();F.selectChannel(S.chan)F.toast(T("ready"),false)F.emit("ready")
+  task.delay(3,function()if not NET.alive then return end local hasPt=type(P.profTheme)=="table"and next(P.profTheme)~=nil if(P.bio or"")~=""or(P.status or"")~=""or(P.profBanner or"")~=""or(P.profIcon or"")~=""or hasPt then F.pushMyProfileSync()end end)
+  task.delay(5,function()if NET.alive then F.loadRobloxFriends()end end)end
 --- [F.stop] Dừng toàn bộ vòng lặp mạng, lưu dữ liệu lần cuối, ngắt mọi kết nối sự kiện và xóa giao diện Chat Bridge
 function F.stop()if S.stopped then return end
-  S.stopped=true F.save(true)
+  S.stopped=true F.stopInlineSound()F.save(true)
   task.spawn(function()pcall(rawRequest,"POST","/api/presence",{u=P.username,off=true})end)task.delay(0.5,function()NET.alive=false end)F.emit("stop")for _,c in ipairs(conns)do pcall(function()c:Disconnect()end)end
   for _,b in pairs(S.bubbles)do pcall(function()if type(b)=="table"and b.bb then b.bb:Destroy()elseif b.Destroy then b:Destroy()end end)end for _,b in pairs(S.sameBb or{})do pcall(function()b:Destroy()end)end
   pcall(function()U.gui:Destroy()end)
-  for v=46,41,-1 do ENV["CB"..v.."_STOP"]=nil ENV["CB"..v]=nil end end
-for v=46,41,-1 do ENV["CB"..v.."_STOP"]=F.stop end
-;(function()local CB_API={version="46.0",cfg=CFG,F=F,S=S,P=P,U=U,H=H,command=F.command,on=F.on,toast=F.toast,
+  for v=47,41,-1 do ENV["CB"..v.."_STOP"]=nil ENV["CB"..v]=nil end end
+for v=47,41,-1 do ENV["CB"..v.."_STOP"]=F.stop end
+;(function()local CB_API={version="47.0",cfg=CFG,F=F,S=S,P=P,U=U,H=H,command=F.command,on=F.on,toast=F.toast,
   send=function(text,chan)if chan then F.selectChannel(chan)end
     U.input.Text=tostring(text);F.sendNow()end,
     request=F.openRequest,admin=F.openAdmin,roles=F.openRoles,diag=F.openDiag,suggest=F.openSuggestions,bug=F.openBugReport}
-for v=46,41,-1 do ENV["CB"..v]=CB_API end
+for v=47,41,-1 do ENV["CB"..v]=CB_API end
 F.armAutoTeleport()F.layout();F.paintTheme();F.layoutTabs();F.paintTabs();F.updateInfo()task.spawn(function()
   local ok,info=pcall(function()return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)end)S.placeName=(ok and info and info.Name)or tostring(game.Name or"?")S.lastPresPiggy=0
 end)if F._bootLoops then F._bootLoops()end task.spawn(function()
@@ -8119,11 +9882,11 @@ end)if F._bootLoops then F._bootLoops()end task.spawn(function()
     if NET.idx>1 and PROXY_POOL[1] and (NET.cooldown[PROXY_POOL[1]]or 0)<=os.clock() then
       local ok,res=pcall(httpFn,{Url=PROXY_POOL[1].."/api/ping",Method="GET"})
       if ok and type(res)=="table"and(tonumber(res.StatusCode or res.Status)or 0)==200 then
-        NET.idx=1;CFG.PROXY=PROXY_POOL[1];NET.cooldown[PROXY_POOL[1]]=nil;S.lastSeq=0;S.pollFail=0
+        NET.idx=1;CFG.PROXY=PROXY_POOL[1];NET.cooldown[PROXY_POOL[1]]=nil;S.lastSeq=0;S.seenSeq=0;S.pollFail=0
       end
     end
-    if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0 warn("[CB46] Watchdog: resync")end
+    if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0 warn("[CB47] Watchdog: resync")end
   end
 end)if saved.W==nil and IS_MOBILE then P.W,P.H=340,480 end
-print("[CB46] Chat Bridge v46.0 · "..EXEC.." · "..(L=="en"and"Stop: getgenv().CB46_STOP()"or"Dừng: getgenv().CB46_STOP()"))
+print("[CB47] Chat Bridge v47.0 · "..EXEC.." · "..(L=="en"and"Stop: getgenv().CB47_STOP()"or"Dừng: getgenv().CB47_STOP()"))
 end)()
