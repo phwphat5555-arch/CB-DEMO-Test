@@ -1,5 +1,5 @@
 -- =============================================================================
--- CHAT BRIDGE CLIENT SCRIPT CHO ROBLOX (CB.lua - Phiên bản v47.0)
+-- CHAT BRIDGE CLIENT SCRIPT CHO ROBLOX (CB.lua - Phiên bản v47.5)
 -- =============================================================================
 -- Kiến trúc tổng thể gồm 6 bảng trung tâm:
 --   1. CFG : Cấu hình hằng số hệ thống, danh sách máy chủ Proxy, Emoji & Shortcode.
@@ -30,9 +30,9 @@ local CFG={
     "https://backupv3.just-a-blur-000.workers.dev",    -- [BACKUP #4 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
     "https://backup5.dumbnguyen5555.workers.dev",      -- [BACKUP #5 - CLOUDFLARE] Nơi player trò chuyện (Liên kết Mesh)
   },DEVELOPERS={phwphat5555=true},PREFIX="CB42:",LEGACY={},
-  VERSION="47.0",SUGGEST_WEBHOOK="",
+  VERSION="47.5",SUGGEST_WEBHOOK="",
   BUG_WEBHOOK="",
-  LONGPOLL=12,POLL_FAST=0.35,POLL_IDLE=1.5,POLL_AFK=3.5,LP_RETRY=30,HEARTBEAT=90,PRESENCE_TIMEOUT=150,SWEEP=12,OVERLAP_MS=15000,HISTORY=60,MAX_MESSAGES=250,MAX_RENDER=50,MAX_CONTENT=800,
+  LONGPOLL=12,POLL_FAST=0.35,POLL_IDLE=1.5,POLL_AFK=3.5,LP_RETRY=30,HEARTBEAT=45,PRESENCE_TIMEOUT=75,SWEEP=12,OVERLAP_MS=15000,HISTORY=60,MAX_MESSAGES=250,MAX_RENDER=50,MAX_CONTENT=800,
   TYPING_TIMEOUT=4,TYPING_THROTTLE=1.5,REACT_THRO=0.4,GROUP_SECS=300,MENTION_SOUND="rbxassetid://6042053626",MIN_W=60,MIN_H=60,SEEN_MAX=1500,SAVE_THROTTLE=3,GAME_CACHE_TTL=7200,}for v=47,43,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end for v=41,19,-1 do table.insert(CFG.LEGACY,"CB"..v..":")end
 
 -- =============================================================================
@@ -83,6 +83,10 @@ function H.jenc(v)local ok,s=pcall(HttpService.JSONEncode,HttpService,v);return 
 function H.jdec(s)
   if type(s)~="string"or s==""then return nil end
   local ok,v=pcall(HttpService.JSONDecode,HttpService,s)return ok and v or nil end
+--- [H.copy] Sao chép bảng Lua (deep-copy an toàn)
+function H.copy(t)
+  if type(t)~="table"then return t end
+  local o={}for k,v in pairs(t)do o[k]=(type(v)=="table")and H.copy(v)or v end return o end
 --- [H.now] Lấy thời gian Unix timestamp hiện tại (giây)
 function H.now()return os.time()end
 --- [H.uuid] Tạo mã định danh duy nhất (GUID/UUID) không kèm dấu ngoặc nhọn
@@ -114,9 +118,22 @@ end
 --- [H.tohex] Chuyển đổi đối tượng Color3 sang chuỗi mã màu Hex (#RRGGBB)
 function H.tohex(c)
   return string.format("#%02X%02X%02X",clamp(floor(c.R*255+0.5),0,255),clamp(floor(c.G*255+0.5),0,255),clamp(floor(c.B*255+0.5),0,255))end
---- [H.safeHex] Kiểm tra mã màu Hex hợp lệ, trả về màu mặc định nếu sai định dạng
-function H.safeHex(c,d)c=tostring(c or"")
-  if c:match("^#%x%x%x%x%x%x$")then return c end return d or"#5865F2"end
+--- [H.validHex] Trả về mã Hex hợp lệ (#RRGGBB) hoặc nil nếu sai/rỗng
+function H.validHex(c)
+  local s=tostring(c or""):match("^#%x%x%x%x%x%x$")
+  return s and s:upper()or nil
+end
+--- [H.safeHex] Kiểm tra mã màu Hex hợp lệ; nếu truyền tham số mặc định thứ 2 (kể cả nil) thì trả về nó khi sai
+function H.safeHex(c,...)
+  local s=H.validHex(c)
+  if s then return s end
+  if select("#",...)>=1 then local d=...;return d end
+  return"#5865F2"
+end
+--- [H.onColor] Chọn màu chữ/icon tương phản tối ưu (Trắng hoặc Than chì) trên nền bất kỳ
+function H.onColor(bg)
+  return(bg and H.lum(bg)>0.34)and rgb(20,20,24)or c3(1,1,1)
+end
 --- [H.lum] Tính độ chói tương đối (Relative Luminance) của màu theo chuẩn WCAG
 function H.lum(c)
   local function f(x)if x<=0.03928 then return x/12.92 end return((x+0.055)/1.055)^2.4 end
@@ -612,7 +629,7 @@ local THEMES={
   midnight={bg="#0E0E12",bg2="#16161D",bg3="#22232E",title="#09090C",text="#F4F4F6",muted="#8E8EA0",accent="#5865F2",danger="#EF4444",ok="#4ADE80",warn="#FBBF24",own="#232242",mention="#3E301B",g1="#0E0E12",g2="#151626",g3="#1E1B38",gRot=28,cat="dark"},
   dark={bg="#313338",bg2="#2B2D31",bg3="#383A40",title="#1E1F22",text="#F2F3F5",muted="#949BA4",accent="#5865F2",danger="#F23F43",ok="#23A55A",warn="#F0B232",own="#35374C",mention="#463826",g1="#2B2D31",g2="#313338",g3="#23273A",gRot=24,cat="dark"},
   rose_noir={bg="#1A0A11",bg2="#261019",bg3="#351724",title="#11060B",text="#FFE4EE",muted="#C4849A",accent="#FF4D79",danger="#FF2A4B",ok="#34D399",warn="#FBBF24",own="#421C2E",mention="#4A2C22",g1="#1A0A11",g2="#2E1120",g3="#1E0D24",gRot=32,cat="chroma"},
-  nord={bg="#2E3440",bg2="#3B4252",bg3="#434C5E",title="#242933",text="#ECEFF4",muted="#A3BE8C",accent="#88C0D0",danger="#BF616A",ok="#A3BE8C",warn="#EBCB8B",own="#4C566A",mention="#5E4F3A",g1="#242933",g2="#2E3440",g3="#3B4252",gRot=25,cat="dark"},
+  nord={bg="#2E3440",bg2="#3B4252",bg3="#434C5E",title="#242933",text="#ECEFF4",muted="#A7B5C8",accent="#88C0D0",danger="#BF616A",ok="#A3BE8C",warn="#EBCB8B",own="#4C566A",mention="#5E4F3A",g1="#242933",g2="#2E3440",g3="#3B4252",gRot=25,cat="dark"},
   amoled={bg="#000000",bg2="#0A0A0C",bg3="#141418",title="#000000",text="#FFFFFF",muted="#8A8A93",accent="#3B82F6",danger="#F43F5E",ok="#22C55E",warn="#F59E0B",own="#111A2E",mention="#2E2208",g1="#000000",g2="#070B14",g3="#0F172A",gRot=35,cat="dark"},
   ocean={bg="#0F1B2D",bg2="#14253B",bg3="#1B3252",title="#0A1424",text="#E6F1FF",muted="#8FB0D6",accent="#38BDF8",danger="#F87171",ok="#34D399",warn="#FBBF24",own="#173A5E",mention="#4A3B1C",g1="#0A1424",g2="#0F2540",g3="#133B5C",gRot=30,cat="chroma"},
   forest={bg="#17221C",bg2="#1D2B23",bg3="#26382D",title="#101914",text="#E8F5EC",muted="#93B5A0",accent="#4ADE80",danger="#F87171",ok="#86EFAC",warn="#FACC15",own="#25402F",mention="#4A4120",g1="#101914",g2="#172A20",g3="#1E382B",gRot=28,cat="dark"},
@@ -703,7 +720,8 @@ if P.scriptUrl~=""then ENV.CB47_SCRIPT_URL=P.scriptUrl ENV.CB46_SCRIPT_URL=P.scr
 S.soundNameCache={};S.soundBtns={};S.transCache={};S.prevLiveFriends={};S.friendToastCd={};S.bootClock=os.clock()
 S.prevW=tonumber(saved.prevW)or((P.W>=240 and P.W)or(IS_MOBILE and 330 or 400))
 S.prevH=tonumber(saved.prevH)or((P.H>=220 and P.H)or(IS_MOBILE and 380 or 320))
-S.users,S.profiles,S.profFetchedAt,S.profFullLoaded,S.uidCache,S.msgs,S.order,S.frames,S.frameQ={},{},{},{},{},{},{},{},{}S.polls=type(saved.polls)=="table"and saved.polls or{}
+S.users,S.usersLow,S.profiles,S.profFetchedAt,S.profFullLoaded,S.uidCache,S.msgs,S.order,S.frames,S.frameQ={},{},{},{},{},{},{},{},{},{}S.polls=type(saved.polls)=="table"and saved.polls or{}
+S.lockdown={active=false,by="",reason="",ts=0}S.lockdownSeq=0
 S.friendsList,S.friendsMap,S.friendsLoadedAt,S.friendsLoading,S.knownUsersFetchedAt,S.knownUsersLoading={},{},0,false,0,false
 if type(saved.profiles)=="table"then for k,v in pairs(saved.profiles)do if type(v)=="table"then local kn=tostring(v.u or k)if kn~=""and kn~="?"then S.profiles[kn:lower()]=v end end end end
 S.reactions=type(saved.reactions)=="table"and saved.reactions or{}S.seen,S.seenOld,S.seenN={},{},0 S.typing,S.unread,S.dmUnread={},{game=0,general=0,announce=0,punish=0,scripts=0,staff=0},{}
@@ -822,14 +840,19 @@ function F.publish(pkt,lane,cb)
   local content=CFG.PREFIX..raw if#content>1900 then if cb then cb(false,"big")end return end enqueue(lane or"send","POST","/api/send",{content=content},function(data,err)
     if data and data.ok then S.sendOk=S.sendOk+1;if cb then cb(true)end return end
     S.sendFail=S.sendFail+1 local e=(data and data.error)or err
-    if e=="muted"then F.applyMute(P.username,{on=true,reason=data.reason or"",exp=tonumber(data.exp)or 0,by=""})elseif e=="banned"then S.banned={reason=data.reason or"",exp=tonumber(data.exp)or 0}
+    if e=="lockdown"then S.lockdown={active=true,by=tostring(data and data.by or"Admin"),reason=tostring(data and data.reason or""),ts=H.now()};F.updateInfo();F.toast(tostring((data and data.reason)or(L=="en"and"🔒 Server chat is locked."or"🔒 Kênh chat toàn server đang tạm khóa.")),true)
+    elseif e=="muted"then F.applyMute(P.username,{on=true,reason=data.reason or"",exp=tonumber(data.exp)or 0,by=""})elseif e=="banned"then S.banned={reason=data.reason or"",exp=tonumber(data.exp)or 0}
       F.toast(T("banned_you"),true)elseif pkt.type~="typing"then F.netError(e)end if cb then cb(false,e)end end)F.emit("send",pkt)end
 --- [themed] Đăng ký hàm cập nhật giao diện tùy chỉnh cho một Instance mỗi khi đổi Theme
 local function themed(o,fn)reg[#reg+1]={o=o,fn=fn};pcall(fn,o)end
 --- [th] Gán thuộc tính màu sắc (`BackgroundColor3`, `TextColor3`...) của Instance theo khóa màu của Theme hiện tại
-local function th(o,prop,key,isBg)reg[#reg+1]={o=o,p=prop,k=key,a=isBg}pcall(function()o[prop]=TH[key]end)if isBg then pcall(function()o.BackgroundTransparency=P.alpha end)end end
---- [F.pruneThemeReg] Dọn dẹp các Instance đã bị hủy (Destroy) khỏi danh sách đăng ký Theme `reg`
-function F.pruneThemeReg()local keep={}for _,r in ipairs(reg)do if r.o and r.o.Parent then keep[#keep+1]=r end end reg=keep end
+local function th(o,prop,key,isBg)reg[#reg+1]={o=o,p=prop,k=key,a=isBg}pcall(function()o[prop]=TH[key]end)if isBg then pcall(function()o.BackgroundTransparency=F.surfaceAlpha("card")end)end end
+--- [F.pruneThemeReg] Dọn dẹp các Instance đã bị hủy (Destroy) khỏi danh sách đăng ký Theme `reg` và hiệu ứng động
+function F.pruneThemeReg()
+  local keep={}for _,r in ipairs(reg)do if r.o and r.o.Parent then keep[#keep+1]=r end end reg=keep
+  if S._ringAnims then for i=#S._ringAnims,1,-1 do local e=S._ringAnims[i]if not e or not e.frame or not e.frame.Parent then tremove(S._ringAnims,i)end end end
+  if S._nameAnims then for i=#S._nameAnims,1,-1 do local e=S._nameAnims[i]if not e or not e.lbl or not e.lbl.Parent then tremove(S._nameAnims,i)end end end
+end
 --- [F.unthemeTree] Gỡ đăng ký Theme App khỏi cây UI riêng (dùng cho Profile người khác để tránh dính viền/icon Theme cá nhân)
 function F.unthemeTree(root)if not root then return end local keep={}for _,r in ipairs(reg)do if r.o and r.o.Parent and not(r.o==root or r.o:IsDescendantOf(root))then keep[#keep+1]=r end end reg=keep end
 --- [F.computeTheme] Tính toán bảng màu `TH` hiện hành kèm các điểm dừng Gradient 3 màu (`g1`, `g2`, `g3`), Nút bấm (`btnBg`), Ô nhập (`inputBg`) và Thẻ (`cardBg`)
@@ -845,8 +868,11 @@ function F.computeTheme()
   local effBg2=(isDark and H.lum(TH.bg2)>0.45)and H.mix(TH.bg,rgb(24,28,38),0.25)or((not isDark and H.lum(TH.bg2)<0.38)and H.mix(TH.bg,c3(1,1,1),0.35)or TH.bg2)
   local effBg3=(isDark and H.lum(TH.bg3)>0.42)and H.mix(effBg2,TH.accent,0.14)or((not isDark and H.lum(TH.bg3)<0.38)and H.mix(effBg2,TH.accent,0.12)or TH.bg3)
   local effTitle=(isDark and H.lum(TH.title)>0.48)and effBg2 or((not isDark and H.lum(TH.title)<0.38)and effBg2 or TH.title)
+  TH.bg2=effBg2;TH.bg3=effBg3;TH.title=effTitle
   TH.text=H.ensureContrast(TH.text,TH.bg,4.5)
+  if H.contrast(TH.text,effBg2)<4.5 then TH.text=H.ensureContrast(TH.text,effBg2,4.5)end
   TH.muted=H.ensureContrast(TH.muted,effBg2,3.1)
+  TH.accentText=H.ensureContrast(TH.accent,effBg2,3.6)
   local rawG1=P.custom.g1 and H.hex(P.custom.g1)or(base.g1 and H.hex(base.g1))or TH.bg
   local rawG2=P.custom.g2 and H.hex(P.custom.g2)or(base.g2 and H.hex(base.g2))or H.mix(TH.bg,TH.accent,0.34)
   local rawG3=P.custom.g3 and H.hex(P.custom.g3)or(base.g3 and H.hex(base.g3))or H.mix(effBg2,TH.ok,0.26)
@@ -859,12 +885,15 @@ function F.computeTheme()
   TH.btnBorder=H.mix(effBg3,TH.text,isDark and 0.24 or 0.18)
   TH.cardBg=H.mix(effBg2,effBg3,isDark and 0.32 or 0.45)
   TH.border=H.mix(effBg3,TH.muted,0.24)
-  TH.mentionText=P.custom.mentionText and H.hex(P.custom.mentionText)or H.ensureContrast(H.mix(TH.accent,TH.warn,0.32),effBg2,4.3)
-  TH.emojiText=P.custom.emojiText and H.hex(P.custom.emojiText)or H.ensureContrast(H.mix(TH.accent,TH.ok,0.22),effBg2,4.3)
+  local rawMen=P.custom.mentionText and H.hex(P.custom.mentionText)or H.mix(TH.accent,TH.warn,0.32)
+  local rawEmo=P.custom.emojiText and H.hex(P.custom.emojiText)or H.mix(TH.accent,TH.ok,0.22)
+  TH.mentionText=H.ensureContrast(rawMen,effBg2,4.3)
+  TH.emojiText=H.ensureContrast(rawEmo,effBg2,4.3)
 end
 --- [F.surfaceAlpha] Tính độ trong suốt bề mặt (thẻ/thanh công cụ/hộp thoại) thích ứng theo chế độ nền Image/Glass/Chroma
 function F.surfaceAlpha(kind)
   local mode=P.backgroundMode or"solid"
+  if mode=="image"and not H.assetId(P.backgroundImage or"")then mode="solid"end
   local a=clamp(tonumber(P.alpha)or 0,0,0.85)
   if mode=="image"then
     if kind=="bar"then return clamp(max(a,0.34),0.26,0.72)
@@ -921,8 +950,9 @@ do local function setProp(o,p,v)o[p]=v end
 function F.paintTheme()F.computeTheme()
   local isGlass=(P.backgroundMode=="glass")
   local effAlpha=isGlass and max(P.alpha,0.26)or P.alpha
+  local cardAlpha=F.surfaceAlpha("card")
   local keep={}for _,r in ipairs(reg)do if r.o and r.o.Parent then
-      keep[#keep+1]=r if r.fn then pcall(r.fn,r.o)else pcall(setProp,r.o,r.p,TH[r.k])if r.a then pcall(setProp,r.o,"BackgroundTransparency",effAlpha)end end end end reg=keep if F.paintTabs then pcall(F.paintTabs)end
+      keep[#keep+1]=r if r.fn then pcall(r.fn,r.o)else pcall(setProp,r.o,r.p,TH[r.k])if r.a then pcall(setProp,r.o,"BackgroundTransparency",cardAlpha)end end end end reg=keep if F.paintTabs then pcall(F.paintTabs)end
   if U.main and U.main.Parent then pcall(function()
       local mode=P.backgroundMode or"solid"local imageId=H.assetId(P.backgroundImage or"")
       if mode=="image"and not imageId then mode="solid"end
@@ -935,7 +965,7 @@ function F.paintTheme()F.computeTheme()
       local useGrad=(mode=="gradient"or mode=="mesh"or mode=="glass")
       U.main.BackgroundTransparency=mode=="solid"and effAlpha or 1
       U.wallpaperGradient.Visible=useGrad
-      U.wallpaperGradient.BackgroundColor3= c3(1,1,1)
+      U.wallpaperGradient.BackgroundColor3=c3(1,1,1)
       U.wallpaperGradient.BackgroundTransparency=useGrad and(mode=="glass"and max(0.18,effAlpha)or P.alpha)or 1
       if U.wallpaperUIGrad and useGrad then
         local baseTheme=THEMES[P.themeName]or THEMES.dark
@@ -959,7 +989,7 @@ function F.paintTheme()F.computeTheme()
         U.wallpaperMesh.Visible=isMesh
         if isMesh then
           U.wallpaperMesh.BackgroundColor3=c3(1,1,1)
-          U.wallpaperMesh.BackgroundTransparency=clamp(0.45+P.alpha*0.4,0.25,0.88)
+          U.wallpaperMesh.BackgroundTransparency=clamp(0.62+P.alpha*0.25,0.55,0.90)
           if U.wallpaperMeshGrad then
             U.wallpaperMeshGrad.Rotation=(tonumber(P.gradAngle)or 28)+115
             U.wallpaperMeshGrad.Color=ColorSequence.new({
@@ -990,15 +1020,21 @@ function F.paintTheme()F.computeTheme()
       F.applyMainWallpaper(false)
       if U.input then U.input.Font=fG end
       if U.inputRich then U.inputRich.Font=fG end
+      if U.searchBox then U.searchBox.Font=fG end
       if U.titleLbl then U.titleLbl.Font=fGB end
       if U.infoLbl then U.infoLbl.Font=fG end
+      if U.infoFrameBtn then U.infoFrameBtn.Font=fGB end
       if U.typing then U.typing.Font=fG end
+      if U.cmdBtn then U.cmdBtn.Font=fGB end
+      if U.atBtn then U.atBtn.Font=fGB end
       if U.sendBtn then U.sendBtn.Font=fGB end
+      if U.jump then U.jump.Font=fGB end
+      if U.bLang then U.bLang.Font=fGB end
       if U.mini then U.mini.Font=fGB end
       if U.miniBadge then U.miniBadge.Font=fGB end
       if U.titleGrad then U.titleGrad.Color=ColorSequence.new(TH.title,H.mix(TH.title,TH.accent,(mode=="gradient"or mode=="mesh")and 0.34 or 0.16))end
       for _,tb in pairs(U.tabs or{})do if tb and tb.Parent then tb.Font=fGB end end
-      if U.titleBar then U.titleBar.BackgroundTransparency=F.surfaceAlpha("bar")end
+      if U.titleBar then U.titleBar.BackgroundColor3=c3(1,1,1);U.titleBar.BackgroundTransparency=F.surfaceAlpha("bar")end
       if U.chatBar then U.chatBar.BackgroundTransparency=F.surfaceAlpha("bar")end
       if U.chatBarStroke then U.chatBarStroke.Color=glowOn and H.mix(TH.border,TH.accent,0.35)or TH.border;U.chatBarStroke.Transparency=glowOn and 0.18 or 0.35 end
       if U.infoBar then U.infoBar.BackgroundTransparency=F.surfaceAlpha("bar")end
@@ -1032,7 +1068,7 @@ local function tbtn(parent,text,o)o=o or{}local key=o.key or"btnBg"
     Text=text or"",BorderSizePixel=0,AutoButtonColor=true,Font=fGB,TextSize=o.ts or 12,Size=o.size or u2(1,0,0,o.h or 30),Position=o.pos or u2(),LayoutOrder=o.layout or 0,TextWrapped=false,},parent)
   th(b,"BackgroundColor3",key);corner(b,o.r or 8)
   stroke(b,isColored and key or"btnBorder",1,isColored and 0.35 or 0.45)
-  if isColored then themed(b,function(x)x.TextColor3=H.lum(TH[key])>0.42 and rgb(20,20,24)or c3(1,1,1)end)
+  if isColored then themed(b,function(x)x.TextColor3=H.onColor(TH[key])end)
   else themed(b,function(x)x.TextColor3=H.ensureContrast(TH.text,TH[key]or TH.btnBg,4.8)end)end
   if o.fn then hook(b.MouseButton1Click,o.fn)end return b end
 --- [F.styleInput] Định dạng ô nhập liệu (`TextBox`) kiểu hộp lõm (inset) gọn gàng, đổi màu viền khi Focus và không chèn phần tử con gây tràn lề
@@ -1074,14 +1110,30 @@ function F.section(parent,title,layout)local f=mk("Frame",{Size=u2(1,0,0,22),Bac
 function F.card(parent,h)local c=mk("Frame",{Size=u2(1,0,0,h or 40),BorderSizePixel=0},parent)
   themed(c,function(o)o.BackgroundColor3=TH.cardBg;o.BackgroundTransparency=F.surfaceAlpha("card")end);corner(c,8);stroke(c,"border",1,0.45)return c end
 --- [F.switch] Tạo công tắc bật/tắt (Toggle Switch) kèm hiệu ứng chuyển màu rõ nét
-function F.switch(parent,text,get,set)local r=mk("TextButton",{Size=u2(1,0,0,34),Text="",BorderSizePixel=0,AutoButtonColor=true},parent)
-  themed(r,function(o)o.BackgroundColor3=TH.cardBg;o.BackgroundTransparency=F.surfaceAlpha("card")end);corner(r,8);stroke(r,"border",1,0.5)lab(r,text,{size=u2(1,-66,1,0),pos=uo(12,0),trunc=true})
+function F.switch(parent,text,get,set,o)o=o or{}local r=mk("TextButton",{Size=u2(1,0,0,o.h or 34),Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=o.layout or 0},parent)
+  corner(r,8)
+  local rSt=mk("UIStroke",{Thickness=1,Transparency=0.5,ApplyStrokeMode=smBorder},r)
+  local lbl=mk("TextLabel",{Text=text or"",BackgroundTransparency=1,BorderSizePixel=0,Size=u2(1,-66,1,0),Position=uo(12,0),Font=fG,TextSize=o.ts or 12,TextXAlignment=txL,TextTruncate=trEnd},r)
   local track=mk("Frame",{Size=uo(38,20),Position=u2(1,-48,0.5,-10),BorderSizePixel=0},r)corner(track,10)
   local trStroke=mk("UIStroke",{Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},track)
   local knob=mk("Frame",{Size=uo(14,14),BorderSizePixel=0,BackgroundColor3=c3(1,1,1)},track)corner(knob,7)
-  local function paint()local on=get()==true track.BackgroundColor3=on and TH.ok or TH.inputBg
-    trStroke.Color=on and TH.ok or TH.inputBorder
-    knob.Position=on and uo(21,3)or uo(3,3)end themed(track,paint)hook(r.MouseButton1Click,function()set(not get());paint()end)return r end
+  local function paint()
+    local c=o.profSt and o.profSt.cols or TH
+    local on=get()==true
+    r.BackgroundColor3=o.profSt and c.sub or TH.cardBg
+    r.BackgroundTransparency=o.profSt and 0 or F.surfaceAlpha("card")
+    rSt.Color=o.profSt and c.cBorder or TH.border
+    lbl.TextColor3=o.profSt and c.txt or TH.text
+    if o.profSt then local fm=FONT_MAP[(o.profSt.pTheme and o.profSt.pTheme.font)or"gotham"]or FONT_MAP.gotham;lbl.Font=fm.reg else lbl.Font=fG end
+    track.BackgroundColor3=on and(c.ok or TH.ok)or(c.inpBg or TH.inputBg)
+    trStroke.Color=on and(c.ok or TH.ok)or(c.iBorder or TH.inputBorder)
+    knob.Position=on and uo(21,3)or uo(3,3)
+  end
+  if o.profSt then o.profSt.fxPainters=o.profSt.fxPainters or{};tinsert(o.profSt.fxPainters,paint);paint()
+  else themed(track,paint)end
+  hook(r.MouseButton1Click,function()set(not get());paint()end)
+  return r,paint
+end
 --- [F.track] Bắt đầu theo dõi thao tác kéo chuột hoặc chạm vuốt trên thanh trượt / bảng màu
 function F.track(frame,fn,done)hook(frame.InputBegan,function(i)
     local ut=i.UserInputType if ut~=mb1 and ut~=utTouch then return end
@@ -1092,19 +1144,37 @@ function F.track(frame,fn,done)hook(frame.InputBegan,function(i)
 function F.endTrack()local tk=S.track if not tk then return end
   S.track=nil if tk.sc then pcall(function()tk.sc.ScrollingEnabled=true end)end if tk.done then pcall(tk.done)end end
 --- [F.slider] Tạo thanh trượt giá trị số (`Slider`) từ `mn` đến `mx` hỗ trợ kéo trực tiếp
-function F.slider(parent,text,mn,mx,val,o)o=o or{}local box=mk("Frame",{Size=u2(1,0,0,46),BorderSizePixel=0},parent)
-  themed(box,function(b)b.BackgroundColor3=TH.cardBg;b.BackgroundTransparency=F.surfaceAlpha("card")end);corner(box,8);stroke(box,"border",1,0.5)
-  local head=lab(box,"",{size=u2(1,-76,0,16),pos=uo(10,5),ts=11,bold=true,key="text",trunc=true})
-  local valPill=lab(box,"",{size=uo(54,16),pos=u2(1,-64,0,5),ts=11,bold=true,key="accent",align=txR})valPill.Font=fCode
-  local bar=mk("Frame",{Size=u2(1,-20,0,8),Position=uo(10,28),BorderSizePixel=0},box)th(bar,"BackgroundColor3","inputBg");corner(bar,4);stroke(bar,"inputBorder",1,0.4)
-  local fill=mk("Frame",{Size=u2(0,0,1,0),BorderSizePixel=0},bar)
-  th(fill,"BackgroundColor3","accent");corner(fill,4)local knob=mk("Frame",{Size=uo(14,14),AnchorPoint=v2(0.5,0.5),Position=u2(0,0,0.5,0),BorderSizePixel=0,BackgroundColor3=c3(1,1,1),ZIndex=2},bar)corner(knob,7)
-  stroke(knob,"accent",1.5,0.1)
+function F.slider(parent,text,mn,mx,val,o)o=o or{}local box=mk("Frame",{Size=u2(1,0,0,46),BorderSizePixel=0,LayoutOrder=o.layout or 0},parent)
+  corner(box,8)
+  local boxSt=mk("UIStroke",{Thickness=1,Transparency=0.5,ApplyStrokeMode=smBorder},box)
+  local head=mk("TextLabel",{Size=u2(1,-76,0,16),Position=uo(10,5),BackgroundTransparency=1,BorderSizePixel=0,Font=fGB,TextSize=11,TextXAlignment=txL,TextTruncate=trEnd},box)
+  local valPill=mk("TextLabel",{Size=uo(54,16),Position=u2(1,-64,0,5),BackgroundTransparency=1,BorderSizePixel=0,Font=fCode,TextSize=11,TextXAlignment=txR},box)
+  local bar=mk("Frame",{Size=u2(1,-20,0,8),Position=uo(10,28),BorderSizePixel=0},box);corner(bar,4)
+  local barSt=mk("UIStroke",{Thickness=1,Transparency=0.4,ApplyStrokeMode=smBorder},bar)
+  local fill=mk("Frame",{Size=u2(0,0,1,0),BorderSizePixel=0},bar);corner(fill,4)
+  local knob=mk("Frame",{Size=uo(14,14),AnchorPoint=v2(0.5,0.5),Position=u2(0,0,0.5,0),BorderSizePixel=0,BackgroundColor3=c3(1,1,1),ZIndex=2},bar)corner(knob,7)
+  local kSt=mk("UIStroke",{Thickness=1.5,Transparency=0.1,ApplyStrokeMode=smBorder},knob)
+  local function paintSl()
+    local c=o.profSt and o.profSt.cols or TH
+    local acc=o.profSt and c.acc or TH.accent
+    local cardC=o.profSt and c.sub or TH.cardBg
+    box.BackgroundColor3=cardC
+    box.BackgroundTransparency=o.profSt and 0 or F.surfaceAlpha("card")
+    boxSt.Color=o.profSt and c.cBorder or TH.border
+    head.TextColor3=o.profSt and c.txt or TH.text
+    if o.profSt then local fm=FONT_MAP[(o.profSt.pTheme and o.profSt.pTheme.font)or"gotham"]or FONT_MAP.gotham;head.Font=fm.bold else head.Font=fGB end
+    valPill.TextColor3=H.ensureContrast(acc,cardC,3.2)
+    bar.BackgroundColor3=o.profSt and c.inpBg or TH.inputBg
+    barSt.Color=o.profSt and c.iBorder or TH.inputBorder
+    fill.BackgroundColor3=acc;kSt.Color=acc
+  end
+  if o.profSt then o.profSt.fxPainters=o.profSt.fxPainters or{};tinsert(o.profSt.fxPainters,paintSl);paintSl()
+  else themed(box,paintSl)end
   local hit=mk("TextButton",{Text="",BackgroundTransparency=1,Size=u2(1,0,0,28),Position=uo(0,18),AutoButtonColor=false,ZIndex=3},box)local cur=val
-  local function set(v,fire)v=clamp(v,mn,mx)
+  local function set(v,fire)local prev=cur;v=clamp(v,mn,mx)
     if o.step then v=floor(v/o.step+0.5)*o.step end cur=v local f=(mx>mn)and(v-mn)/(mx-mn)or 0 fill.Size=u2(f,0,1,0)knob.Position=u2(f,0,0.5,0)
     head.Text=text valPill.Text=(o.fmt and o.fmt(v)or tostring(v))
-    if fire and o.onChange then o.onChange(v)end end
+    if fire and o.onChange and v~=prev then o.onChange(v)end end
   F.track(hit,function(pos)set(mn+clamp((pos.X-bar.AbsolutePosition.X)/max(1,bar.AbsoluteSize.X),0,1)*(mx-mn),true)end,function()if o.onDone then o.onDone(cur)end end)
   set(val,false)return box,set end
 --- [F.pushRecentColor] Lưu mã màu Hex vừa chọn vào danh sách 10 màu sử dụng gần nhất (`P.recentColors`)
@@ -1112,30 +1182,45 @@ function F.pushRecentColor(hex)hex=H.safeHex(hex,nil)if not hex then return end 
   tinsert(P.recentColors,1,hex)while#P.recentColors>10 do tremove(P.recentColors)end
   S.isDirty=true end
 --- [F.colorPicker] Tạo bộ chọn màu HSV đầy đủ (khung bão hòa/độ sáng SV, thanh Hue, ô nhập Hex và bảng màu gần đây)
-function F.colorPicker(parent,startHex,onChange,onDone)local c0=H.hex(startHex)local hh,ss,vv=Color3.toHSV(c0)
+function F.colorPicker(parent,startHex,onChange,onDone,opts)opts=type(opts)=="table"and opts or{}local c0=H.hex(startHex)local hh,ss,vv=Color3.toHSV(c0)
   local box=mk("Frame",{Size=u2(1,0,0,200),BackgroundTransparency=1},parent)local sv=mk("Frame",{Size=u2(1,-34,0,130),BorderSizePixel=0,Active=true},box)corner(sv,6)
   local white=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(1,1,1),BorderSizePixel=0},sv)corner(white,6)
   mk("UIGradient",{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)})},white)local black=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(0,0,0),BorderSizePixel=0},sv)
   corner(black,6)mk("UIGradient",{Rotation=90,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(1,0)})},black)
-  local knob=mk("Frame",{Size=uo(14,14),AnchorPoint=v2(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=5},sv)corner(knob,7);mk("UIStroke",{Color=c3(1,1,1),Thickness=2},knob)
+  local knobOuter=mk("Frame",{Size=uo(16,16),AnchorPoint=v2(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=5},sv)corner(knobOuter,8);mk("UIStroke",{Color=rgb(12,14,18),Thickness=2,Transparency=0.2},knobOuter)
+  local knob=mk("Frame",{Size=uo(12,12),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=6},knobOuter)corner(knob,6);mk("UIStroke",{Color=c3(1,1,1),Thickness=2},knob)
   local hue=mk("Frame",{Size=uo(24,130),Position=u2(1,-24,0,0),BorderSizePixel=0,Active=true,BackgroundColor3=c3(1,1,1)},box)corner(hue,6)local kp={}
   for i=0,6 do kp[#kp+1]=ColorSequenceKeypoint.new(i/6,Color3.fromHSV(min(i/6,0.9999),1,1))end mk("UIGradient",{Rotation=90,Color=ColorSequence.new(kp)},hue)
-  local hk=mk("Frame",{Size=u2(1,6,0,4),AnchorPoint=v2(0.5,0.5),BackgroundColor3=c3(1,1,1),BorderSizePixel=0,ZIndex=5},hue)corner(hk,2);mk("UIStroke",{Color=c3(0,0,0),Thickness=1,Transparency=0.4},hk)
+  local hk=mk("Frame",{Size=u2(1,6,0,4),AnchorPoint=v2(0.5,0.5),BackgroundColor3=c3(1,1,1),BorderSizePixel=0,ZIndex=5},hue)corner(hk,2);mk("UIStroke",{Color=c3(0,0,0),Thickness=1,Transparency=0.35},hk)
   local swatch=mk("Frame",{Size=uo(28,28),Position=uo(0,138),BorderSizePixel=0},box)corner(swatch,6)
   local hexBox=mk("TextBox",{Size=u2(1,-36,0,28),Position=uo(34,138),Text="",ClearTextOnFocus=false,Font=fCode,TextSize=13,BorderSizePixel=0,TextXAlignment=txL},box)
-  F.styleInput(hexBox,"code",false)local rec=mk("Frame",{Size=u2(1,0,0,22),Position=uo(0,172),BackgroundTransparency=1},box)
+  if opts.profSt then
+    local stP=opts.profSt;corner(hexBox,7);pad(hexBox,8,4,8,4)
+    local hSt=mk("UIStroke",{Color=stP.cols.iBorder,Thickness=1.1,Transparency=0.25,ApplyStrokeMode=smBorder},hexBox)
+    local function paintPk()hexBox.BackgroundColor3=stP.cols.inpBg;hexBox.TextColor3=stP.cols.inpTxt;hexBox.PlaceholderColor3=stP.cols.muted;hSt.Color=stP.cols.iBorder end
+    stP.fxPainters=stP.fxPainters or{};tinsert(stP.fxPainters,paintPk);paintPk()
+  else F.styleInput(hexBox,"code",false)end
+  local rec=mk("Frame",{Size=u2(1,0,0,22),Position=uo(0,172),BackgroundTransparency=1},box)
   mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},rec)local obj={frame=box}local last=0
   local function cur()return Color3.fromHSV(hh,ss,vv)end
   local function emit(force)
     local t=os.clock()if force or t-last>=0.05 then last=t;if onChange then onChange(H.tohex(cur()))end end end
-  local function render()sv.BackgroundColor3=Color3.fromHSV(hh,1,1)knob.Position=u2(ss,0,1-vv,0)
+  local function render()sv.BackgroundColor3=Color3.fromHSV(hh,1,1)knobOuter.Position=u2(ss,0,1-vv,0)
     hk.Position=u2(0.5,0,hh,0)swatch.BackgroundColor3=cur()hexBox.Text=H.tohex(cur())end
-  local function finish()emit(true);F.pushRecentColor(H.tohex(cur()));if onDone then onDone(H.tohex(cur()))end end
+  local function rebuildRec()
+    for _,ch in ipairs(rec:GetChildren())do if not ch:IsA("UIListLayout")then ch:Destroy()end end
+    local n=0 for _,hx in ipairs(P.recentColors)do n=n+1 if n>9 then break end
+      local b=mk("TextButton",{Text="",Size=uo(20,20),BackgroundColor3=H.hex(hx),BorderSizePixel=0,LayoutOrder=n},rec)corner(b,5)
+      mk("UIStroke",{Color=rgb(140,145,160),Thickness=1,Transparency=0.5,ApplyStrokeMode=smBorder},b)
+      hook(b.MouseButton1Click,function()hh,ss,vv=Color3.toHSV(H.hex(hx));render();emit(true);if onDone then onDone(hx)end end)
+    end
+  end
+  local function finish()emit(true);F.pushRecentColor(H.tohex(cur()));rebuildRec();if onDone then onDone(H.tohex(cur()))end end
   F.track(sv,function(pos)ss=clamp((pos.X-sv.AbsolutePosition.X)/max(1,sv.AbsoluteSize.X),0,1)vv=1-clamp((pos.Y-sv.AbsolutePosition.Y)/max(1,sv.AbsoluteSize.Y),0,1)render();emit(false)end,finish)
-  F.track(hue,function(pos)hh=clamp((pos.Y-hue.AbsolutePosition.Y)/max(1,hue.AbsoluteSize.Y),0,0.999)render();emit(false)end,finish)hook(hexBox.FocusLost,function()local h=H.trim(hexBox.Text)
-    if not h:find("^#")then h="#"..h end if h:match("^#%x%x%x%x%x%x$")then hh,ss,vv=Color3.toHSV(H.hex(h));render();finish()else render()end end)local n=0 for _,hx in ipairs(P.recentColors)do n=n+1 if n>9 then break end
-    local b=mk("TextButton",{Text="",Size=uo(20,20),BackgroundColor3=H.hex(hx),BorderSizePixel=0,LayoutOrder=n},rec)corner(b,5);stroke(b,"muted",1,0.6)
-    hook(b.MouseButton1Click,function()hh,ss,vv=Color3.toHSV(H.hex(hx));render();emit(true);if onDone then onDone(hx)end end)end
+  F.track(hue,function(pos)hh=clamp((pos.Y-hue.AbsolutePosition.Y)/max(1,hue.AbsoluteSize.Y),0,0.999)render();emit(false)end,finish)
+  hook(hexBox.FocusLost,function()local h=H.trim(hexBox.Text)
+    if not h:find("^#")then h="#"..h end if h:match("^#%x%x%x%x%x%x$")then hh,ss,vv=Color3.toHSV(H.hex(h));render();finish()else render()end end)
+  rebuildRec()
   function obj.set(hex)hh,ss,vv=Color3.toHSV(H.hex(hex));render()end
   function obj.get()return H.tohex(cur())end render()return obj end
 -- Bảng icon vector Lucide chuẩn (nguồn Footagesus/Icons - Roblox AssetID đã kiểm chứng)
@@ -1182,6 +1267,14 @@ function F.lucide(parent,key,sz,o)
   end
   return im
 end
+--- [F.btnIcon] Đặt icon Lucide vào bên trái TextButton có UIPadding mà không bị cộng dồn Padding làm đè chữ
+function F.btnIcon(b,icKey,sz,padL,icLeft,o)
+  o=o or{}sz=sz or 12;icLeft=icLeft or 7;padL=padL or(icLeft+sz+4)
+  pad(b,padL,0,o.padR or 4,0)
+  b.TextTruncate=trEnd
+  o.pos=u2(0,icLeft-padL,0.5,0);o.anc=v2(0,0.5)
+  return F.lucide(b,icKey,sz,o)
+end
 --- [F.compactProfTheme] Rút gọn bảng profTheme bằng cách bỏ giá trị mặc định nhằm tối ưu băng thông Mesh/Discord Free Tier
 function F.compactProfTheme(pt)
   if type(pt)~="table"then return{}end
@@ -1194,7 +1287,7 @@ function F.compactProfTheme(pt)
   if pt.font and pt.font~=""and pt.font~="gotham"then out.font=pt.font end
   if pt.gRot~=nil and tonumber(pt.gRot)~=28 then out.gRot=clamp(floor(tonumber(pt.gRot)or 28),0,360)end
   if pt.gMix~=nil and tonumber(pt.gMix)~=65 then out.gMix=clamp(floor(tonumber(pt.gMix)or 65),15,100)end
-  if pt.rad~=nil and tonumber(pt.rad)~=10 then out.rad=clamp(floor(tonumber(pt.rad)or 10),3,16)end
+  if pt.rad~=nil and tonumber(pt.rad)~=12 then out.rad=clamp(floor(tonumber(pt.rad)or 12),3,16)end
   if pt.glow==false then out.glow=false end
   if pt.bgOp~=nil and tonumber(pt.bgOp)~=82 then out.bgOp=clamp(floor(tonumber(pt.bgOp)or 82),15,100)end
   if pt.bgDim~=nil and tonumber(pt.bgDim)~=25 then out.bgDim=clamp(floor(tonumber(pt.bgDim)or 25),0,75)end
@@ -1230,7 +1323,23 @@ function F.compactProfTheme(pt)
     local defAnim=decDef and decDef.anim or"none"
     if pt.ranim and pt.ranim~=""and pt.ranim~=defAnim then out.ranim=pt.ranim end
   end
-  if pt.nEff and pt.nEff~="solid"and pt.nEff~=""then out.nEff=pt.nEff end
+  if pt.nEff and pt.nEff~="solid"and pt.nEff~=""then
+    out.nEff=pt.nEff
+    local nDef for _,ne in ipairs(F._NAME_EFFS or{})do if ne.id==pt.nEff then nDef=ne;break end end
+    for _,nk in ipairs({"nc1","nc2","nc3","nsc"})do
+      local nv=H.validHex(pt[nk])
+      if nv then out[nk]=nv end
+    end
+    local defSw=nDef and tonumber(nDef.sw)or 1
+    if pt.nsw~=nil and tonumber(pt.nsw)~=defSw then out.nsw=clamp(floor(tonumber(pt.nsw)or defSw),0,3)end
+    local defRot=nDef and tonumber(nDef.rot)or 15
+    if pt.nrot~=nil and tonumber(pt.nrot)~=defRot then out.nrot=clamp(floor(tonumber(pt.nrot)or defRot),0,360)end
+    local defGlow=(nDef and nDef.glow==true)
+    if pt.nglow~=nil and(pt.nglow==true)~=defGlow then out.nglow=(pt.nglow==true)end
+    local defAnim=nDef and nDef.anim or"none"
+    if pt.nanim and pt.nanim~=""and pt.nanim~=defAnim then out.nanim=pt.nanim end
+  end
+  if pt.mHide==true then out.mHide=true end
   if type(pt.tag)=="string"and H.trim(pt.tag)~=""then out.tag=H.clip(H.trim(pt.tag),36)end
   if type(pt.abLbl)=="string"and H.trim(pt.abLbl)~=""then out.abLbl=H.clip(H.trim(pt.abLbl),40)end
   if type(pt.hiTxt)=="string"and H.trim(pt.hiTxt)~=""then out.hiTxt=H.clip(H.trim(pt.hiTxt),70)end
@@ -1400,6 +1509,25 @@ F._RING_ANIMS={
   {id="pulse",vi="Nhịp",en="Pulse"},
   {id="rainbow",vi="RGB",en="Rainbow"},
 }
+F._NAME_EFFS={
+  {id="solid",name="Solid",c1=nil,c2=nil,sc=nil,sw=0,rot=15,glow=false,anim="none"},
+  {id="gradient",name="Gradient",c1="#60A5FA",c2="#C084FC",sc="#0C0E14",sw=1,rot=15,glow=false,anim="none"},
+  {id="neon",name="Neon",c1="#6EE7FF",c2="#C084FC",sc="#38BDF8",sw=1.4,rot=18,glow=true,anim="pulse"},
+  {id="gold",name="Gold VIP",c1="#FEF08A",c2="#F59E0B",c3="#D97706",sc="#451A03",sw=1.2,rot=25,glow=true,anim="shimmer"},
+  {id="ice",name="Ice",c1="#E0F7FF",c2="#38BDF8",c3="#2563EB",sc="#082F49",sw=1.2,rot=20,glow=true,anim="none"},
+  {id="cyber",name="Cyber",c1="#00F5D4",c2="#7C3AED",sc="#090D16",sw=1.3,rot=15,glow=true,anim="shimmer"},
+  {id="flame",name="Flame",c1="#FACC15",c2="#F97316",c3="#EF4444",sc="#450A0A",sw=1.2,rot=25,glow=true,anim="pulse"},
+  {id="sakura",name="Sakura",c1="#FCE7F3",c2="#F472B6",c3="#E11D48",sc="#500724",sw=1.1,rot=20,glow=false,anim="none"},
+  {id="aurora",name="Aurora",c1="#34D399",c2="#22D3EE",c3="#818CF8",sc="#064E3B",sw=1.2,rot=20,glow=true,anim="shimmer"},
+  {id="rgb",name="RGB",c1="#FF2D55",c2="#22C55E",c3="#3B82F6",sc="#09090B",sw=1.3,rot=0,glow=true,anim="rainbow"},
+  {id="custom",name="Custom",c1="#38BDF8",c2="#EC4899",sc="#0C0E14",sw=1.2,rot=15,glow=false,anim="none"},
+}
+F._NAME_ANIMS={
+  {id="none",vi="Tĩnh",en="Static"},
+  {id="shimmer",vi="Lấp lánh",en="Shimmer"},
+  {id="pulse",vi="Nhịp",en="Pulse"},
+  {id="rainbow",vi="RGB",en="Rainbow"},
+}
 function F.resolveAvatarRing(pt)
   if type(pt)~="table"then return nil end
   local aid=tostring(pt.avDec or"none")
@@ -1407,22 +1535,53 @@ function F.resolveAvatarRing(pt)
   local def
   for _,d in ipairs(F._AV_DECS)do if d.id==aid then def=d;break end end
   if not def then
-    local h1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")
+    local h1=H.validHex(pt.rc1)
     if not h1 then return nil end
     def=F._AV_DECS[#F._AV_DECS]
   end
   if def.id=="none"then return nil end
-  local c1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or def.c1 or"#5865F2"
-  local c2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or def.c2 or c1
-  local rawC3=tostring(pt.rc3 or"")
-  local c3hex=(def.id=="custom")and rawC3:match("^#%x%x%x%x%x%x$")or(rawC3:match("^#%x%x%x%x%x%x$")or(def.c3 and def.c3~=""and def.c3 or nil))
+  local c1=H.validHex(pt.rc1)or def.c1 or"#5865F2"
+  local c2=H.validHex(pt.rc2)or def.c2 or c1
+  local c3hex=(def.id=="custom")and H.validHex(pt.rc3)or(H.validHex(pt.rc3)or(def.c3 and def.c3~=""and def.c3 or nil))
   local rw=clamp(tonumber(pt.rw)or 3,1,6)
-  local rrot=clamp(tonumber(pt.rrot)~=nil and tonumber(pt.rrot)or(def.rot or 35),0,360)
-  local rglow=(pt.rglow~=nil)and(pt.rglow==true)or(def.glow~=false)
+  local rrot=clamp((tonumber(pt.rrot)~=nil)and tonumber(pt.rrot)or(def.rot or 35),0,360)
+  local rglow
+  if pt.rglow~=nil then rglow=(pt.rglow==true)else rglow=(def.glow~=false)end
   local ranim=tostring(pt.ranim or"")
   if ranim==""then ranim=def.anim or"none"end
   if ranim~="none"and ranim~="spin"and ranim~="pulse"and ranim~="rainbow"then ranim="none"end
   return{id=def.id,name=def.name,c1=c1,c2=c2,c3=c3hex,rw=rw,rot=rrot,glow=rglow,anim=ranim}
+end
+function F.resolveNameEffect(pt,accFallback)
+  if type(pt)~="table"then return nil end
+  local nid=tostring(pt.nEff or"solid")
+  if nid==""or nid=="solid"then
+    if H.validHex(pt.nc1)then nid="custom"else return nil end
+  end
+  local def
+  for _,ne in ipairs(F._NAME_EFFS)do if ne.id==nid then def=ne;break end end
+  if not def then
+    if H.validHex(pt.nc1)then def=F._NAME_EFFS[#F._NAME_EFFS]else return nil end
+  end
+  if def.id=="solid"then return nil end
+  local defC1,defC2=def.c1,def.c2
+  if def.id=="gradient"and not H.validHex(pt.nc1)and accFallback then
+    local ac=H.hex(accFallback)
+    defC1=H.tohex(ac)
+    defC2=H.tohex(H.mix(ac,c3(1,1,1),0.45))
+  end
+  local c1=H.validHex(pt.nc1)or defC1 or"#60A5FA"
+  local c2=H.validHex(pt.nc2)or defC2 or c1
+  local c3hex=(def.id=="custom")and H.validHex(pt.nc3)or(H.validHex(pt.nc3)or(def.c3 and def.c3~=""and def.c3 or nil))
+  local sc=H.validHex(pt.nsc)or def.sc or"#0C0E14"
+  local sw=clamp((tonumber(pt.nsw)~=nil)and tonumber(pt.nsw)or(tonumber(def.sw)or 1),0,3)
+  local rot=clamp((tonumber(pt.nrot)~=nil)and tonumber(pt.nrot)or(tonumber(def.rot)or 15),0,360)
+  local glow
+  if pt.nglow~=nil then glow=(pt.nglow==true)else glow=(def.glow==true)end
+  local anim=tostring(pt.nanim or"")
+  if anim==""then anim=def.anim or"none"end
+  if anim~="none"and anim~="shimmer"and anim~="pulse"and anim~="rainbow"then anim="none"end
+  return{id=def.id,name=def.name,c1=c1,c2=c2,c3=c3hex,sc=sc,sw=sw,rot=rot,glow=glow,anim=anim}
 end
 function F.ringColorSeq(c1,c2,c3hex)
   local col1=H.hex(c1);local col2=H.hex(c2 or c1)
@@ -1439,46 +1598,85 @@ function F.ensureRingAnimLoop()
   if S._ringAnimConn then return end
   local accDt=0
   S._ringAnimConn=hook(RunService.Heartbeat,function(dt)
+    local t=os.clock()
+    local step=((t-(S.activityAt or 0))>30)and 0.08 or 0.04
     accDt=accDt+dt
-    if accDt<0.033 then return end
+    if accDt<step then return end
     accDt=0
-    local list=S._ringAnims
-    if not list or#list==0 then
+    local rList=S._ringAnims
+    local nList=S._nameAnims
+    local hasR=rList and#rList>0
+    local hasN=nList and#nList>0
+    if not hasR and not hasN then
       if S._ringAnimConn then pcall(function()S._ringAnimConn:Disconnect()end);S._ringAnimConn=nil end
       return
     end
-    local t=os.clock();local rCs
-    for i=#list,1,-1 do
-      local e=list[i]
-      if not e or not e.frame or not e.frame.Parent or not e.grad or not e.stroke then
-        tremove(list,i)
-      elseif e.frame.Visible then
-        if e.anim=="spin"then
-          local rot=(e.baseRot+t*95)%360
-          e.grad.Rotation=rot
-          if e.haloGrad then e.haloGrad.Rotation=rot end
-          if e.hasGlow and e.haloStroke then e.haloStroke.Transparency=0.60+0.12*math.sin(t*2.6)end
-        elseif e.anim=="pulse"then
-          local w=0.5+0.5*math.sin(t*3.3)
-          e.stroke.Thickness=e.thick*(0.84+0.30*w)
-          if e.hasGlow and e.haloStroke then e.haloStroke.Transparency=0.42+0.36*(1-w)end
-        elseif e.anim=="rainbow"then
-          if not rCs then
-            local h1=(t*0.24)%1;local h2=(h1+0.33)%1;local h3=(h1+0.66)%1
-            rCs=ColorSequence.new({
-              ColorSequenceKeypoint.new(0,Color3.fromHSV(h1,0.92,1)),
-              ColorSequenceKeypoint.new(0.5,Color3.fromHSV(h2,0.92,1)),
-              ColorSequenceKeypoint.new(1,Color3.fromHSV(h3,0.92,1)),
-            })
+    local winVis=(U.main and U.main.Visible==true)or(U.modal and U.modal.Visible==true)
+    if not winVis then return end
+    local rCs
+    local function getRbSeq()
+      if not rCs then
+        local h1=(t*0.24)%1;local h2=(h1+0.33)%1;local h3=(h1+0.66)%1
+        rCs=ColorSequence.new({
+          ColorSequenceKeypoint.new(0,Color3.fromHSV(h1,0.92,1)),
+          ColorSequenceKeypoint.new(0.5,Color3.fromHSV(h2,0.92,1)),
+          ColorSequenceKeypoint.new(1,Color3.fromHSV(h3,0.92,1)),
+        })
+      end
+      return rCs
+    end
+    if hasR then
+      for i=#rList,1,-1 do
+        local e=rList[i]
+        if not e or not e.frame or not e.frame.Parent or not e.grad or not e.stroke or(U.gui and type(e.frame.IsDescendantOf)=="function"and not e.frame:IsDescendantOf(U.gui))then
+          tremove(rList,i)
+        elseif e.frame.Visible then
+          if e.anim=="spin"then
+            local rot=(e.baseRot+t*95)%360
+            e.grad.Rotation=rot
+            if e.haloGrad then e.haloGrad.Rotation=rot end
+            if e.hasGlow and e.haloStroke then e.haloStroke.Transparency=0.72+0.12*math.sin(t*2.6)end
+          elseif e.anim=="pulse"then
+            local w=0.5+0.5*math.sin(t*3.3)
+            e.stroke.Thickness=e.thick*(0.84+0.26*w)
+            if e.hasGlow and e.haloStroke then
+              e.haloStroke.Thickness=e.haloThick*(0.88+0.24*w)
+              e.haloStroke.Transparency=0.66+0.22*(1-w)
+            end
+          elseif e.anim=="rainbow"then
+            local cs=getRbSeq()
+            e.grad.Color=cs
+            local rot=(e.baseRot+t*70)%360
+            e.grad.Rotation=rot
+            if e.haloGrad then e.haloGrad.Color=cs;e.haloGrad.Rotation=rot end
+            if e.hasGlow and e.haloStroke then e.haloStroke.Transparency=0.72+0.10*math.sin(t*3.0)end
           end
-          e.grad.Color=rCs
-          local rot=(e.baseRot+t*70)%360
-          e.grad.Rotation=rot
-          if e.haloGrad then e.haloGrad.Color=rCs;e.haloGrad.Rotation=rot end
         end
       end
     end
-    if#list==0 and S._ringAnimConn then
+    if hasN then
+      for i=#nList,1,-1 do
+        local e=nList[i]
+        if not e or not e.lbl or not e.lbl.Parent or not e.grad or(U.gui and type(e.lbl.IsDescendantOf)=="function"and not e.lbl:IsDescendantOf(U.gui))then
+          tremove(nList,i)
+        elseif e.lbl.Visible and e.grad.Enabled then
+          if e.anim=="shimmer"then
+            local swOff=math.sin(t*2.6)*0.38
+            e.grad.Offset=v2(swOff,0)
+          elseif e.anim=="pulse"then
+            local w=0.5+0.5*math.sin(t*3.2)
+            if e.stroke and e.sw>0 then
+              e.stroke.Thickness=e.sw*(0.80+0.35*w)
+              e.stroke.Transparency=(e.hasGlow and 0.14 or 0.36)+0.24*(1-w)
+            end
+          elseif e.anim=="rainbow"then
+            e.grad.Color=getRbSeq()
+            e.grad.Rotation=(e.baseRot+t*55)%360
+          end
+        end
+      end
+    end
+    if(not rList or#rList==0)and(not nList or#nList==0)and S._ringAnimConn then
       pcall(function()S._ringAnimConn:Disconnect()end)
       S._ringAnimConn=nil
     end
@@ -1496,8 +1694,10 @@ function F.applyAvatarRingUi(refs,pt,radPct,sizePx)
     if refs.halo then refs.halo.Visible=false end
     return nil
   end
-  local sc=clamp((sizePx or 78)/78,0.56,1.15)
-  local thick=max(1.3,(1.15+spec.rw*0.52)*sc)
+  local sz=sizePx or 78
+  local sc=clamp(sz/78,0.56,1.15)
+  local thick=(sz<=42)and max(1.2,(0.90+spec.rw*0.34)*sc)or max(1.5,(1.15+spec.rw*0.50)*sc)
+  local hThick=(sz<=42)and max(1.6,thick*1.45)or max(2.2,thick*1.68)
   local rU=u1((radPct or 50)/100,0)
   if refs.corner then refs.corner.CornerRadius=rU end
   if refs.stroke then
@@ -1513,8 +1713,8 @@ function F.applyAvatarRingUi(refs,pt,radPct,sizePx)
     if spec.glow then
       if refs.haloCorner then refs.haloCorner.CornerRadius=rU end
       refs.haloStroke.Color=c3(1,1,1)
-      refs.haloStroke.Thickness=max(2.2,thick*1.95)
-      refs.haloStroke.Transparency=0.66
+      refs.haloStroke.Thickness=hThick
+      refs.haloStroke.Transparency=0.76
       refs.haloGrad.Color=seq
       refs.haloGrad.Rotation=spec.rot
     end
@@ -1523,11 +1723,70 @@ function F.applyAvatarRingUi(refs,pt,radPct,sizePx)
     S._ringAnims[#S._ringAnims+1]={
       frame=refs.frame,stroke=refs.stroke,grad=refs.grad,
       halo=refs.halo,haloStroke=refs.haloStroke,haloGrad=refs.haloGrad,
-      anim=spec.anim,baseRot=spec.rot,thick=thick,hasGlow=spec.glow,
+      anim=spec.anim,baseRot=spec.rot,thick=thick,haloThick=hThick,hasGlow=spec.glow,
     }
+    while#S._ringAnims>80 do tremove(S._ringAnims,1)end
     F.ensureRingAnimLoop()
   end
   return spec
+end
+function F.applyNameEffectUi(lbl,grad,stObj,pt,baseCol,bgCol,opts)
+  if not lbl then return nil end
+  opts=type(opts)=="table"and opts or{}
+  S._nameAnims=S._nameAnims or{}
+  for i=#S._nameAnims,1,-1 do
+    if S._nameAnims[i].lbl==lbl then tremove(S._nameAnims,i)end
+  end
+  if type(pt)=="table"and pt.font and FONT_MAP[pt.font]and not opts.keepFont then
+    lbl.Font=FONT_MAP[pt.font].bold
+  end
+  local spec=F.resolveNameEffect(pt,opts.accHex)
+  if not spec then
+    lbl.TextColor3=bgCol and H.ensureContrast(baseCol or TH.text,bgCol,4.2)or(baseCol or TH.text)
+    if grad then grad.Enabled=false;grad.Offset=v2(0,0)end
+    if stObj then stObj.Transparency=1 end
+    return nil
+  end
+  lbl.TextColor3=c3(1,1,1)
+  if grad then
+    grad.Enabled=true
+    grad.Rotation=spec.rot
+    grad.Offset=v2(0,0)
+    grad.Color=F.ringColorSeq(spec.c1,spec.c2,spec.c3)
+  end
+  local effSw=spec.sw
+  local effSc=H.hex(spec.sc)
+  local effTrans=spec.glow and 0.16 or 0.40
+  if effSw==0 and opts.autoOutlineOnLight and bgCol and H.lum(bgCol)>0.55 and H.lum(H.hex(spec.c1))>0.65 then
+    effSw=0.8;effSc=rgb(24,28,42);effTrans=0.35
+  end
+  if stObj then
+    if effSw>0 or spec.glow then
+      local sThick=(opts.small)and max(0.75,max(0.8,effSw)*0.78)or max(0.8,effSw)
+      stObj.Color=effSc
+      stObj.Thickness=sThick
+      stObj.Transparency=effTrans
+    else
+      stObj.Transparency=1
+    end
+  end
+  if spec.anim~="none"then
+    S._nameAnims[#S._nameAnims+1]={
+      lbl=lbl,grad=grad,stroke=stObj,anim=spec.anim,baseRot=spec.rot,
+      sw=stObj and stObj.Thickness or 1,hasGlow=spec.glow,
+    }
+    while#S._nameAnims>80 do tremove(S._nameAnims,1)end
+    F.ensureRingAnimLoop()
+  end
+  return spec
+end
+function F.setupNameLabel(lbl,pt,baseCol,bgCol,opts)
+  if not lbl then return nil end
+  local ng=lbl:FindFirstChild("_NGrad")or mk("UIGradient",{Name="_NGrad",Rotation=15,Enabled=false},lbl)
+  local okCtx,ctxMode=pcall(function()return Enum.ApplyStrokeMode.Contextual end)
+  local ns=lbl:FindFirstChild("_NStroke")or mk("UIStroke",{Name="_NStroke",Thickness=1.1,Transparency=1,Color=rgb(12,14,20),ApplyStrokeMode=okCtx and ctxMode or smBorder},lbl)
+  local sp=F.applyNameEffectUi(lbl,ng,ns,pt,baseCol,bgCol,opts)
+  return ng,ns,sp
 end
 --- [F.makeFramedAvatar] Vẽ ảnh đại diện nhỏ (Chat/Danh sách/Cài đặt) tôn trọng Crop/Zoom/Pan, Bo góc `ir` & Avatar Decoration Ring
 function F.makeFramedAvatar(parent,opts)
@@ -1535,44 +1794,52 @@ function F.makeFramedAvatar(parent,opts)
   local px=opts.px or 28
   local uPt=type(opts.pt)=="table"and opts.pt or{}
   local radPct=clamp(tonumber(uPt.ir)or 50,0,50)
+  local rU=u1(radPct/100,0)
   local z=opts.z or 8
+  local customIc=(type(opts.customIc)=="string"and H.trim(opts.customIc)~="")and H.trim(opts.customIc)or nil
+  local needsCanvas=customIc~=nil and((tonumber(uPt.iz)or 100)>100 or tonumber(uPt.ix or 0)~=0 or tonumber(uPt.iy or 0)~=0 or((uPt["if"]or"crop")=="crop"and(uPt.ia or"auto")~="auto"))
   local host=mk("Frame",{
     Size=uo(px,px),Position=opts.pos or uo(0,0),BackgroundTransparency=1,BorderSizePixel=0,
     ClipsDescendants=false,ZIndex=z,LayoutOrder=opts.layout or 0,
   },parent)
-  local clip=F.createClipHost(host,{
-    Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,
-    ClipsDescendants=true,ZIndex=z+1,
-  })
-  local hc=mk("UICorner",{CornerRadius=u1(radPct/100,0)},clip)
+  local clip=needsCanvas and F.createClipHost(host,{
+    Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1,
+  })or mk("Frame",{
+    Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=(not customIc)and false or true,ZIndex=z+1,
+  },host)
+  local hc=mk("UICorner",{CornerRadius=rU},clip)
   local img=mk("ImageLabel",{
     Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),
     BackgroundTransparency=1,BorderSizePixel=0,ScaleType=Enum.ScaleType.Crop,ZIndex=z+2,
-    Image=opts.customIc and F.thumbUrl(opts.customIc,150,150)or F.avatarUrl(opts.uid or 1),
+    Image=customIc and F.thumbUrl(customIc,150,150)or F.avatarUrl(opts.uid or 1),
   },clip)
-  if opts.customIc and opts.customIc~=""then
-    F.setAsset(img,opts.customIc)
+  if customIc then
+    F.setAsset(img,customIc)
     local cfg={fit=uPt["if"]or"crop",zoom=uPt.iz or 100,x=uPt.ix or 0,y=uPt.iy or 0,aspect=uPt.ia or"auto"}
     F.applyImageFrame(clip,img,cfg,px,px)
-    if (tonumber(cfg.zoom)or 100)<=100 and (cfg.fit=="fit"or cfg.fit=="stretch"or (cfg.aspect or"auto")=="auto") then
-      mk("UICorner",{CornerRadius=u1(radPct/100,0)},img)
+    if(not needsCanvas)or((tonumber(cfg.zoom)or 100)<=100 and(cfg.fit=="fit"or cfg.fit=="stretch"or(cfg.aspect or"auto")=="auto"))then
+      mk("UICorner",{CornerRadius=rU},img)
     end
   else
-    mk("UICorner",{CornerRadius=u1(0.5,0)},img)
+    mk("UICorner",{CornerRadius=rU},img)
   end
-  local haloFrame=mk("Frame",{Size=u2(1,4,1,4),Position=uo(-2,-2),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z,Visible=false},host)
-  local haloCorner=mk("UICorner",{CornerRadius=u1(radPct/100,0)},haloFrame)
-  local haloStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=3,Transparency=0.66,ApplyStrokeMode=smBorder},haloFrame)
+  local haloFrame=mk("Frame",{Size=u2(1,2,1,2),Position=uo(-1,-1),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z,Visible=false},host)
+  local haloCorner=mk("UICorner",{CornerRadius=rU},haloFrame)
+  local haloStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=2.4,Transparency=0.76,ApplyStrokeMode=smBorder},haloFrame)
   local haloGrad=mk("UIGradient",{Rotation=35},haloStroke)
-  local decFrame=mk("Frame",{Size=u2(1,2,1,2),Position=uo(-1,-1),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z+3,Visible=false},host)
-  local decCorner=mk("UICorner",{CornerRadius=u1(radPct/100,0)},decFrame)
-  local decStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=2,Transparency=0,ApplyStrokeMode=smBorder},decFrame)
+  local decFrame=mk("Frame",{Size=us(1,1),Position=uo(0,0),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z+3,Visible=false},host)
+  local decCorner=mk("UICorner",{CornerRadius=rU},decFrame)
+  local decStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=1.8,Transparency=0,ApplyStrokeMode=smBorder},decFrame)
   local decGrad=mk("UIGradient",{Rotation=35},decStroke)
   local spec=F.applyAvatarRingUi({
     frame=decFrame,corner=decCorner,stroke=decStroke,grad=decGrad,
     halo=haloFrame,haloCorner=haloCorner,haloStroke=haloStroke,haloGrad=haloGrad,
   },uPt,radPct,px)
-  if opts.strokeKey and not spec then stroke(clip,opts.strokeKey,opts.strokeThick or 1.5,opts.strokeTrans or 0.25)end
+  if opts.strokeKey and not spec then
+    local stBox=mk("Frame",{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=z+3},host)
+    mk("UICorner",{CornerRadius=rU},stBox)
+    stroke(stBox,opts.strokeKey,opts.strokeThick or 1.5,opts.strokeTrans or 0.25)
+  end
   if opts.onClick then
     local hit=mk("TextButton",{Size=us(1,1),BackgroundTransparency=1,Text="",AutoButtonColor=false,Active=true,ZIndex=z+4},host)
     hook(hit.MouseButton1Click,opts.onClick)
@@ -1611,7 +1878,7 @@ U.gui=mk("ScreenGui",{Name="CB47_GUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIn
 U.gui.Parent=guiParent U.mini=mk("TextButton",{Size=uo(42,42),Position=uo(P.miniX or 12,P.miniY or 80),Text="",TextSize=20,Font=fGB,BorderSizePixel=0,Visible=P.minimized==true,ZIndex=50},U.gui)
 th(U.mini,"BackgroundColor3","accent");corner(U.mini,21);stroke(U.mini,"btnBorder",1.5,0.25)
 do local mi=F.lucide(U.mini,"msgCircle",20,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=c3(1,1,1),themed=false,z=51})
-  themed(mi,function(ic)ic.ImageColor3=H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1)end)
+  themed(mi,function(ic)ic.ImageColor3=H.onColor(TH.accent)end)
 end
 U.miniBadge=mk("TextLabel",{Size=uo(18,18),Position=u2(1,-8,0,-4),Text="",TextSize=10,Font=fGB,TextColor3=c3(1,1,1),BorderSizePixel=0,Visible=false,ZIndex=52},U.mini)
 th(U.miniBadge,"BackgroundColor3","danger");corner(U.miniBadge,9)U.main=mk("Frame",{Size=uo(P.W,P.H),Position=uo(P.winX or 60,P.winY or 60),BorderSizePixel=0,ClipsDescendants=true,Active=true,Visible=P.minimized~=true},U.gui)
@@ -1626,7 +1893,7 @@ U.wallpaperTint=mk("Frame",{Size=us(1,1),BackgroundColor3=TH.bg,BackgroundTransp
 th(U.main,"BackgroundColor3","bg",true);U.mainCorner=corner(U.main,P.uiRadius or 10)
 U.mainStroke=mk("UIStroke",{Thickness=1.4,Transparency=0.25,ApplyStrokeMode=smBorder,Color=c3(1,1,1)},U.main)
 U.mainStrokeGrad=mk("UIGradient",{Rotation=40},U.mainStroke)
-U.titleBar=mk("Frame",{Size=u2(1,0,0,34),BorderSizePixel=0,ZIndex=8},U.main)themed(U.titleBar,function(o)o.BackgroundColor3=TH.title;o.BackgroundTransparency=F.surfaceAlpha("bar")end);U.titleCorner=corner(U.titleBar,P.uiRadius or 10)
+U.titleBar=mk("Frame",{Size=u2(1,0,0,34),BorderSizePixel=0,ZIndex=8},U.main)themed(U.titleBar,function(o)o.BackgroundColor3=c3(1,1,1);o.BackgroundTransparency=F.surfaceAlpha("bar")end);U.titleCorner=corner(U.titleBar,P.uiRadius or 10)
 U.titleGrad=mk("UIGradient",{Rotation=15},U.titleBar)themed(U.titleGrad,function(g)g.Color=ColorSequence.new(TH.title,H.mix(TH.title,TH.accent,0.14))end)
 U.dot=mk("Frame",{Size=uo(8,8),Position=uo(10,13),BorderSizePixel=0,ZIndex=9},U.titleBar)corner(U.dot,4)
 --- [F.paintDot] Cập nhật màu chấm trạng thái kết nối trên thanh tiêu đề (Xanh = Ổn định, Vàng = Chậm/Đang tải, Đỏ = Mất kết nối)
@@ -1680,7 +1947,7 @@ function F.paintTabs()local totalUn=0
     end
     b.Text=lbl;b.TextSize=P.W<230 and 12 or 11;b.BackgroundColor3=on and TH.accent or TH.bg2
     b.BackgroundTransparency=on and 0.04 or pillA
-    local fg=on and(H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1))or TH.muted b.TextColor3=fg
+    local fg=on and H.onColor(TH.accent)or TH.muted b.TextColor3=fg
     if ic then ic.ImageColor3=fg end
     if st then st.Color=on and TH.accent or TH.btnBorder st.Transparency=on and 0.08 or 0.42 end
     local tbBar=U.tabBars and U.tabBars[d[1]]if tbBar then tbBar.Visible=on tbBar.BackgroundColor3=fg end end if U.nanoBadge then
@@ -1720,7 +1987,7 @@ hook(U.infoFrameBtn.MouseButton1Click,function()
 end)
 U.searchBox=mk("TextBox",{Size=u2(1,-12,0,26),Position=uo(6,86),Text="",PlaceholderText=T("search"),ClearTextOnFocus=false,Font=fG,TextSize=12,BorderSizePixel=0,Visible=false,TextXAlignment=txL,ZIndex=8},U.main)
 F.styleInput(U.searchBox,"text",false)
-U.scroll=mk("ScrollingFrame",{Position=uo(6,86),Size=u2(1,-12,1,-155),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,CanvasSize=u2(),AutomaticCanvasSize=asY,ScrollingDirection=Enum.ScrollingDirection.Y,ClipsDescendants=true,ZIndex=2},U.main)
+U.scroll=mk("ScrollingFrame",{Position=uo(6,86),Size=u2(1,-12,1,-155),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,CanvasSize=u2(),AutomaticCanvasSize=asY,ScrollingDirection=Enum.ScrollingDirection.Y,ClipsDescendants=true,ZIndex=3},U.main)
 -- Khởi tạo thanh hiển thị người đang gõ (U.typing), thanh phản hồi cú pháp Token (U.tokenBar) và thanh trả lời (U.replyBar)
 list(U.scroll,4)U.typing=lab(U.main,"",{size=u2(1,-16,0,14),ts=10,key="muted"})U.typing.ZIndex=6 U.tokenBar=mk("Frame",{Size=u2(1,-12,0,22),BorderSizePixel=0,Visible=false,ZIndex=18},U.main)
 th(U.tokenBar,"BackgroundColor3","bg2");corner(U.tokenBar,7)U.tokenStroke=mk("UIStroke",{Color=TH.accent,Thickness=1.3,Transparency=0.15,ApplyStrokeMode=smBorder},U.tokenBar)
@@ -1752,7 +2019,7 @@ F.lucide(U.pollBtn,"chartCol",14,{pos=us(0.5,0.5),anc=v2(0.5,0.5),key="text",con
 U.sendBtn=tbtn(U.chatBar,T("send"),{size=uo(64,30),key="accent",r=7});U.sendBtn.ZIndex=15
 U.sendPad=pad(U.sendBtn,20,0,5,0)
 U.sendIcon=F.lucide(U.sendBtn,"send",12,{pos=u2(0,-13,0.5,0),anc=v2(0,0.5),col=c3(1,1,1),themed=false,z=16})
-themed(U.sendIcon,function(ic)ic.ImageColor3=H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1)end)
+themed(U.sendIcon,function(ic)ic.ImageColor3=H.onColor(TH.accent)end)
 function F.updateSendBtn()
   if not U.sendBtn then return end
   local w=P.W or 340
@@ -1859,9 +2126,14 @@ function F.chanToast(chan,text,force,fn,opts)
   return F.toast(text,force,fn,opts)
 end
 --- [F.closeModal] Đóng hộp thoại Modal đang mở và xóa toàn bộ các lớp Popup con
-function F.closeModal()
+function F.closeModal(force)
+  if not force and U.modal and U.modal.Visible and S.popN==0 and type(S.modalGuard)=="function"then
+    if S.modalGuard(function()F.closeModal(true)end)==false then return end
+  end
+  if S.track then pcall(function()if S.track.sc then S.track.sc.ScrollingEnabled=true end end);S.track=nil end
+  S.viewAs=false
   for _,c in ipairs(U.modal:GetChildren())do c:Destroy()end
-  U.modal.Visible=false S.popN=0 S.reopenModal=nil end
+  U.modal.Visible=false S.popN=0 S.reopenModal=nil S.modalGuard=nil S.refreshOnlineList=nil F.pruneThemeReg() end
 --- [buildBox] Xây dựng khung hộp thoại chuẩn (có thanh tiêu đề bo góc mượt, nút đóng 'X' và vùng cuộn nội dung)
 local function buildBox(parentFrame,title,w,h,z,onClose,opts)opts=type(opts)=="table"and opts or{}local v=viewNow()w=min(w or 340,v.X-16)h=min(h or 420,v.Y-16)
   local customProf=(opts.noAppTheme==true and type(opts.cols)=="table")
@@ -1870,33 +2142,56 @@ local function buildBox(parentFrame,title,w,h,z,onClose,opts)opts=type(opts)=="t
   local mode=customProf and(ipt.mode or"solid")or(P.backgroundMode or"solid")
   local mRad=customProf and clamp(tonumber(ipt.rad)or 12,3,16)or clamp((tonumber(P.uiRadius)or 10)+2,4,18)
   local box=mk("Frame",{Size=uo(w,h),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundColor3=customProf and ic.box or TH.bg2,BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1,Active=true},parentFrame)
-  if not customProf then th(box,"BackgroundColor3","bg2")end
-  corner(box,customProf and max(6,mRad+2)or mRad)
+  local boxCor=corner(box,customProf and max(6,mRad+2)or mRad)
   if not customProf then
-    if mode=="glass"then box.BackgroundTransparency=F.surfaceAlpha("modal")
-    elseif mode=="image"then
+    local wpBg=F.createClipHost(box,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1,Visible=false})
+    local wpCor=corner(wpBg,mRad)
+    local wpImg=mk("ImageLabel",{Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ImageTransparency=0.82,ZIndex=z+1},wpBg)
+    local bgGrad=mk("UIGradient",{Name="AppBoxGrad",Rotation=tonumber(P.gradAngle)or 28,Enabled=false},box)
+    local lastWpId=nil
+    themed(box,function(b)
+      local gm=P.backgroundMode or"solid"
+      local isG=(gm=="gradient"or gm=="mesh"or gm=="glass")
       local imgId=H.assetId(P.backgroundImage or"")
-      if imgId then
-        local wpBg=F.createClipHost(box,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=z+1})
-        corner(wpBg,mRad)
-        local wpImg=mk("ImageLabel",{Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ImageTransparency=clamp(1-(tonumber(P.backgroundOpacity)or 0.82)*0.28,0.68,0.92),ZIndex=z+1},wpBg)
-        F.setAsset(wpImg,imgId,function()
-          if wpImg and wpImg.Parent then F.applyImageFrame(wpBg,wpImg,P.bgFrame,w,h)end
-        end,wpImg.ImageTransparency)
+      local radNow=clamp((tonumber(P.uiRadius)or 10)+2,4,18)
+      boxCor.CornerRadius=u1(0,radNow);wpCor.CornerRadius=u1(0,radNow)
+      b.BackgroundColor3=isG and c3(1,1,1)or TH.bg2
+      b.BackgroundTransparency=(gm=="glass")and F.surfaceAlpha("modal")or 0
+      bgGrad.Enabled=isG
+      if isG then
+        bgGrad.Rotation=tonumber(P.gradAngle)or 28
+        bgGrad.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,TH.bg2),ColorSequenceKeypoint.new(0.6,H.mix(TH.bg2,TH.g2,0.36)),ColorSequenceKeypoint.new(1,H.mix(TH.bg2,TH.g3,0.42))})
+      end
+      local showWp=(gm=="image"and imgId~=nil)
+      wpBg.Visible=showWp
+      if showWp then
+        local wt=clamp(1-(tonumber(P.backgroundOpacity)or 0.82)*0.28,0.68,0.92)
+        wpImg.ImageTransparency=wt
+        if lastWpId~=imgId then
+          lastWpId=imgId
+          F.setAsset(wpImg,imgId,function()
+            if wpImg and wpImg.Parent then wpImg.ImageTransparency=wt;F.applyImageFrame(wpBg,wpImg,P.bgFrame,w,h)end
+          end,wt)
+        end
         F.applyImageFrame(wpBg,wpImg,P.bgFrame,w,h)
       end
-    end
-    if mode=="gradient"or mode=="mesh"or mode=="glass"then
-      local bgGrad=mk("UIGradient",{Rotation=tonumber(P.gradAngle)or 28,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,TH.bg2),ColorSequenceKeypoint.new(0.6,H.mix(TH.bg2,TH.g2,0.36)),ColorSequenceKeypoint.new(1,H.mix(TH.bg2,TH.g3,0.42))})},box)
-      bgGrad.Enabled=true
-    end
+    end)
   end
   local useGlow=customProf and(ipt.glow~=false)or(P.borderGlow~=false)
   local bs=mk("UIStroke",{Thickness=useGlow and 1.5 or 1.2,Transparency=useGlow and 0.2 or 0.45,ApplyStrokeMode=smBorder,Color=useGlow and c3(1,1,1)or(customProf and ic.cBorder or TH.accent)},box)
-  if useGlow then
-    local sgCol=customProf and ColorSequence.new({ColorSequenceKeypoint.new(0,ic.acc),ColorSequenceKeypoint.new(0.5,H.mix(ic.acc,ic.g3 or ic.acc,0.58)),ColorSequenceKeypoint.new(1,H.mix(ic.acc,ic.g2 or ic.acc,0.48))})
-      or ColorSequence.new({ColorSequenceKeypoint.new(0,TH.accent),ColorSequenceKeypoint.new(0.5,H.mix(TH.accent,TH.g3,0.6)),ColorSequenceKeypoint.new(1,H.mix(TH.accent,TH.ok,0.45))})
-    mk("UIGradient",{Rotation=(tonumber(customProf and ipt.gRot or P.gradAngle)or 28)+15,Color=sgCol},bs)
+  local bsGrad=mk("UIGradient",{Rotation=(tonumber(customProf and ipt.gRot or P.gradAngle)or 28)+15,Enabled=useGlow},bs)
+  if customProf then
+    if useGlow then bsGrad.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,ic.acc),ColorSequenceKeypoint.new(0.5,H.mix(ic.acc,ic.g3 or ic.acc,0.58)),ColorSequenceKeypoint.new(1,H.mix(ic.acc,ic.g2 or ic.acc,0.48))})end
+  else
+    themed(bs,function(s)
+      local gOn=(P.borderGlow~=false)
+      s.Thickness=gOn and 1.5 or 1.2;s.Transparency=gOn and 0.2 or 0.45;s.Color=gOn and c3(1,1,1)or TH.accent
+      bsGrad.Enabled=gOn
+      if gOn then
+        bsGrad.Rotation=(tonumber(P.gradAngle)or 28)+15
+        bsGrad.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,TH.accent),ColorSequenceKeypoint.new(0.5,H.mix(TH.accent,TH.g3,0.6)),ColorSequenceKeypoint.new(1,H.mix(TH.accent,TH.ok,0.45))})
+      end
+    end)
   end
   local head=mk("Frame",{Size=u2(1,0,0,34),BackgroundTransparency=1,ZIndex=z+3},box)
   local hBar=mk("Frame",{Size=uo(3,14),Position=uo(10,10),BackgroundColor3=customProf and ic.acc or TH.accent,BorderSizePixel=0,ZIndex=z+4},head)
@@ -1923,14 +2218,16 @@ local function buildBox(parentFrame,title,w,h,z,onClose,opts)opts=type(opts)=="t
   local scr=mk("ScrollingFrame",{Size=u2(1,-16,1,-42),Position=uo(8,38),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,CanvasSize=u2(),AutomaticCanvasSize=asY,ZIndex=z+3},box)list(scr,6);pad(scr,2,2,4,8)
   return scr,box end
 --- [F.modalBox] Mở một hộp thoại Modal chính giữa màn hình (đóng Modal cũ nếu có)
-function F.modalBox(title,w,h,opts)F.closeModal()U.modal.Visible=true
-  local back=mk("TextButton",{Size=us(1,1),BackgroundColor3=c3(0,0,0),BackgroundTransparency=0.45,Text="",AutoButtonColor=false,ZIndex=40},U.modal)hook(back.MouseButton1Click,F.closeModal)
-  local scr,box=buildBox(U.modal,title,w,h,40,F.closeModal,opts)return scr,F.closeModal,box end
+function F.modalBox(title,w,h,opts)F.closeModal(true)U.modal.Visible=true
+  local back=mk("TextButton",{Size=us(1,1),BackgroundColor3=c3(0,0,0),BackgroundTransparency=0.45,Text="",AutoButtonColor=false,ZIndex=40},U.modal)hook(back.MouseButton1Click,function()F.closeModal(false)end)
+  local scr,box=buildBox(U.modal,title,w,h,40,function()F.closeModal(false)end,opts)return scr,F.closeModal,box end
 --- [F.popup] Mở một hộp thoại Popup xếp chồng lên trên Modal hiện tại
-function F.popup(title,w,h)if not U.modal.Visible then local scr,closeFn,box=F.modalBox(title,w,h)return scr,closeFn,box end
+function F.popup(title,w,h,opts)opts=type(opts)=="table"and opts or{}
+  if not U.modal.Visible then local scr,closeFn,box=F.modalBox(title,w,h,opts)return scr,function()if opts.onClose then pcall(opts.onClose)end;closeFn(true)end,box end
   S.popN=S.popN+1 local z=50+S.popN*4 local layer=mk("TextButton",{Size=us(1,1),BackgroundColor3=c3(0,0,0),BackgroundTransparency=0.5,Text="",AutoButtonColor=false,ZIndex=z},U.modal)local box
-  local function close()pcall(function()layer:Destroy()end);pcall(function()box:Destroy()end)end
-  hook(layer.MouseButton1Click,close)local scr scr,box=buildBox(U.modal,title,w,h,z,close)return scr,close,box end
+  local closed=false
+  local function close()if closed then return end closed=true;S.popN=max(0,S.popN-1);if opts.onClose then pcall(opts.onClose)end;pcall(function()layer:Destroy()end);pcall(function()box:Destroy()end)end
+  hook(layer.MouseButton1Click,close)local scr scr,box=buildBox(U.modal,title,w,h,z,close,opts)return scr,close,box end
 
 -- =============================================================================
 -- 13. HỆ THỐNG PHÂN QUYỀN ROLE, CẤP BẬC (RANK) & KIỂM TRA CẤM CHAT (MUTE)
@@ -2338,20 +2635,73 @@ function F.uidOf(name,hint)
   local fr=S.friendsMap and S.friendsMap[ln]
   if fr and tonumber(fr.userId)and tonumber(fr.userId)>1 then return tonumber(fr.userId)end
   for _,sc in ipairs(S.scripts or{})do
-    if tostring(sc.author or""):lower()==ln and tonumber(sc.uid)and tonumber(sc.uid)>1 then return tonumber(sc.uid)end
+    if tostring(sc.author or""):lower()==ln and tonumber(sc.uid)and tonumber(sc.uid)>1 then
+      local found=tonumber(sc.uid);S.uidCache=S.uidCache or{};S.uidCache[ln]=found;S.uidCache[name]=found;return found
+    end
   end
   for _,m in pairs(S.msgs or{})do
-    if type(m)=="table"and tostring(m.author or""):lower()==ln and tonumber(m.uid)and tonumber(m.uid)>1 then return tonumber(m.uid)end
+    if type(m)=="table"and tostring(m.author or""):lower()==ln and tonumber(m.uid)and tonumber(m.uid)>1 then
+      local found=tonumber(m.uid);S.uidCache=S.uidCache or{};S.uidCache[ln]=found;S.uidCache[name]=found;return found
+    end
   end
   return(r and tonumber(r.userId))or tonumber(hint)or 1
 end
---- [F.isLive] Kiểm tra bản ghi người dùng còn trực tuyến hay không (dựa theo `PRESENCE_TIMEOUT`)
-function F.isLive(rec)if not rec or not rec.recvAt then return false end return(rec.age or 0)+(os.clock()-rec.recvAt)<=CFG.PRESENCE_TIMEOUT end
---- [F.userRec] Tìm bản ghi thông tin trực tuyến của người dùng trong `S.users` (không phân biệt hoa thường)
+--- [F.setUserRec] Ghi bản ghi người dùng vào `S.users` và bảng tra cứu nhanh không phân biệt hoa thường `S.usersLow`
+function F.setUserRec(name,rec)
+  local canon=H.trim(tostring(name or""))
+  if canon==""or type(rec)~="table"then return nil end
+  local ln=canon:lower()
+  S.users=S.users or{};S.usersLow=S.usersLow or{}
+  for uk in pairs(S.users)do
+    if uk~=canon and tostring(uk):lower()==ln then S.users[uk]=nil end
+  end
+  rec.u=canon
+  S.users[canon]=rec
+  S.usersLow[ln]=rec
+  return rec
+end
+--- [F.markUserOfflineLocal] Chuyển ngay trạng thái cục bộ của người dùng `name` sang Offline (xóa `recvAt`, `inGame`, `jobId`)
+function F.markUserOfflineLocal(name,ts)
+  local canon=H.trim(tostring(name or""))
+  if canon==""or canon:lower()==P.username:lower()then return false end
+  local ln=canon:lower()
+  local changed=false
+  local ur=(S.users and S.users[canon])or(S.usersLow and S.usersLow[ln])
+  if not ur and S.users then
+    for uk,r in pairs(S.users)do if tostring(uk):lower()==ln then ur=r;canon=uk;break end end
+  end
+  if type(ur)=="table"then
+    if ur.recvAt~=nil and ur.recvAt>0 then changed=true end
+    ur.recvAt=nil;ur.age=9999;ur.inGame=false;ur.jobId=""
+    if tonumber(ts)and tonumber(ts)>(tonumber(ur.lastSeen)or 0)then ur.lastSeen=tonumber(ts)end
+    if S.usersLow then S.usersLow[ln]=ur end
+  end
+  if S.prevLiveFriends then S.prevLiveFriends[ln]=nil end
+  local sp=S.profiles and S.profiles[ln]
+  if type(sp)=="table"then
+    sp.inGame=false;sp.jobId=""
+    if tonumber(ts)and tonumber(ts)>(tonumber(sp.lastSeen)or 0)then sp.lastSeen=tonumber(ts)end
+  end
+  return changed
+end
+--- [F.isLive] Kiểm tra bản ghi hoặc tên người dùng còn trực tuyến hay không (dựa theo `PRESENCE_TIMEOUT`)
+function F.isLive(rec)
+  if type(rec)=="string"then
+    if rec:lower()==P.username:lower()then return true end
+    rec=F.userRec(rec)
+  end
+  if type(rec)~="table"or not rec.recvAt or rec.recvAt<=0 then return false end
+  return(tonumber(rec.age)or 0)+(os.clock()-rec.recvAt)<=CFG.PRESENCE_TIMEOUT
+end
+--- [F.userRec] Tìm bản ghi thông tin trực tuyến của người dùng trong `S.users` (O(1) không phân biệt hoa thường)
 function F.userRec(name)if not name then return nil end
   local ln=tostring(name):lower()
-  local ur=S.users[name]
-  if not ur then for u,r in pairs(S.users)do if tostring(u):lower()==ln then ur=r;break end end end
+  local ur=S.users[name]or(S.usersLow and S.usersLow[ln])
+  if not ur then
+    for u,r in pairs(S.users)do
+      if tostring(u):lower()==ln then ur=r;if S.usersLow then S.usersLow[ln]=r end;break end
+    end
+  end
   local sp=S.profiles and S.profiles[ln]or nil
   if ur and sp then
     if(ur.profBanner or"")==""and(sp.profBanner or"")~=""then ur.profBanner=sp.profBanner end
@@ -2386,10 +2736,13 @@ function F.fetchUserProfile(u,cb,force)
       local stored=F.rememberProfile(canon,p,isOn)
       if data.found~=false then S.profFullLoaded[key]=true end
       if isOn and stored then
-        local cur=S.users[canon]or{}
+        local cur=(S.users and S.users[canon])or(S.usersLow and S.usersLow[canon:lower()])or{}
         for k,v in pairs(stored)do cur[k]=v end
-        cur.age=0;cur.recvAt=os.clock();cur.isScript=true
-        S.users[canon]=cur
+        local srvAge=max(0,(tonumber(data.now)or H.now())-(tonumber(p.lastSeen or p.ts)or tonumber(data.now)or H.now()))
+        cur.age=srvAge;cur.recvAt=os.clock();cur.isScript=true
+        F.setUserRec(canon,cur)
+      else
+        F.markUserOfflineLocal(canon,tonumber(p.lastSeen or p.ts))
       end
     end
     if F.uidOf(target)<=1 then
@@ -2500,22 +2853,24 @@ function F.isScriptUser(name)if not name or name==""then return false end if tos
   local rec=F.userRec(name)
   if not rec or not rec.isScript then return false end return F.isLive(rec)end
 --- [F.touchUser] Cập nhật hoặc khởi tạo bản ghi hoạt động mới nhất cho người dùng `name` trong `S.users`
-function F.touchUser(name,uid,display)if not name or name==""or name==P.username or F.isSystemActor(name,{uid=uid,display=display})then return end
-  F.rememberProfile(name,{userId=uid,display=display,lastSeen=H.now()},false)
-  local rec=S.users[name]
-  if not rec then
-    local ln=tostring(name):lower()
-    for u,r in pairs(S.users)do if tostring(u):lower()==ln then rec=r;break end end
-  end
-  local base=S.profiles and S.profiles[tostring(name):lower()]
+function F.touchUser(name,uid,display,pktTs)
+  if not name or name==""or tostring(name):lower()==P.username:lower()or F.isSystemActor(name,{uid=uid,display=display})then return end
+  local ts=tonumber(pktTs)or H.now()
+  local isFresh=(H.now()-ts)<=25
+  F.rememberProfile(name,{userId=uid,display=display,lastSeen=ts},isFresh)
+  if not isFresh then return end
+  local ln=tostring(name):lower()
+  local rec=S.users[name]or(S.usersLow and S.usersLow[ln])
+  local base=S.profiles and S.profiles[ln]
   if not rec then
     rec={display=(base and base.display)or display or name,userId=(base and base.userId)or tonumber(uid)or 1,status=(base and base.status)or"",bio=(base and base.bio)or"",country=(base and base.country)or"??",inGame=false,placeId=(base and base.placeId)or 0,gameName=(base and base.gameName)or"",jobId="",profBanner=(base and base.profBanner)or"",profIcon=(base and base.profIcon)or"",profTheme=(base and base.profTheme)or{}}
-    S.users[name]=rec
   else
     if tonumber(uid)and tonumber(uid)>1 then rec.userId=tonumber(uid)end
     if display and display~=""and display~="?"then rec.display=display end
   end
-  rec.isScript=true rec.age,rec.recvAt=0,os.clock()end
+  rec.isScript=true;rec.age=max(0,H.now()-ts);rec.recvAt=os.clock()
+  F.setUserRec(name,rec)
+end
 --- [F.chanKey] Chuẩn hóa khóa kênh chat không phân biệt hoa thường cho DM 1-1 & Group Chat
 function F.chanKey(c)
   c=tostring(c or"")
@@ -3042,9 +3397,10 @@ function F.refreshSoundButtons()
     for i=#listBtns,1,-1 do
       local rec=listBtns[i]
       if rec and rec.btn and rec.btn.Parent then
-        rec.btn.Text=isOn and("⏹ "..T("sound_stop"))or("▶ "..T("sound_play"))
-        rec.btn.BackgroundColor3=isOn and TH.danger or TH.accent
-        rec.btn.TextColor3=H.lum(isOn and TH.danger or TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1)
+        rec.btn.Text=isOn and("|| "..T("sound_stop"))or("> "..T("sound_play"))
+        local bg=isOn and TH.danger or TH.accent
+        rec.btn.BackgroundColor3=bg
+        rec.btn.TextColor3=H.onColor(bg)
       else
         tremove(listBtns,i)
       end
@@ -3154,7 +3510,7 @@ function F.openBookmarks()
         hook(putB.MouseButton1Click,function()close();U.input.Text=tostring(bm.content or"");U.input:CaptureFocus()end)
         local sndId=tostring(bm.content or""):match("%[sound:(%d+)%]")
         if sndId then
-          local plB=tbtn(br,"▶ Audio",{size=uo(64,24),key="ok",ts=10,r=6,layout=3})
+          local plB=tbtn(br,"> Audio",{size=uo(64,24),key="ok",ts=10,r=6,layout=3})
           hook(plB.MouseButton1Click,function()F.playInlineSound(sndId)end)
         end
         local delB=tbtn(br,"X",{size=uo(28,24),key="danger",ts=10,r=6,layout=4})
@@ -3281,7 +3637,7 @@ function F.renderSoundTagCards(col,soundIds,startOrder)
     local titleLbl=lab(card,(S.soundNameCache and S.soundNameCache[sid]~=""and S.soundNameCache[sid])or("Audio #"..sid),{size=u2(1,-142,0,16),pos=uo(20,0),ts=11,bold=true,trunc=true})
     local idLbl=lab(card,"ID: "..sid,{size=u2(1,-142,0,12),pos=uo(20,15),ts=9,key="muted",trunc=true})
     local isOn=(S.activeSoundId==sid and S.activeSound and S.activeSound.IsPlaying)
-    local playBtn=tbtn(card,isOn and("⏹ "..T("sound_stop"))or("▶ "..T("sound_play")),{size=uo(70,24),pos=u2(1,-120,0,1),key=isOn and"danger"or"accent",ts=10,r=6})
+    local playBtn=tbtn(card,isOn and("|| "..T("sound_stop"))or("> "..T("sound_play")),{size=uo(70,24),pos=u2(1,-120,0,1),key=isOn and"danger"or"accent",ts=10,r=6})
     playBtn.ZIndex=8
     S.soundBtns=S.soundBtns or{};S.soundBtns[sid]=S.soundBtns[sid]or{}
     tinsert(S.soundBtns[sid],{btn=playBtn})
@@ -3303,37 +3659,40 @@ function F.renderThemeCards(col,themeCodes,startOrder)
     local cardBgHex=H.safeHex(cMap.bg2 or cMap.bg,baseT.bg2)
     local accHex=H.safeHex(cMap.accent,baseT.accent)
     local txtHex=H.safeHex(cMap.text,baseT.text)
-    local card=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundColor3=H.hex(cardBgHex),BorderSizePixel=0,LayoutOrder=(startOrder or 30)+idx,ZIndex=6},col)
-    corner(card,9);mk("UIStroke",{Color=H.hex(accHex),Thickness=1.3,Transparency=0.2,ApplyStrokeMode=smBorder},card)
+    local cardBgCol=H.hex(cardBgHex)
+    local accCol=H.hex(accHex)
+    local txtCol=H.ensureContrast(H.hex(txtHex),cardBgCol,4.2)
+    local card=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundColor3=cardBgCol,BorderSizePixel=0,LayoutOrder=(startOrder or 30)+idx,ZIndex=6},col)
+    corner(card,9);mk("UIStroke",{Color=accCol,Thickness=1.3,Transparency=0.2,ApplyStrokeMode=smBorder},card)
     pad(card,9,7,9,7);list(card,5)
     local topR=mk("Frame",{Size=u2(1,0,0,18),BackgroundTransparency=1,LayoutOrder=1},card)
-    local ttl=mk("TextLabel",{Size=u2(1,-80,1,0),BackgroundTransparency=1,Text="🎨 Theme: "..tostring(d.n or"custom").." ("..tostring(d.bm or"solid")..")",Font=fGB,TextSize=11,TextColor3=H.hex(txtHex),TextXAlignment=txL,TextTruncate=trEnd},topR)
+    mk("TextLabel",{Size=u2(1,-8,1,0),BackgroundTransparency=1,Text="🎨 Theme: "..tostring(d.n or"custom").." ("..tostring(d.bm or"solid")..")",Font=fGB,TextSize=11,TextColor3=txtCol,TextXAlignment=txL,TextTruncate=trEnd},topR)
     local swRow=mk("Frame",{Size=u2(1,0,0,16),BackgroundTransparency=1,LayoutOrder=2},card)
     mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},swRow)
     for si,hexStr in ipairs({cMap.bg or baseT.bg,cardBgHex,accHex,txtHex,cMap.g1 or baseT.g1,cMap.g2 or baseT.g2})do
-      if tostring(hexStr):match("^#%x%x%x%x%x%x$")then
+      if H.validHex(hexStr)then
         local sw=mk("Frame",{Size=uo(18,14),BackgroundColor3=H.hex(hexStr),BorderSizePixel=0,LayoutOrder=si},swRow)
         corner(sw,4);mk("UIStroke",{Color=c3(1,1,1),Thickness=1,Transparency=0.65,ApplyStrokeMode=smBorder},sw)
       end
     end
     local actR=mk("Frame",{Size=u2(1,0,0,24),BackgroundTransparency=1,LayoutOrder=3},card)
     mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO},actR)
-    local tryB=mk("TextButton",{Size=uo(76,24),BackgroundColor3=H.hex(accHex),Text=T("theme_try"),Font=fGB,TextSize=10,TextColor3=H.lum(H.hex(accHex))>0.55 and rgb(20,20,24)or c3(1,1,1),BorderSizePixel=0,LayoutOrder=1},actR)
+    local tryB=mk("TextButton",{Size=uo(68,24),BackgroundColor3=accCol,Text=T("theme_try"),Font=fGB,TextSize=10,TextColor3=H.onColor(accCol),BorderSizePixel=0,LayoutOrder=1},actR)
     corner(tryB,6)
     hook(tryB.MouseButton1Click,function()
       S.prevThemeCode=S.prevThemeCode or F.themeCode()
       if F.importTheme(code)then F.save(true);F.toast(T("theme_ok"),true)end
     end)
     if S.prevThemeCode then
-      local undoB=tbtn(actR,"↩",{size=uo(28,24),key="warn",ts=10,r=6,layout=2})
+      local undoB=tbtn(actR,L=="en"and"Undo"or"Hoàn tác",{size=uo(64,24),key="warn",ts=9,r=6,layout=2})
       hook(undoB.MouseButton1Click,function()
         local prev=S.prevThemeCode;S.prevThemeCode=nil
         if prev and F.importTheme(prev)then F.save(true);F.toast(T("theme_undo"),true)end
       end)
     end
-    local cpB=tbtn(actR,T("copy"),{size=uo(50,24),key="btnBg",ts=10,r=6,layout=3})
+    local cpB=tbtn(actR,T("copy"),{size=uo(46,24),key="btnBg",ts=10,r=6,layout=3})
     hook(cpB.MouseButton1Click,function()F.copyText(code)end)
-    local svB=tbtn(actR,"★ "..T("save"),{size=uo(58,24),key="btnBg",ts=10,r=6,layout=4})
+    local svB=tbtn(actR,T("save"),{size=uo(56,24),key="btnBg",ts=10,r=6,layout=4})
     hook(svB.MouseButton1Click,function()
       P.savedThemes=type(P.savedThemes)=="table"and P.savedThemes or{}
       tinsert(P.savedThemes,1,{name="Shared · "..tostring(d.n or"custom"),code=code,ts=H.now()})
@@ -3355,21 +3714,32 @@ function F.renderProfileTagCards(col,profNames,msgId,startOrder)
     corner(card,10);mk("UIStroke",{Color=accC,Thickness=1.3,Transparency=0.25,ApplyStrokeMode=smBorder},card)
     local banId=H.assetId((isMe and P.profBanner)or rec.profBanner or"")
     if banId then
-      local banImg=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,ImageTransparency=0.55,ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0,ZIndex=6},card)
-      F.setAsset(banImg,banId,nil,0.55)
+      local banImg=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,ImageTransparency=0.48,ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0,ZIndex=6},card)
+      corner(banImg,10);F.setAsset(banImg,banId,nil,0.48)
+      local scrim=mk("Frame",{Size=us(1,1),BackgroundColor3=bgC,BackgroundTransparency=0.45,BorderSizePixel=0,ZIndex=6},card);corner(scrim,10)
     end
     local inner=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,ZIndex=7},card)
-    pad(inner,8,6,8,6)
+    pad(inner,9,7,8,7)
     local icId=H.assetId((isMe and P.profIcon)or rec.profIcon or"")
-    F.makeFramedAvatar(inner,{px=36,pos=uo(0,2),z=8,uid=(isMe and P.userId)or tonumber(rec.userId or rec.id)or F.uidOf(rawU),customIc=icId,pt=pt})
+    F.makeFramedAvatar(inner,{px=36,pos=uo(1,2),z=8,uid=(isMe and P.userId)or tonumber(rec.userId or rec.id)or F.uidOf(rawU),customIc=icId,pt=pt})
+    local hdrRow=mk("Frame",{Size=u2(1,-110,0,18),Position=uo(46,1),BackgroundTransparency=1,ClipsDescendants=true,ZIndex=8},inner)
+    mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},hdrRow)
     local dName=F.disp((isMe and P.display)or rec.display or rawU)
+    local nmFont=(pt.font and FONT_MAP[pt.font])and FONT_MAP[pt.font].bold or fGB
+    local dW=clamp(H.textW(dName,11,nmFont)+4,20,130)
+    local nLbl=mk("TextLabel",{Size=uo(dW,18),BackgroundTransparency=1,Text=dName,Font=nmFont,TextSize=11,TextColor3=txtC,TextXAlignment=txL,TextTruncate=trEnd,LayoutOrder=1,ZIndex=8},hdrRow)
+    F.setupNameLabel(nLbl,pt,txtC,bgC,{small=true,autoOutlineOnLight=true,accHex=H.tohex(accC)})
+    local uStr="(@"..rawU..")"
+    local uW=clamp(H.textW(uStr,10,fG)+2,24,110)
+    mk("TextLabel",{Size=uo(uW,16),BackgroundTransparency=1,Text=uStr,Font=fG,TextSize=10,TextColor3=H.mix(txtC,bgC,0.28),TextXAlignment=txL,TextTruncate=trEnd,LayoutOrder=2,ZIndex=8},hdrRow)
     local cc=H.resolveCountry((isMe and P.country)or rec.country or"??")
-    local hdrTxt=dName.." (@"..rawU..") "..(cc~="??"and H.flag(cc)or"")
-    local nLbl=mk("TextLabel",{Size=u2(1,-108,0,16),Position=uo(44,1),BackgroundTransparency=1,Text=hdrTxt,Font=fGB,TextSize=11,TextColor3=txtC,TextXAlignment=txL,TextTruncate=trEnd,ZIndex=8},inner)
+    if cc~="??"then
+      mk("TextLabel",{Size=uo(18,16),BackgroundTransparency=1,Text=H.flag(cc),Font=fG,TextSize=12,TextColor3=c3(1,1,1),TextXAlignment=txL,LayoutOrder=3,ZIndex=8},hdrRow)
+    end
     local bioStr=H.trim(tostring((isMe and P.status~=""and P.status or P.bio)or(rec.status and rec.status~=""and rec.status or rec.bio)or""))
-    local subLbl=mk("TextLabel",{Size=u2(1,-108,0,15),Position=uo(44,19),BackgroundTransparency=1,Text=bioStr~=""and F.disp(H.clip(bioStr,55))or(F.isLive(rec)and"🟢 Online"or"Chat Bridge Profile"),Font=fG,TextSize=10,TextColor3=H.mix(txtC,bgC,0.28),TextXAlignment=txL,TextTruncate=trEnd,ZIndex=8},inner)
-    local openB=tbtn(inner,T("profile"),{size=uo(56,24),pos=u2(1,-56,0,6),key="accent",ts=10,r=6})
-    openB.BackgroundColor3=accC;openB.TextColor3=H.lum(accC)>0.55 and rgb(20,20,24)or c3(1,1,1);openB.ZIndex=9
+    mk("TextLabel",{Size=u2(1,-110,0,15),Position=uo(46,20),BackgroundTransparency=1,Text=bioStr~=""and F.disp(H.clip(bioStr,55))or(F.isLive(rec)and"🟢 Online"or"Chat Bridge Profile"),Font=fG,TextSize=10,TextColor3=H.mix(txtC,bgC,0.28),TextXAlignment=txL,TextTruncate=trEnd,ZIndex=8},inner)
+    local openB=mk("TextButton",{Size=uo(56,24),Position=u2(1,-56,0,7),BackgroundColor3=accC,Text=T("profile"),Font=fGB,TextSize=10,TextColor3=H.onColor(accC),BorderSizePixel=0,AutoButtonColor=true,ZIndex=9},inner)
+    corner(openB,6);mk("UIStroke",{Color=accC,Thickness=1,Transparency=0.3,ApplyStrokeMode=smBorder},openB)
     local function openIt()F.openProfile(rawU)end
     hook(card.MouseButton1Click,openIt);hook(openB.MouseButton1Click,openIt)
     if not isMe and not S.profFullLoaded[rawU:lower()]then
@@ -3432,29 +3802,36 @@ function F.renderMessage(m)if not m or m.deleted or m.cleared or m.type~="msg"th
     end)
     if pinged then stroke(frame,"mentionText",1,0.35)elseif mine and P.borderGlow~=false then stroke(frame,"accent",1,0.42)else stroke(frame,"border",1,0.5)end
   end
-  pad(frame,8,grp and 2 or(mStyle=="minimal"and 2 or 4),6,grp and 2 or(mStyle=="minimal"and 2 or 4))local topR=F.topRole(m.author)local barCol=(topR and H.hex(topR.color))or(F.isDev(m.author)and H.hex(F.DEVROLE.color))or TH.accent
+  pad(frame,8,grp and 2 or(mStyle=="minimal"and 2 or 5),6,grp and 2 or(mStyle=="minimal"and 2 or 5))local topR=F.topRole(m.author)local barCol=(topR and H.hex(topR.color))or(F.isDev(m.author)and H.hex(F.DEVROLE.color))or TH.accent
   local bar=mk("Frame",{Size=u2(0,mStyle=="minimal"and 2 or 3,1,-6),Position=uo(0,3),BackgroundColor3=barCol,BorderSizePixel=0,ZIndex=2,Visible=(mStyle~="flat"or mine or pinged or topR~=nil)},frame)corner(bar,2)S.frames[id]=frame tinsert(S.frameQ,id)local compactAv=(P.W<210 or mStyle=="minimal")
+  local uRec=F.userRec(m.author)
+  local uPt=(mine and type(P.profTheme)=="table"and P.profTheme)or(uRec and type(uRec.profTheme)=="table"and uRec.profTheme)or{}
   if not grp and not compactAv then
-    local uRec=F.userRec(m.author)
     local customIc=(mine and P.profIcon~=""and P.profIcon)or(uRec and uRec.profIcon and uRec.profIcon~=""and uRec.profIcon)or nil
-    local uPt=(mine and type(P.profTheme)=="table"and P.profTheme)or(uRec and type(uRec.profTheme)=="table"and uRec.profTheme)or{}
-    F.makeFramedAvatar(frame,{px=28,pos=uo(0,1),z=8,uid=m.uid or F.uidOf(m.author),customIc=customIc,pt=uPt,onClick=function()F.safeTap("av:"..id,function()F.openProfile(m.author)end)end})end
-  local colX=(grp or compactAv)and 7 or 35
-  local rightReserve=grp and 22 or 4 local col=mk("Frame",{Position=uo(colX,0),Size=u2(1,-(colX+rightReserve),0,0),AutomaticSize=asY,BackgroundTransparency=1,ZIndex=3,},frame)list(col,2)if not grp then
-    local hdr=mk("Frame",{Size=u2(1,-68,0,17),BackgroundTransparency=1,LayoutOrder=1,ZIndex=4},col)mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC,},hdr)
-    local dispStr=F.disp(m.display or m.author or"?")local nmW=clamp(H.textW(dispStr,12,fGB)+2,20,116)local nm=mk("TextButton",{Size=uo(nmW,16),BackgroundTransparency=1,Text=dispStr,Font=fGB,TextSize=12,
+    F.makeFramedAvatar(frame,{px=28,pos=uo(6,2),z=8,uid=m.uid or F.uidOf(m.author),customIc=customIc,pt=uPt,onClick=function()F.safeTap("av:"..id,function()F.openProfile(m.author)end)end})end
+  local canStaffDel=F.isStaff(P.username)or(m.author==P.username and m.chan~="announce"and m.chan~="punish")
+  local qW=canStaffDel and 98 or 78
+  local colX=(grp or compactAv)and 7 or 41
+  local rightReserve=grp and 26 or 4 local col=mk("Frame",{Position=uo(colX,0),Size=u2(1,-(colX+rightReserve),0,0),AutomaticSize=asY,BackgroundTransparency=1,ZIndex=3,},frame)list(col,2)if not grp then
+    local hdr=mk("Frame",{Size=u2(1,-(qW+2),0,18),BackgroundTransparency=1,ClipsDescendants=true,LayoutOrder=1,ZIndex=4},col)mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC,},hdr)
+    local dispStr=F.disp(m.display or m.author or"?")local nmFont=(uPt.font and FONT_MAP[uPt.font])and FONT_MAP[uPt.font].bold or fGB
+    local nmW=clamp(H.textW(dispStr,12,nmFont)+4,20,122)local nm=mk("TextButton",{Size=uo(nmW,17),BackgroundTransparency=1,Text=dispStr,Font=nmFont,TextSize=12,
       TextXAlignment=txL,TextTruncate=trEnd,LayoutOrder=1,BorderSizePixel=0,AutoButtonColor=false,Active=true,ZIndex=8,},hdr)hook(nm.MouseButton1Click,function()F.safeTap("nm:"..id,function()F.openProfile(m.author)end)
-    end)if topR then nm.TextColor3=H.hex(topR.color)else th(nm,"TextColor3","text")end if topR then F.roleChip(hdr,topR,2,false)elseif F.isDev(m.author)then F.roleChip(hdr,F.DEVROLE,2,false)end
+    end)
+    if F.resolveNameEffect(uPt,H.tohex(TH.accent))then
+      F.setupNameLabel(nm,uPt,TH.text,mine and TH.own or(pinged and TH.mention or TH.bg2),{small=true,autoOutlineOnLight=true,accHex=H.tohex(TH.accent)})
+    elseif topR then nm.TextColor3=H.hex(topR.color)else th(nm,"TextColor3","text")end
+    if topR then F.roleChip(hdr,topR,2,false)elseif F.isDev(m.author)then F.roleChip(hdr,F.DEVROLE,2,false)end
     local tStr=H.shortTime(m.ts)..(m.edited and(" "..T("edited"))or"")local tW=max(26,H.textW(tStr,9,fG)+4)local tm=mk("TextLabel",{Size=uo(tW,16),BackgroundTransparency=1,Text=tStr,Font=fG,TextSize=9,
       TextXAlignment=txL,LayoutOrder=3,BorderSizePixel=0,ZIndex=4,},hdr)th(tm,"TextColor3","muted")if m.failed then local fStr=T("failed")local fl=mk("TextLabel",{Size=uo(H.textW(fStr,9,fGB)+4,16),
         BackgroundTransparency=1,Text=fStr,Font=fGB,TextSize=9,LayoutOrder=4,BorderSizePixel=0,ZIndex=4,},hdr)th(fl,"TextColor3","danger")end end
   if m.fwdFrom and tostring(m.fwdFrom)~=""then
-    local fb=mk("Frame",{Size=u2(1,0,0,15),BackgroundTransparency=1,LayoutOrder=1,ZIndex=5},col)
-    local fTxt="↪ "..(L=="en"and"Forwarded from @"or"Chuyển tiếp từ @")..F.disp(m.fwdFrom)..(m.fwdChan and m.fwdChan~=""and(" ("..tostring(m.fwdChan)..")")or"")
+    local fb=mk("Frame",{Size=u2(1,0,0,15),BackgroundTransparency=1,LayoutOrder=2,ZIndex=5},col)
+    local fTxt="-> "..(L=="en"and"Forwarded from @"or"Chuyển tiếp từ @")..F.disp(m.fwdFrom)..(m.fwdChan and m.fwdChan~=""and(" ("..tostring(m.fwdChan)..")")or"")
     lab(fb,fTxt,{size=us(1,1),ts=9,bold=true,key="accent",trunc=true})
   end
   if m.replyTo then local rb=mk("TextButton",{Size=u2(1,0,0,18),Text="",
-      AutoButtonColor=true,BorderSizePixel=0,LayoutOrder=2,ZIndex=6,ClipsDescendants=true,},col)th(rb,"BackgroundColor3","bg3");corner(rb,5)
+      AutoButtonColor=true,BorderSizePixel=0,LayoutOrder=3,ZIndex=6,ClipsDescendants=true,},col)th(rb,"BackgroundColor3","bg3");corner(rb,5)
     local rbar=mk("Frame",{Size=u2(0,3,1,-4),Position=uo(2,2),BackgroundColor3=barCol,BorderSizePixel=0,ZIndex=7},rb)corner(rbar,2)
     local rl=lab(rb,F.disp("↩ @"..tostring(m.replyAuthor or"?")..": "..H.clip(F.plain(m.replySnippet or""),56)),{size=u2(1,-14,1,0),pos=uo(10,0),ts=10,key="muted",trunc=true,})rl.ZIndex=7
     hook(rb.MouseButton1Click,function()F.jumpToMsg(m.replyTo)end)end
@@ -3464,18 +3841,18 @@ function F.renderMessage(m)if not m or m.deleted or m.cleared or m.type~="msg"th
   if rich.cleanText~=""or not hasRichCards then
     if imgCount==0 then local rawDisp=F.disp(F.expandShortcodes(rich.cleanText))..(grp and m.edited and(" "..T("edited"))or"")
       if rawDisp~=""then
-        local body=lab(col,rawDisp,{wrap=true,auto=true,ts=P.textSize,layout=3})if rawDisp:find("@[%w_]+")or rawDisp:find(":[%w_%-]+:")then
+        local body=lab(col,rawDisp,{wrap=true,auto=true,ts=P.textSize,layout=4})if rawDisp:find("@[%w_]+")or rawDisp:find(":[%w_%-]+:")then
           themed(body,function(bLbl)local eHex=H.tohex(TH.emojiText or TH.accent)local escaped=H.esc(rawDisp):gsub("@([%w_]+)",function(u)
               local colHex=H.tohex(F.mentionColorFor(u))return'<font color="'..colHex..'"><b>@'..u..'</b></font>'end):gsub(":([%w_%-]+):",function(em)
               return'<font color="'..eHex..'"><b>:'..em..':</b></font>'end)bLbl.RichText=true bLbl.Text=escaped end)else body.RichText=false
         end body.ZIndex=3
       end
-    elseif not hasText then local ir=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3,ZIndex=4},col)
+    elseif not hasText then local ir=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=4,ZIndex=4},col)
       mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,6),SortOrder=soLO,VerticalAlignment=vaC},ir)local sz=imgCount==1 and 50 or 40 for i,seg in ipairs(segs)do if seg.kind=="img"then
           local info=F.emojiInfoById(seg.id)local holder=mk("TextButton",{Size=uo(sz,sz+(info and 13 or 0)),BackgroundTransparency=1,Text="",BorderSizePixel=0,LayoutOrder=i,ZIndex=6,},ir)
           local ib=F.iconBox(holder,"img:"..seg.id,sz)ib.ZIndex=6 if info and info.name then local tagL=lab(holder,":"..info.name..":",{size=u2(1,0,0,12),pos=uo(0,sz),ts=9,bold=true,key="emojiText",align=txC,trunc=true,})tagL.ZIndex=6 end
           hook(holder.MouseButton1Click,function()F.openEmojiPreview(seg.id,m,false)end)end end
-    else local flow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3,ZIndex=4},col)
+    else local flow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=4,ZIndex=4},col)
       mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,3),SortOrder=soLO,VerticalAlignment=vaC},flow)local orderIdx=0 local inlineSz=clamp(P.textSize+8,20,26)for _,seg in ipairs(segs)do if seg.kind=="text"then
           for word in tostring(seg.text):gmatch("%S+")do orderIdx=orderIdx+1 local wStr=F.disp(word)local wW=max(6,H.textW(wStr,P.textSize,fG)+2)local wl=mk("TextLabel",{Size=uo(wW,inlineSz),BackgroundTransparency=1,
               Text=wStr,Font=fG,TextSize=P.textSize,TextXAlignment=txL,BorderSizePixel=0,LayoutOrder=orderIdx,ZIndex=4,},flow)if wStr:match("^@[%w_]+")then local u=wStr:match("^@([%w_]+)")wl.Font=fGB
@@ -3507,9 +3884,8 @@ function F.renderMessage(m)if not m or m.deleted or m.cleared or m.type~="msg"th
     hook(stLbl.MouseButton1Click,function()if m.failed then F.resend(m)else F.openSeenDetail(m)end end)
     S.statusLabels[id]=stLbl
   end
-  local canStaffDel=F.isStaff(P.username)or(m.author==P.username and m.chan~="announce"and m.chan~="punish")
-  if not grp then local qbar=mk("Frame",{Size=uo(canStaffDel and 98 or 78,19),
-      Position=u2(1,-(canStaffDel and 98 or 78),0,0),BorderSizePixel=0,ZIndex=10},frame)
+  if not grp then local qbar=mk("Frame",{Size=uo(qW,19),
+      Position=u2(1,-qW,0,0),BorderSizePixel=0,ZIndex=10},frame)
     themed(qbar,function(o)o.BackgroundColor3=TH.bg3;o.BackgroundTransparency=clamp(F.surfaceAlpha("pill")+0.14,0.18,0.74)end)
     corner(qbar,6);stroke(qbar,"border",1,0.55)
     mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,1),HorizontalAlignment=Enum.HorizontalAlignment.Center,VerticalAlignment=vaC,SortOrder=soLO},qbar)
@@ -3703,12 +4079,15 @@ function F.chanName(c)if c=="general"then return"# "..T("general")elseif c=="ann
   elseif c=="scripts"then return T("script_forum")elseif c=="staff"then return T("stafftab")end
   if F.isGroupChan(c)then local g=F.groupByChan(c)return g and("👥 "..F.locText(g.name or"Group"))or"👥 Group"end
   local o=F.dmOther(c)return o and("DM · "..o)or c end
---- [F.updateInfo] Cập nhật thanh thông tin phụ (`U.infoBar`): hiển thị số người đang online, tên kênh, trạng thái tắt thông báo và nháp tin nhắn
+--- [F.updateInfo] Cập nhật thanh thông tin phụ (`U.infoBar`): hiển thị số người đang online, tên kênh, trạng thái khóa chat, tắt thông báo và nháp tin nhắn
 function F.updateInfo()
-  local n=0 for _,r in pairs(S.users)do if F.isLive(r)then n=n+1 end end n=max(n,1)
+  local myLow=P.username:lower()
+  local n=1
+  for u,r in pairs(S.users)do if tostring(u):lower()~=myLow and F.isLive(r)then n=n+1 end end
   local ck=F.chanKey(S.chan)
   local hasDraft=type(P.drafts)=="table"and type(P.drafts[ck])=="string"and H.trim(P.drafts[ck])~=""
-  U.infoLbl.Text=n.." "..T("online").."  ·  "..F.chanName(S.chan)..(hasDraft and("  ·  "..T("draft_tag"))or"")..(S.rtt and("  ·  "..floor(S.rtt).."ms")or"")
+  local lockTag=(type(S.lockdown)=="table"and S.lockdown.active)and(L=="en"and"  ·  🔒 Lockdown"or"  ·  🔒 Khóa Chat")or""
+  U.infoLbl.Text=n.." "..T("online").."  ·  "..F.chanName(S.chan)..lockTag..(hasDraft and("  ·  "..T("draft_tag"))or"")..(S.rtt and("  ·  "..floor(S.rtt).."ms")or"")
   if U.muteToastBtn then
     local mutedCh=F.isToastMuted(S.chan)
     U.muteToastBtn.Text=mutedCh and"🔕"or"🔔"
@@ -4241,59 +4620,87 @@ function F.isDmPartner(u)
 end
 function F.ingestPresence(data)
   local now=os.clock()
+  local srvNow=tonumber(data.now)or H.now()
   local curLive={}
+  local myLow=P.username:lower()
   local warmed=(S.presenceWarmed==true)or(now-(S.bootClock or 0)>6)
-  for _,u in ipairs(data.users or{})do
-    local lk=tostring(u.u or""):lower()
-    if lk~=""then curLive[lk]=true end
-    local umc=tonumber(u.mc or u.msgCount)or 0
-    if lk==P.username:lower()and umc>(P.msgCount or 0)then P.msgCount=umc;S.isDirty=true end
-    local incPb=H.assetId(u.pb or"")or""
-    local incPi=H.assetId(u.pi or"")or""
-    local incPt=(type(u.pt)=="table"and next(u.pt)~=nil)and u.pt or nil
-    local stored=F.rememberProfile(u.u,{
-      u=u.u,d=u.d,id=tonumber(u.id)or 1,c=u.c,
-      st=(u.st and u.st~="")and u.st or nil,
-      bio=(u.bio and u.bio~="")and u.bio or nil,
-      pb=incPb~=""and incPb or nil,
-      pi=incPi~=""and incPi or nil,
-      pt=incPt,
-      sg=u.sg==true,mc=umc,pl=tonumber(u.pl)or 0,gn=u.gn or"",jb=u.jb or"",
-    },true)
-    local rec={}
-    if type(stored)=="table"then for k,v in pairs(stored)do rec[k]=v end end
-    rec.age=(tonumber(data.now)or 0)-(tonumber(u.ts)or 0)
-    rec.recvAt=now
-    rec.isScript=true
-    S.users[u.u]=rec
-    if lk~=""and lk~=P.username:lower()then
-      local isWatch=F.isDmPartner(u.u)or(type(S.friendsMap)=="table"and S.friendsMap[lk]~=nil)
-      local canJoin=(tonumber(rec.placeId)or 0)>0 and tostring(rec.jobId or"")~=""and(tonumber(rec.placeId)~=game.PlaceId or tostring(rec.jobId)~=tostring(game.JobId))
-      if isWatch then
-        if not warmed then
-          S.prevLiveFriends[lk]=true
-        elseif not S.prevLiveFriends[lk]and(now-(S.friendToastCd[lk]or -999))>=120 then
-          S.prevLiveFriends[lk]=true
-          S.friendToastCd[lk]=now
-          local dNm=F.disp(rec.display or u.u)
-          local gTxt=(rec.inGame and rec.gameName~="")and(" · 🎮 "..F.disp(H.clip(rec.gameName,24)))or""
-          local joinPl,joinJob=tonumber(rec.placeId)or 0,tostring(rec.jobId or"")
-          local uTarget=u.u
-          F.toast("🟢 @"..dNm.." "..T("friend_online")..gTxt,false,function()
-            U.main.Visible=true;U.mini.Visible=false;F.openProfile(uTarget)
-          end,canJoin and{
-            btnText="🚀 "..(L=="en"and"Join Same Server"or"Vào chung Server"),
-            btnKey="ok",
-            dur=6,
-            onBtn=function()
-              if F.armAutoTeleport then F.armAutoTeleport(true)end
-              F.toast(T("delta_tp_note"),true)
-              pcall(function()TeleportService:TeleportToPlaceInstance(joinPl,joinJob,LP)end)
-            end,
-          }or{dur=5})
+  local statusChanged=false
+  if type(data.users)=="table"then
+    for _,u in ipairs(data.users)do
+      local uname=H.trim(tostring(u and u.u or""))
+      local lk=uname:lower()
+      if lk~=""then
+        local uTs=tonumber(u.ts)or srvNow
+        local age=max(0,srvNow-uTs)
+        local isFresh=(u.off~=true and u.online~=false and age<=CFG.PRESENCE_TIMEOUT)
+        local umc=tonumber(u.mc or u.msgCount)or 0
+        if lk==myLow and umc>(P.msgCount or 0)then P.msgCount=umc;S.isDirty=true end
+        local incPb=H.assetId(u.pb or"")or""
+        local incPi=H.assetId(u.pi or"")or""
+        local incPt=(type(u.pt)=="table"and next(u.pt)~=nil)and u.pt or nil
+        local stored=F.rememberProfile(uname,{
+          u=uname,d=u.d,id=tonumber(u.id)or 1,c=u.c,
+          st=(u.st and u.st~="")and u.st or nil,
+          bio=(u.bio and u.bio~="")and u.bio or nil,
+          pb=incPb~=""and incPb or nil,
+          pi=incPi~=""and incPi or nil,
+          pt=incPt,
+          sg=isFresh and(u.sg==true)or false,mc=umc,pl=tonumber(u.pl)or 0,gn=u.gn or"",jb=isFresh and(u.jb or"")or"",lastSeen=uTs,
+        },isFresh)
+        local prevRec=(S.users and S.users[uname])or(S.usersLow and S.usersLow[lk])
+        local wasLive=F.isLive(prevRec)
+        local rec={}
+        if type(stored)=="table"then for k,v in pairs(stored)do rec[k]=v end end
+        rec.isScript=true
+        if isFresh then
+          curLive[lk]=true
+          rec.age=age
+          rec.recvAt=now
+          if not wasLive then statusChanged=true end
         else
-          S.prevLiveFriends[lk]=true
+          rec.age=9999
+          rec.recvAt=nil
+          rec.inGame=false;rec.jobId=""
+          if wasLive then statusChanged=true end
         end
+        F.setUserRec(uname,rec)
+        if isFresh and lk~=myLow then
+          local isWatch=F.isDmPartner(uname)or(type(S.friendsMap)=="table"and S.friendsMap[lk]~=nil)
+          local canJoin=(tonumber(rec.placeId)or 0)>0 and tostring(rec.jobId or"")~=""and(tonumber(rec.placeId)~=game.PlaceId or tostring(rec.jobId)~=tostring(game.JobId))
+          if isWatch then
+            if not warmed then
+              S.prevLiveFriends[lk]=true
+            elseif not S.prevLiveFriends[lk]and(now-(S.friendToastCd[lk]or -999))>=120 then
+              S.prevLiveFriends[lk]=true
+              S.friendToastCd[lk]=now
+              local dNm=F.disp(rec.display or uname)
+              local gTxt=(rec.inGame and rec.gameName~="")and(" · 🎮 "..F.disp(H.clip(rec.gameName,24)))or""
+              local joinPl,joinJob=tonumber(rec.placeId)or 0,tostring(rec.jobId or"")
+              local uTarget=uname
+              F.toast("🟢 @"..dNm.." "..T("friend_online")..gTxt,false,function()
+                U.main.Visible=true;U.mini.Visible=false;F.openProfile(uTarget)
+              end,canJoin and{
+                btnText="🚀 "..(L=="en"and"Join Same Server"or"Vào chung Server"),
+                btnKey="ok",
+                dur=6,
+                onBtn=function()
+                  if F.armAutoTeleport then F.armAutoTeleport(true)end
+                  F.toast(T("delta_tp_note"),true)
+                  pcall(function()TeleportService:TeleportToPlaceInstance(joinPl,joinJob,LP)end)
+                end,
+              }or{dur=5})
+            else
+              S.prevLiveFriends[lk]=true
+            end
+          end
+        end
+      end
+    end
+    -- Đối soát danh sách đầy đủ từ máy chủ: ai không còn trong `data.users` lập tức chuyển sang Offline
+    for uk,ur in pairs(S.users or{})do
+      local uLow=tostring(uk):lower()
+      if uLow~=myLow and not curLive[uLow]and type(ur)=="table"and ur.recvAt~=nil then
+        if F.markUserOfflineLocal(uk)then statusChanged=true end
       end
     end
   end
@@ -4302,7 +4709,9 @@ function F.ingestPresence(data)
   if type(data.mute)=="table"then F.applyMute(P.username,{on=true,reason=data.mute.reason or"",exp=tonumber(data.mute.exp)or 0,by=data.mute.by or"",ts=tonumber(data.mute.ts)or H.now()})
   elseif data.mute==nil and data.ok then F.clearMuteState(P.username)end
   if type(data.banned)=="table"then S.banned=data.banned elseif data.banned==nil and data.ok then S.banned=nil end
-  F.updateInfo()end
+  F.updateInfo()
+  if statusChanged and type(S.refreshOnlineList)=="function"then pcall(S.refreshOnlineList)end
+end
 --- [F.allKnownScriptUsers] Lấy toàn bộ danh sách tên người dùng thật đã/đang sử dụng Chat Bridge (Online trước, Offline sau)
 function F.allKnownScriptUsers()
   local byLow,canon={},{}
@@ -4357,10 +4766,13 @@ function F.fetchKnownUsers(cb,force)
           local st=F.rememberProfile(p.u,p,isOn)
           if p.pt~=nil or isOn then S.profFullLoaded=S.profFullLoaded or{};S.profFullLoaded[tostring(p.u):lower()]=true end
           if isOn and st then
-            local cur=S.users[st.u]or{}
+            local cur=(S.users and S.users[st.u])or(S.usersLow and S.usersLow[tostring(st.u):lower()])or{}
             for k,v in pairs(st)do cur[k]=v end
-            cur.age=0;cur.recvAt=os.clock();cur.isScript=true
-            S.users[st.u]=cur
+            local srvAge=max(0,(tonumber(data.now)or H.now())-(tonumber(p.lastSeen or p.ts)or tonumber(data.now)or H.now()))
+            cur.age=srvAge;cur.recvAt=os.clock();cur.isScript=true
+            F.setUserRec(st.u,cur)
+          else
+            F.markUserOfflineLocal(p.u,tonumber(p.lastSeen or p.ts))
           end
         end
       end
@@ -4506,13 +4918,15 @@ function F.userRow(parent,u,o)o=o or{}local rec=F.userRec(u)or{}
   local liveNow=isMe or F.isLive(rec)
   local isFriendOnline=(not liveNow and rec.isFriend==true and rec.isOnline==true)
   local uPt=(isMe and type(P.profTheme)=="table"and P.profTheme)or(type(rec.profTheme)=="table"and rec.profTheme)or{}
-  local b=mk("TextButton",{Size=u2(1,0,0,38),Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=o.layout or 0},parent)th(b,"BackgroundColor3","cardBg");corner(b,8);stroke(b,"border",1,0.5)
+  local b=mk("TextButton",{Size=u2(1,0,0,40),Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=o.layout or 0},parent)th(b,"BackgroundColor3","cardBg");corner(b,8);stroke(b,"border",1,0.5)
   local customIc=(isMe and P.profIcon~=""and P.profIcon)or(rec.profIcon and rec.profIcon~=""and rec.profIcon)or nil
-  F.makeFramedAvatar(b,{px=28,pos=uo(6,5),z=2,uid=F.uidOf(u),customIc=customIc,pt=uPt})
-  local dot=mk("Frame",{Size=uo(9,9),Position=uo(26,26),BorderSizePixel=0,ZIndex=8},b)corner(dot,5);themed(dot,function(x)x.BackgroundColor3=liveNow and TH.ok or(isFriendOnline and rgb(56,189,248)or TH.muted)end)local top=F.topRole(u)
-  local nm=lab(b,F.disp(rec.display or u),{size=u2(1,-(o.right or 60)-44,0,17),pos=uo(40,3),bold=true,trunc=true})
-  if top then nm.TextColor3=H.hex(top.color)elseif H.safeHex(uPt.acc,nil)then nm.TextColor3=H.hex(uPt.acc)end
-  if uPt.font and FONT_MAP[uPt.font]then nm.Font=FONT_MAP[uPt.font].bold end
+  F.makeFramedAvatar(b,{px=28,pos=uo(7,6),z=2,uid=F.uidOf(u),customIc=customIc,pt=uPt})
+  local dot=mk("Frame",{Size=uo(9,9),Position=uo(27,27),BorderSizePixel=0,ZIndex=8},b)corner(dot,5)
+  local dotSt=mk("UIStroke",{Thickness=1.6,Transparency=0,ApplyStrokeMode=smBorder},dot)
+  themed(dot,function(x)x.BackgroundColor3=liveNow and TH.ok or(isFriendOnline and rgb(56,189,248)or TH.muted);dotSt.Color=TH.cardBg end)
+  local top=F.topRole(u)
+  local nm=lab(b,F.disp(rec.display or u),{size=u2(1,-(o.right or 60)-46,0,18),pos=uo(42,4),bold=true,trunc=true})
+  F.setupNameLabel(nm,uPt,top and H.hex(top.color)or TH.text,TH.cardBg,{small=true,accHex=H.safeHex(uPt.acc,nil),autoOutlineOnLight=true})
   local sub="@"..u
   local mInfo=F.getMute(u)local wList=F.getWarns(u)local bInfo=F.getBan(u)
   local modTag=(bInfo and" · ⛔ BAN"or"")..(mInfo and" · 🔇 Mute"or"")..(#wList>0 and(" · ⚠️"..#wList)or"")
@@ -4531,7 +4945,7 @@ function F.userRow(parent,u,o)o=o or{}local rec=F.userRec(u)or{}
   else
     sub=sub..modTag
   end
-  lab(b,F.disp(sub),{size=u2(1,-(o.right or 60)-44,0,14),pos=uo(40,20),ts=10,key=(bInfo or mInfo)and"danger"or(#wList>0 and"warn"or"muted"),trunc=true})
+  lab(b,F.disp(sub),{size=u2(1,-(o.right or 60)-46,0,14),pos=uo(42,22),ts=10,key=(bInfo or mInfo)and"danger"or(#wList>0 and"warn"or"muted"),trunc=true})
   if o.click then hook(b.MouseButton1Click,function()o.click(u)end)end return b end
 --- [F.openOnline] Mở hộp thoại danh sách & tìm kiếm toàn bộ người dùng đã/đang dùng Script (Online & Offline)
 function F.openOnline()S.reopenModal=F.openOnline local scr=F.modalBox(T("users"),360,480)
@@ -4583,8 +4997,9 @@ function F.openOnline()S.reopenModal=F.openOnline local scr=F.modalBox(T("users"
   hook(bOn.MouseButton1Click,function()fMode="online";rebuild()end)
   hook(bOff.MouseButton1Click,function()fMode="offline";rebuild()end)
   hook(q:GetPropertyChangedSignal("Text"),rebuild)
+  S.refreshOnlineList=function()if listBox and listBox.Parent then rebuild()end end
   rebuild()
-  F.fetchKnownUsers(function()if listBox.Parent then rebuild()end end)
+  F.fetchKnownUsers(function()if listBox.Parent then rebuild()end end,(os.clock()-(S.knownUsersFetchedAt or 0))>4)
 end
 --- [F.openDM] Mở kênh trò chuyện riêng (Direct Message) chỉ với người dùng thật trên Chat Bridge hoặc Bạn bè Roblox
 function F.openDM(u)
@@ -5119,11 +5534,20 @@ function F.openImageCropStudio(opts)
     or(target=="icon"and(L=="en"and"Avatar Crop & Frame Studio"or"Căn chỉnh Ảnh Đại Diện (Avatar Studio)")
     or(L=="en"and"Wallpaper Crop & Framing Studio"or"Căn chỉnh Ảnh Nền Thẻ (Wallpaper Studio)"))
   )
-  local scr,rawClose=F.popup(titleTxt,mw,mh)
+  local applied=false
   local studioConns={}
-  local function closeStudio()
+  local function cleanupConns()
     for _,c in ipairs(studioConns)do pcall(function()c:Disconnect()end)end
     studioConns={}
+  end
+  local scr,rawClose=F.popup(titleTxt,mw,mh,{
+    onClose=function()
+      cleanupConns()
+      if not applied and opts.onCancel then pcall(opts.onCancel)end
+    end
+  })
+  local function closeStudio()
+    cleanupConns()
     if type(rawClose)=="function"then rawClose()else F.closeModal()end
   end
 
@@ -5137,15 +5561,16 @@ function F.openImageCropStudio(opts)
 
   local topTools=row(scr,28)
   local srcBadge=lab(topTools,st.id~=""and("ID: "..st.id)or(L=="en"and"No image"or"Chưa chọn ảnh"),{size=u2(1,-214,1,0),ts=10,bold=true,key="muted",trunc=true})
-  local pickStoreBtn=tbtn(topTools,L=="en"and" Store"or" Kho ảnh",{size=uo(96,26),pos=u2(1,-208,0,1),key="accent",ts=10,r=6})
-  F.lucide(pickStoreBtn,"store",12,{pos=uo(8,7),col=H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
-  local reloadHdBtn=tbtn(topTools,L=="en"and" Reload HD"or" Tải nét HD",{size=uo(106,26),pos=u2(1,-106,0,1),key="btnBg",ts=10,r=6})
-  F.lucide(reloadHdBtn,"refresh",12,{pos=uo(8,7),key="ok"})
+  local pickStoreBtn=tbtn(topTools,L=="en"and"Store"or"Kho ảnh",{size=uo(96,26),pos=u2(1,-208,0,1),key="accent",ts=10,r=6})
+  F.btnIcon(pickStoreBtn,"store",12,21,6,{col=H.onColor(TH.accent),themed=false})
+  local reloadHdBtn=tbtn(topTools,L=="en"and"Reload HD"or"Tải nét HD",{size=uo(106,26),pos=u2(1,-106,0,1),key="btnBg",ts=10,r=6})
+  F.btnIcon(reloadHdBtn,"refresh",12,21,6,{key="ok"})
 
   local pvShell=mk("Frame",{Size=u2(1,0,0,164),BorderSizePixel=0},scr)
   th(pvShell,"BackgroundColor3","cardBg");corner(pvShell,10);stroke(pvShell,"border",1,0.35);pad(pvShell,10,10,10,10)
   local pvFrameW=(target=="icon")and 128 or(mw-48)
-  local pvFrameH=(target=="icon")and 128 or((target=="banner")and clamp(st.height,64,142)or 138)
+  local defWpH=clamp(floor(pvFrameW*9/16+0.5),112,148)
+  local pvFrameH=(target=="icon")and 128 or((target=="banner")and clamp(st.height,64,142)or defWpH)
   local pvClip=F.createClipHost(pvShell,{
     Size=uo(pvFrameW,pvFrameH),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),
     BorderSizePixel=0,ClipsDescendants=true,Active=true,
@@ -5165,9 +5590,8 @@ function F.openImageCropStudio(opts)
   corner(dragHint,9);F.lucide(dragHint,"move",10,{pos=uo(6,4),col=c3(1,1,1),themed=false})
   local dhl=lab(dragHint,L=="en"and"Drag to Pan"or"Kéo để căn",{size=u2(1,-20,1,0),pos=uo(18,0),ts=9,bold=true});dhl.TextColor3=c3(1,1,1)
 
-  local refreshFns={}
   local function updatePv(forceLoad)
-    local curH=(target=="banner")and clamp(st.height,64,150)or((target=="icon")and 128 or 138)
+    local curH=(target=="banner")and clamp(st.height,64,150)or((target=="icon")and 128 or defWpH)
     pvFrameH=curH
     pvShell.Size=u2(1,0,0,max(148,curH+24))
     pvClip.Size=uo(pvFrameW,curH)
@@ -5176,7 +5600,7 @@ function F.openImageCropStudio(opts)
       pvEmpty.Visible=false;pvImg.Visible=true
       if forceLoad~=nil or pvImg.Image==""then
         srcBadge.Text="ID "..st.id.." · ..."
-        F.setAsset(pvImg,st.id,function(ok,_,isFull)
+        F.setAsset(pvImg,st.id,function(_,_,isFull)
           if srcBadge.Parent then
             srcBadge.Text="ID "..st.id.." · "..(isFull and"HD Native"or"Thumb 420px")
           end
@@ -5192,15 +5616,16 @@ function F.openImageCropStudio(opts)
   local slZoom,setSlZoom,slX,setSlX,slY,setSlY,slExtra,setSlExtra
   local fitBtns,aspectBtns={},{}
   local function paintStudioPills()
+    local onTxt=H.onColor(TH.accent)
     for k,b in pairs(fitBtns)do
       local on=(st.fit==k)
       b.BackgroundColor3=on and TH.accent or TH.btnBg
-      b.TextColor3=on and(H.lum(TH.accent)>0.55 and rgb(18,18,22)or c3(1,1,1))or TH.text
+      b.TextColor3=on and onTxt or TH.text
     end
     for k,b in pairs(aspectBtns)do
       local on=(st.aspect==k)
       b.BackgroundColor3=on and TH.accent or TH.btnBg
-      b.TextColor3=on and(H.lum(TH.accent)>0.55 and rgb(18,18,22)or c3(1,1,1))or TH.text
+      b.TextColor3=on and onTxt or TH.text
     end
   end
 
@@ -5208,8 +5633,8 @@ function F.openImageCropStudio(opts)
   local dragState=nil
   studioConns[#studioConns+1]=pvClip.InputBegan:Connect(function(inp)
     if inp.UserInputType==mb1 or inp.UserInputType==utTouch then
-      if st.fit=="crop"and st.aspect=="auto"and st.zoom<=105 then
-        st.zoom=135;if setSlZoom then setSlZoom(135,false)end;updatePv()
+      if(st.fit=="fit"or st.aspect=="auto")and st.zoom<=105 then
+        st.zoom=125;if setSlZoom then setSlZoom(125,false)end;updatePv()
       end
       dragState={start=inp.Position,sx=st.x,sy=st.y,inp=inp}
     end
@@ -5236,8 +5661,9 @@ function F.openImageCropStudio(opts)
   lab(fitSec,L=="en"and"FIT MODE"or"CHẾ ĐỘ KHỚP KHUNG",{ts=10,bold=true,key="accent"})
   local fitList=(target=="icon")and{{"crop","Crop (Fill)"},{"fit","Fit (Full)"},{"stretch","Stretch"}}or{{"crop","Crop (Fill)"},{"fit","Fit (Full)"},{"stretch","Stretch"},{"tile","Tile"}}
   local fitRow=row(fitSec,26)
+  local fitSub=#fitList>3 and -5 or -4
   for idx,fd in ipairs(fitList)do
-    local b=tbtn(fitRow,fd[2],{size=u2(1/#fitList,-3,1,0),ts=10,r=6,layout=idx})
+    local b=tbtn(fitRow,fd[2],{size=u2(1/#fitList,fitSub,1,0),ts=10,r=6,layout=idx})
     fitBtns[fd[1]]=b
     hook(b.MouseButton1Click,function()st.fit=fd[1];paintStudioPills();updatePv()end)
   end
@@ -5246,7 +5672,7 @@ function F.openImageCropStudio(opts)
   local arRow=row(fitSec,24)
   local arOpts={"auto","1:1","16:9","4:3","3:4","9:16"}
   for idx,ak in ipairs(arOpts)do
-    local b=tbtn(arRow,ak=="auto"and"Auto"or ak,{size=u2(1/#arOpts,-3,1,0),ts=10,r=6,layout=idx})
+    local b=tbtn(arRow,ak=="auto"and"Auto"or ak,{size=u2(1/#arOpts,-5,1,0),ts=10,r=6,layout=idx})
     aspectBtns[ak]=b
     hook(b.MouseButton1Click,function()st.aspect=ak;paintStudioPills();updatePv()end)
   end
@@ -5256,8 +5682,8 @@ function F.openImageCropStudio(opts)
   local zMinus=tbtn(zHead,"-",{size=uo(30,22),ts=12,r=6,layout=1})
   local zLbl=lab(zHead,L=="en"and"Zoom & Precision Nudge"or"Thu phóng & Dịch chuyển",{size=u2(1,-162,1,0),ts=10,bold=true,key="muted",align=txC,layout=2})
   local zPlus=tbtn(zHead,"+",{size=uo(30,22),ts=12,r=6,layout=3})
-  local rstBtn=tbtn(zHead,L=="en"and" Reset"or" Đặt lại",{size=uo(84,22),ts=10,key="btnBg",r=6,layout=4})
-  F.lucide(rstBtn,"rotateCcw",11,{pos=uo(6,5),key="warn"})
+  local rstBtn=tbtn(zHead,L=="en"and"Reset"or"Đặt lại",{size=uo(84,22),ts=10,key="btnBg",r=6,layout=4})
+  F.btnIcon(rstBtn,"rotateCcw",11,20,6,{key="warn"})
 
   slZoom,setSlZoom=F.slider(ctrlSec,L=="en"and"Zoom Scale"or"Độ phóng đại (Zoom)",100,300,st.zoom,{step=5,fmt=function(val)return val.."%"end,onChange=function(val)st.zoom=val;updatePv()end})
   slX,setSlX=F.slider(ctrlSec,L=="en"and"Horizontal Pan (X)"or"Vị trí ngang (Pan X)",-100,100,st.x,{step=2,fmt=function(val)return val.."%"end,onChange=function(val)st.x=val;updatePv()end})
@@ -5268,7 +5694,7 @@ function F.openImageCropStudio(opts)
   elseif target=="icon"then
     local rRow=row(ctrlSec,22)
     for idx,rp in ipairs({{50,L=="en"and"Circle"or"Tròn"},{22,"Squircle"},{10,"Soft"},{0,L=="en"and"Square"or"Vuông"}})do
-      local rb=tbtn(rRow,rp[2],{size=u2(0.25,-3,1,0),ts=10,r=6,layout=idx})
+      local rb=tbtn(rRow,rp[2],{size=u2(0.25,-5,1,0),ts=10,r=6,layout=idx})
       hook(rb.MouseButton1Click,function()st.radius=rp[1];if setSlExtra then setSlExtra(rp[1],false)end;updatePv()end)
     end
     slExtra,setSlExtra=F.slider(ctrlSec,L=="en"and"Corner Roundness"or"Độ bo góc Avatar",0,50,st.radius,{step=1,fmt=function(val)return val.."%"end,onChange=function(val)st.radius=val;updatePv()end})
@@ -5292,13 +5718,14 @@ function F.openImageCropStudio(opts)
 
   local footRow=row(scr,34)
   local cancelB=rbtn(footRow,T("cancel"),{size=u2(0.36,-3,1,0),key="btnBg",ts=11})
-  local applyB=rbtn(footRow,L=="en"and" Apply Framing"or" Áp dụng khung",{size=u2(0.64,-3,1,0),key="accent",ts=11})
-  F.lucide(applyB,"check",14,{pos=uo(12,10),col=H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
+  local applyB=rbtn(footRow,L=="en"and"Apply Framing"or"Áp dụng khung",{size=u2(0.64,-3,1,0),key="accent",ts=11})
+  F.btnIcon(applyB,"check",14,24,10,{col=H.onColor(TH.accent),themed=false})
   hook(cancelB.MouseButton1Click,function()
-    if opts.onCancel then pcall(opts.onCancel)end
+    applied=false
     closeStudio()
   end)
   hook(applyB.MouseButton1Click,function()
+    applied=true
     if opts.onApply then pcall(opts.onApply,st)end
     closeStudio()
   end)
@@ -5308,14 +5735,6 @@ end
 
 -- Namespace nội bộ cho giao diện Hồ sơ Discord-Style (giữ mỗi hàm dưới 25 upvalues cho Lua 5.1)
 F._PROF={}
-
-F._NAME_EFFS={
-  {id="solid",name="Solid"},
-  {id="gradient",name="Gradient"},
-  {id="neon",name="Neon"},
-  {id="gold",name="Gold"},
-  {id="ice",name="Ice"},
-}
 
 F._PROF_DEF={
   card=rgb(31,35,48),box=rgb(24,27,38),acc=rgb(88,101,242),txt=rgb(242,243,247),
@@ -5363,7 +5782,7 @@ function F._PROF.ic(st,parent,key,sz,role,o)
   o=o or{}
   local cols=st.cols
   local col=(role=="acc"and cols.acc)or(role=="txt"and cols.txt)or(role=="muted"and cols.muted)
-    or(role=="onAcc"and(H.lum(cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1)))
+    or(role=="onAcc"and H.onColor(cols.acc))
     or(role=="ok"and cols.ok)or(role=="warn"and cols.warn)or(role=="danger"and cols.danger)or o.col or cols.txt
   local im=F.lucide(parent,key,sz,{pos=o.pos,anc=o.anc,col=col,themed=false,trans=o.trans,z=o.z,layout=o.layout})
   if role=="acc"then st.icAcc[#st.icAcc+1]=im
@@ -5371,6 +5790,12 @@ function F._PROF.ic(st,parent,key,sz,role,o)
   elseif role=="muted"then st.icMuted[#st.icMuted+1]=im
   elseif role=="onAcc"then st.icOnAcc[#st.icOnAcc+1]=im end
   return im
+end
+function F._PROF.btnIcon(st,b,key,sz,role,padL,icLeft,o)
+  o=o or{}sz=sz or 12;icLeft=icLeft or 7;padL=padL or(icLeft+sz+4)
+  pad(b,padL,0,o.padR or 4,0);b.TextTruncate=trEnd
+  o.pos=u2(0,icLeft-padL,0.5,0);o.anc=v2(0,0.5)
+  return F._PROF.ic(st,b,key,sz,role,o)
 end
 
 function F._PROF.btn(st,parent,text,o)
@@ -5408,6 +5833,16 @@ function F._PROF.initState(u,initTab)
   local defRRot=initDecDef and initDecDef.rot or 35
   local defRGlow=(not initDecDef)or(initDecDef.glow~=false)
   local defRAnim=initDecDef and initDecDef.anim or"none"
+  local rglowVal
+  if rawPt.rglow~=nil then rglowVal=(rawPt.rglow==true)else rglowVal=defRGlow end
+  local initNEff=tostring(rawPt.nEff or"solid")
+  local initNeDef for _,d in ipairs(F._NAME_EFFS)do if d.id==initNEff then initNeDef=d;break end end
+  local defNRot=initNeDef and initNeDef.rot or 15
+  local defNSw=initNeDef and initNeDef.sw or 0
+  local defNGlow=initNeDef and(initNeDef.glow==true)or false
+  local defNAnim=initNeDef and initNeDef.anim or"none"
+  local nglowVal
+  if rawPt.nglow~=nil then nglowVal=(rawPt.nglow==true)else nglowVal=defNGlow end
   local pTheme={
     bg=H.safeHex(rawPt.bg,nil)or"",acc=H.safeHex(rawPt.acc,nil)or"",txt=H.safeHex(rawPt.txt,nil)or"",
     g1=H.safeHex(rawPt.g1,nil)or"",g2=H.safeHex(rawPt.g2,nil)or"",g3=H.safeHex(rawPt.g3,nil)or"",
@@ -5426,24 +5861,31 @@ function F._PROF.initState(u,initTab)
     wz=clamp(tonumber(rawPt.wz)or 100,100,300),wx=clamp(tonumber(rawPt.wx)or 0,-100,100),wy=clamp(tonumber(rawPt.wy)or 0,-100,100),
     wa=F._ASPECT[rawPt.wa or""]and rawPt.wa or"auto",
     avDec=initDec,
-    rc1=tostring(rawPt.rc1 or""):match("^#%x%x%x%x%x%x$")or"",
-    rc2=tostring(rawPt.rc2 or""):match("^#%x%x%x%x%x%x$")or"",
-    rc3=tostring(rawPt.rc3 or""):match("^#%x%x%x%x%x%x$")or"",
+    rc1=H.safeHex(rawPt.rc1,nil)or"",
+    rc2=H.safeHex(rawPt.rc2,nil)or"",
+    rc3=H.safeHex(rawPt.rc3,nil)or"",
     rw=clamp(tonumber(rawPt.rw)or 3,1,6),
     rrot=clamp(tonumber(rawPt.rrot)~=nil and tonumber(rawPt.rrot)or defRRot,0,360),
-    rglow=(rawPt.rglow~=nil)and(rawPt.rglow==true)or defRGlow,
+    rglow=rglowVal,
     ranim=(rawPt.ranim and rawPt.ranim~="")and tostring(rawPt.ranim)or defRAnim,
-    nEff=tostring(rawPt.nEff or"solid"),
+    nEff=initNEff,
+    nc1=H.safeHex(rawPt.nc1,nil)or"",
+    nc2=H.safeHex(rawPt.nc2,nil)or"",
+    nc3=H.safeHex(rawPt.nc3,nil)or"",
+    nsc=H.safeHex(rawPt.nsc,nil)or"",
+    nsw=clamp(tonumber(rawPt.nsw)~=nil and tonumber(rawPt.nsw)or defNSw,0,3),
+    nrot=clamp(tonumber(rawPt.nrot)~=nil and tonumber(rawPt.nrot)or defNRot,0,360),
+    nglow=nglowVal,
+    nanim=(rawPt.nanim and rawPt.nanim~="")and tostring(rawPt.nanim)or defNAnim,
     tag=H.clip(H.trim(tostring(rawPt.tag or"")),36),
     abLbl=H.clip(H.trim(tostring(rawPt.abLbl or"")),40),
     hiTxt=H.clip(H.trim(tostring(rawPt.hiTxt or"")),70),
     pinSc=tostring(rawPt.pinSc or""),
     music=H.clip(H.trim(tostring(rawPt.music or"")),160),
     wOrder=tostring(rawPt.wOrder or"bio,scripts,game,stats"),
+    mHide=(rawPt.mHide==true),
   }
-  local mappedTab=tonumber(initTab)or 1
-  if not canEdit and mappedTab>2 then mappedTab=1 end
-  if canEdit and initTab==3 then mappedTab=5 elseif canEdit and initTab==2 then mappedTab=3 end
+  local mappedTab=clamp(floor(tonumber(initTab)or 1),1,canEdit and 5 or 2)
   local st={
     u=u,uLower=tostring(u):lower(),isSelf=isSelf,isPov=isPov,canEdit=canEdit,rec=rec,
     isDevU=F.isDev(u),rlist=rlist,top=rlist[1],
@@ -5451,12 +5893,13 @@ function F._PROF.initState(u,initTab)
     bannerId=H.assetId((isSelf and P.profBanner)or rec.profBanner or"")or"",
     iconId=H.assetId((isSelf and P.profIcon)or rec.profIcon or"")or"",
     muteInfo=F.getMute(u),warnList=F.getWarns(u),banInfo=F.getBan(u),punishHist=F.getUserPunishments(u),
-    pTheme=pTheme,curTab=mappedTab,
+    pTheme=pTheme,curTab=mappedTab,dirty=false,
     cards={},subCards={},inputs={},texts={},muted={},accents={},chips={},dividers={},
-    icAcc={},icTxt={},icMuted={},icOnAcc={},accStrokes={},
-    cardCorners={},subCorners={},cardStrokes={},tabBtns={},modeBtns={},fontBtns={},gStopBtns={},decBtns={},neffBtns={},ringAnimBtns={},
-    cols={},ui={},fields={},fn={},ring={},
+    icAcc={},icTxt={},icMuted={},icOnAcc={},accStrokes={},fxPainters={},
+    cardCorners={},subCorners={},cardStrokes={},tabBtns={},modeBtns={},fontBtns={},gStopBtns={},decBtns={},neffBtns={},ringAnimBtns={},nameAnimBtns={},
+    cols={},ui={},fields={},fn={},ring={},nameFx={},
   }
+  st.markDirty=function()st.dirty=true;if st.fn.refreshDirty then st.fn.refreshDirty()end end
   F._PROF.computeCols(st)
   return st
 end
@@ -5489,15 +5932,17 @@ function F._PROF.applyImages(st)
     local bh=clamp(tonumber(pt.bh)or 96,64,150)
     u.bannerContainer.Size=u2(1,0,0,bh)
     if u.hdTop and u.hdTop.Parent then u.hdTop.Size=u2(1,0,0,bh+46)end
-    if u.avWrap then u.avWrap.Position=uo(14,max(8,bh-40))end
-    if u.dotDot1 then u.dotDot1.Position=uo(90,bh+2)end
-    if u.dotDot2 then u.dotDot2.Position=uo(98,bh-5)end
-    if u.stBubble then u.stBubble.Position=uo(106,max(6,bh-24))end
+    if u.avWrap then u.avWrap.Position=uo(16,max(8,bh-40))end
+    if u.dotDot1 then u.dotDot1.Position=uo(100,bh+2)end
+    if u.dotDot2 then u.dotDot2.Position=uo(108,bh-5)end
+    if u.stBubble then u.stBubble.Position=uo(117,max(6,bh-24));u.stBubble.Size=u2(1,-125,0,38)end
     if u.bImg then
       local hasB=(st.bannerId~="")
+      if u.bImgHost then u.bImgHost.Visible=hasB end
       u.bImg.Visible=hasB
       if hasB then
-        F.applyImageFrame(u.bannerContainer,u.bImg,{fit=pt.bf,zoom=pt.bz,x=pt.bx,y=pt.by,aspect=pt.ba},260,bh)
+        local bW=(u.bannerContainer.AbsoluteSize.X>=4)and u.bannerContainer.AbsoluteSize.X or(st._bw or 265)
+        F.applyImageFrame(u.bImgHost or u.bannerContainer,u.bImg,{fit=pt.bf,zoom=pt.bz,x=pt.bx,y=pt.by,aspect=pt.ba},bW,bh)
       end
     end
   end
@@ -5516,12 +5961,13 @@ function F._PROF.applyImages(st)
       end
     else
       u.avImg.AnchorPoint=v2(0.5,0.5);u.avImg.Position=us(0.5,0.5);u.avImg.Size=us(1,1);u.avImg.ScaleType=Enum.ScaleType.Crop
-      if u.avImgCorner then u.avImgCorner.CornerRadius=u1(0.5,0)end
+      if u.avImgCorner then u.avImgCorner.CornerRadius=u1(ir/100,0)end
     end
   end
   if u.boxBgImg and u.boxBgImg.Parent and pt.bgImg~=""then
-    local bw,bh=u.box and u.box.AbsoluteSize.X or 420,u.box and u.box.AbsoluteSize.Y or 540
-    F.applyImageFrame(u.box,u.boxBgImg,{fit=pt.wf,zoom=pt.wz,x=pt.wx,y=pt.wy,aspect=pt.wa},bw,bh)
+    local bw=(u.box and u.box.AbsoluteSize.X>=4)and u.box.AbsoluteSize.X or st._mw or 420
+    local bh=(u.box and u.box.AbsoluteSize.Y>=4)and u.box.AbsoluteSize.Y or st._mh or 540
+    F.applyImageFrame(u.boxImgHost or u.box,u.boxBgImg,{fit=pt.wf,zoom=pt.wz,x=pt.wx,y=pt.wy,aspect=pt.wa},bw,bh)
   end
 end
 
@@ -5534,7 +5980,8 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
   local useGlow=(pt.glow~=false)
   local useGrad=(mode=="gradient"or mode=="mesh"or mode=="glass")
   local isGlass=(mode=="glass")
-  local cardTrans=isGlass and 0.24 or(useGrad and 0.08 or 0)
+  local hasBgImg=(mode=="image"and pt.bgImg~="")
+  local cardTrans=isGlass and 0.24 or(hasBgImg and 0.24 or(useGrad and 0.08 or 0))
   local fm=FONT_MAP[pt.font or"gotham"]or FONT_MAP.gotham
   local pReg,pBold=fm.reg,fm.bold
   local u=st.ui
@@ -5544,9 +5991,9 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
     if bc then bc.CornerRadius=u1(0,max(6,rad+2))end
     for _,co in ipairs({u.boxGradCorner,u.boxMeshCorner,u.boxImgCorner,u.boxTintCorner})do if co then co.CornerRadius=u1(0,max(6,rad+2))end end
     u.box.BackgroundColor3=cols.box
-    u.box.BackgroundTransparency=isGlass and 0.16 or 0
+    u.box.BackgroundTransparency=isGlass and 0.52 or(useGrad and 0.92 or 0)
     u.boxGradFrame.Visible=useGrad
-    u.boxGradFrame.BackgroundTransparency=isGlass and 0.18 or 0.04
+    u.boxGradFrame.BackgroundTransparency=isGlass and 0.34 or 0.04
     u.boxUIGrad.Rotation=gRot
     if isGlass then
       u.boxUIGrad.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,H.mix(cols.box,cols.acc,0.22)),ColorSequenceKeypoint.new(0.5,cols.card),ColorSequenceKeypoint.new(1,H.mix(cols.box,cols.g3,0.38))})
@@ -5606,14 +6053,17 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
     end
   end
   for _,c in ipairs(st.subCards)do
-    if c and c.Parent then c.BackgroundColor3=cols.sub;c.BackgroundTransparency=isGlass and 0.25 or 0;local so=c:FindFirstChildOfClass("UIStroke");if so then so.Color=cols.cBorder end end
+    if c and c.Parent then c.BackgroundColor3=cols.sub;c.BackgroundTransparency=isGlass and 0.28 or(hasBgImg and 0.22 or 0);local so=c:FindFirstChildOfClass("UIStroke");if so then so.Color=cols.cBorder end end
   end
   for _,inp in ipairs(st.inputs)do
     if inp and inp.Parent then inp.BackgroundColor3=cols.inpBg;inp.TextColor3=cols.inpTxt;inp.PlaceholderColor3=cols.muted;if inp.Font~=fCode then inp.Font=pReg end;local so=inp:FindFirstChildOfClass("UIStroke");if so then so.Color=cols.iBorder end end
   end
-  for _,lbl in ipairs(st.texts)do if lbl and lbl.Parent then lbl.TextColor3=cols.txt;local isB=(lbl.Font==fGB or lbl.Font==Enum.Font.GothamBold or lbl.Font==Enum.Font.SourceSansBold or lbl.Font==Enum.Font.RobotoMono or lbl.Font==Enum.Font.FredokaOne);lbl.Font=isB and pBold or pReg end end
-  for _,lbl in ipairs(st.muted)do if lbl and lbl.Parent then lbl.TextColor3=cols.muted;local isB=(lbl.Font==fGB or lbl.Font==Enum.Font.GothamBold or lbl.Font==Enum.Font.SourceSansBold or lbl.Font==Enum.Font.RobotoMono or lbl.Font==Enum.Font.FredokaOne);lbl.Font=isB and pBold or pReg end end
-  local onAccTxt=H.lum(cols.acc)>0.55 and rgb(20,20,24)or c3(1,1,1)
+  local function isBoldFont(fn)
+    return fn==fGB or fn==Enum.Font.GothamBold or fn==Enum.Font.SourceSansBold or fn==Enum.Font.RobotoMono or fn==Enum.Font.FredokaOne or fn==Enum.Font.Fantasy or fn==Enum.Font.Arcade or fn==Enum.Font.SciFi or fn==Enum.Font.PatrickHand
+  end
+  for _,lbl in ipairs(st.texts)do if lbl and lbl.Parent then lbl.TextColor3=cols.txt;lbl.Font=isBoldFont(lbl.Font)and pBold or pReg end end
+  for _,lbl in ipairs(st.muted)do if lbl and lbl.Parent then lbl.TextColor3=cols.muted;lbl.Font=isBoldFont(lbl.Font)and pBold or pReg end end
+  local onAccTxt=H.onColor(cols.acc)
   for _,item in ipairs(st.accents)do
     if item and item.Parent then
       if item:IsA("UIStroke")then item.Color=cols.acc
@@ -5648,34 +6098,18 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
   end
   if u.dnameLbl and u.dnameLbl.Parent then
     u.dnameLbl.Font=pBold
-    local eff=pt.nEff or"solid"
-    if eff=="solid"then
-      u.dnameLbl.TextColor3=H.ensureContrast(cols.txt,cols.card,4.6)
-      if u.dnameGrad then u.dnameGrad.Enabled=false end
-      if u.dnameStroke then u.dnameStroke.Transparency=1 end
-    else
-      u.dnameLbl.TextColor3=c3(1,1,1)
-      if u.dnameGrad then
-        u.dnameGrad.Enabled=true
-        if eff=="neon"then u.dnameGrad.Color=ColorSequence.new(rgb(110,231,255),rgb(192,132,252))
-        elseif eff=="gold"then u.dnameGrad.Color=ColorSequence.new(rgb(254,240,138),rgb(234,179,8))
-        elseif eff=="ice"then u.dnameGrad.Color=ColorSequence.new(rgb(224,247,255),rgb(56,189,248))
-        else u.dnameGrad.Color=ColorSequence.new(cols.acc,H.mix(cols.acc,cols.txt,0.45))end
-      end
-      if u.dnameStroke then
-        u.dnameStroke.Transparency=(eff=="neon")and 0.2 or 0.45
-        u.dnameStroke.Color=(eff=="neon")and H.mix(cols.acc,c3(0,0,0),0.5)or rgb(12,14,20)
-      end
-    end
+    F.applyNameEffectUi(u.dnameLbl,u.dnameGrad,u.dnameStroke,pt,cols.txt,cols.card,{accHex=H.tohex(cols.acc),autoOutlineOnLight=true})
   end
 
   if st.fn.refreshTabVisuals then st.fn.refreshTabVisuals()end
-  for k,mb in pairs(st.modeBtns)do if mb.btn and mb.btn.Parent then local on=(mode==k);mb.btn.BackgroundColor3=on and cols.acc or cols.sub;mb.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if mb.st then mb.st.Color=on and cols.acc or cols.cBorder end end end
-  for k,fb in pairs(st.fontBtns)do if fb.btn and fb.btn.Parent then local on=((pt.font or"gotham")==k);fb.btn.BackgroundColor3=on and cols.acc or cols.sub;fb.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if fb.st then fb.st.Color=on and cols.acc or cols.cBorder end end end
-  for k,db in pairs(st.decBtns)do if db.btn and db.btn.Parent then local on=((pt.avDec or"none")==k);db.btn.BackgroundColor3=on and cols.acc or cols.sub;local tc=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if db.lbl then db.lbl.TextColor3=tc else db.btn.TextColor3=tc end;if db.st then db.st.Color=on and cols.acc or cols.cBorder;db.st.Thickness=on and 1.6 or 1.1 end end end
-  for k,ab in pairs(st.ringAnimBtns)do if ab.btn and ab.btn.Parent then local on=((pt.ranim or"none")==k);ab.btn.BackgroundColor3=on and cols.acc or cols.sub;ab.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if ab.st then ab.st.Color=on and cols.acc or cols.cBorder end end end
+  for k,mb in pairs(st.modeBtns)do if mb.btn and mb.btn.Parent then local on=(mode==k);mb.btn.BackgroundColor3=on and cols.acc or cols.sub;mb.btn.TextColor3=on and onAccTxt or cols.txt;if mb.st then mb.st.Color=on and cols.acc or cols.cBorder end end end
+  for k,fb in pairs(st.fontBtns)do if fb.btn and fb.btn.Parent then local on=((pt.font or"gotham")==k);fb.btn.BackgroundColor3=on and cols.acc or cols.sub;fb.btn.TextColor3=on and onAccTxt or cols.txt;if fb.st then fb.st.Color=on and cols.acc or cols.cBorder end end end
+  for k,db in pairs(st.decBtns)do if db.btn and db.btn.Parent then local on=((pt.avDec or"none")==k);db.btn.BackgroundColor3=on and cols.acc or cols.sub;local tc=on and onAccTxt or cols.txt;if db.lbl then db.lbl.TextColor3=tc else db.btn.TextColor3=tc end;if db.st then db.st.Color=on and cols.acc or cols.cBorder;db.st.Thickness=on and 1.6 or 1.1 end end end
+  for k,ab in pairs(st.ringAnimBtns)do if ab.btn and ab.btn.Parent then local on=((pt.ranim or"none")==k);ab.btn.BackgroundColor3=on and cols.acc or cols.sub;ab.btn.TextColor3=on and onAccTxt or cols.txt;if ab.st then ab.st.Color=on and cols.acc or cols.cBorder end end end
+  for k,ab in pairs(st.nameAnimBtns or{})do if ab.btn and ab.btn.Parent then local on=((pt.nanim or"none")==k);ab.btn.BackgroundColor3=on and cols.acc or cols.sub;ab.btn.TextColor3=on and onAccTxt or cols.txt;if ab.st then ab.st.Color=on and cols.acc or cols.cBorder end end end
   if st.fn.refreshRingStudio then st.fn.refreshRingStudio()end
-  for k,nb in pairs(st.neffBtns)do if nb.btn and nb.btn.Parent then local on=((pt.nEff or"solid")==k);nb.btn.BackgroundColor3=on and cols.acc or cols.sub;nb.btn.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt;if nb.st then nb.st.Color=on and cols.acc or cols.cBorder end end end
+  if st.fn.refreshNameFxStudio then st.fn.refreshNameFxStudio()end
+  for k,nb in pairs(st.neffBtns)do if nb.btn and nb.btn.Parent then local on=((pt.nEff or"solid")==k);nb.btn.BackgroundColor3=on and cols.acc or cols.sub;if nb.st then nb.st.Color=on and cols.acc or cols.cBorder;nb.st.Thickness=on and 1.6 or 1.1 end end end
   for gk,gb in pairs(st.gStopBtns)do
     if gb.sw and gb.sw.Parent then
       local cC=(gk=="g1"and cols.g1)or(gk=="g2"and cols.g2)or cols.g3
@@ -5684,6 +6118,8 @@ function F._PROF.applyColors(st,bgHex,accHex,txtHex)
     end
   end
   if st.fn.refreshColorPickBtns then st.fn.refreshColorPickBtns(vBg,vAcc,vTxt)end
+  if st.fn.refreshBadgePills then st.fn.refreshBadgePills(cols)end
+  for _,fp in ipairs(st.fxPainters or{})do pcall(fp,cols)end
   F._PROF.applyImages(st)
 end
 
@@ -5691,6 +6127,17 @@ function F._PROF.buildLeftIdentity(st,parent)
   local u=st.ui
   local pt=st.pTheme
   local bh=clamp(tonumber(pt.bh)or 96,64,150)
+
+  if st.isPov then
+    local povBar=mk("Frame",{Size=u2(1,0,0,34),BackgroundColor3=st.cols.sub,BorderSizePixel=0,LayoutOrder=0},parent)
+    corner(povBar,8);mk("UIStroke",{Color=st.cols.acc,Thickness=1.2,Transparency=0.25,ApplyStrokeMode=smBorder},povBar)
+    F._PROF.ic(st,povBar,"eye",13,"acc",{pos=uo(10,10)})
+    local povL=lab(povBar,L=="en"and"Viewing as Others"or"Đang xem dưới góc nhìn người khác",{size=u2(1,-118,1,0),pos=uo(28,0),ts=10,bold=true,trunc=true})
+    st.texts[#st.texts+1]=povL
+    local exitPov=F._PROF.btn(st,povBar,L=="en"and"Exit View"or"Quay lại Sửa",{size=uo(84,24),pos=u2(1,-90,0,5),key="accent",ts=10,r=6})
+    hook(exitPov.MouseButton1Click,function()S.viewAs=false;F.openProfile(st.u,1,true)end)
+  end
+
   local hd=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundColor3=st.cols.card,BorderSizePixel=0,ClipsDescendants=true,LayoutOrder=1},parent)
   st.cards[#st.cards+1]=hd;st.cardCorners[#st.cardCorners+1]=corner(hd,pt.rad or 12)
   local hdSt=mk("UIStroke",{Color=st.cols.cBorder,Thickness=1.3,Transparency=0.25,ApplyStrokeMode=smBorder},hd)
@@ -5709,14 +6156,16 @@ function F._PROF.buildLeftIdentity(st,parent)
   u.bannerContainer=banner
   st.cardCorners[#st.cardCorners+1]=corner(banner,pt.rad or 12)
   u.bannerGrad=mk("UIGradient",{Rotation=pt.gRot or 22},banner)
-  u.bImg=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,Image="",Visible=(st.bannerId~=""),ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0,ZIndex=3},banner)
+  u.bImgHost=F.createClipHost(banner,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=3,Visible=(st.bannerId~="")})
+  st.cardCorners[#st.cardCorners+1]=corner(u.bImgHost,pt.rad or 12)
+  u.bImg=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,Image="",Visible=(st.bannerId~=""),ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0,ZIndex=3},u.bImgHost)
   if st.bannerId~=""then F.setAsset(u.bImg,st.bannerId)end
 
   if st.canEdit then
-    local qCrop=mk("TextButton",{Size=uo(72,22),Position=u2(1,-78,0,8),BackgroundColor3=rgb(14,16,22),BackgroundTransparency=0.28,Text="",AutoButtonColor=true,BorderSizePixel=0,ZIndex=6},hdTop)
+    local qCrop=mk("TextButton",{Size=uo(80,22),Position=u2(1,-86,0,8),BackgroundColor3=rgb(14,16,22),BackgroundTransparency=0.28,Text="",AutoButtonColor=true,BorderSizePixel=0,ZIndex=6},hdTop)
     corner(qCrop,11);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.3,ApplyStrokeMode=smBorder},qCrop)
     F.lucide(qCrop,"crop",11,{pos=uo(7,5),col=c3(1,1,1),themed=false})
-    local qcl=lab(qCrop,L=="en"and"Frame"or"Căn bìa",{size=u2(1,-22,1,0),pos=uo(20,0),ts=9,bold=true});qcl.TextColor3=c3(1,1,1)
+    local qcl=lab(qCrop,(st.bannerId=="")and(L=="en"and"+ Banner"or"+ Ảnh bìa")or(L=="en"and"Frame"or"Căn bìa"),{size=u2(1,-22,1,0),pos=uo(20,0),ts=9,bold=true});qcl.TextColor3=c3(1,1,1)
     hook(qCrop.MouseButton1Click,function()
       F.openImageCropStudio({
         target="banner",assetId=st.bannerId,
@@ -5724,8 +6173,10 @@ function F._PROF.buildLeftIdentity(st,parent)
         onApply=function(res)
           st.bannerId=res.id or""
           if st.fields.tBanner then st.fields.tBanner.Text=st.bannerId end
+          qcl.Text=(st.bannerId=="")and(L=="en"and"+ Banner"or"+ Ảnh bìa")or(L=="en"and"Frame"or"Căn bìa")
           pt.bf=res.fit;pt.bz=res.zoom;pt.bx=res.x;pt.by=res.y;pt.ba=res.aspect;pt.bh=res.height
           if st.bannerId~=""then F.setAsset(u.bImg,st.bannerId)end
+          st.markDirty()
           F._PROF.applyImages(st)
         end,
       })
@@ -5734,18 +6185,18 @@ function F._PROF.buildLeftIdentity(st,parent)
 
   -- Avatar nổi overlapping Banner (Discord cutout ring + Decoration ring + Online dot)
   local ir=clamp(tonumber(pt.ir)or 50,0,50)
-  local avWrap=mk("Frame",{Size=uo(78,78),Position=uo(14,max(8,bh-40)),BackgroundColor3=st.cols.card,BorderSizePixel=0,ZIndex=6},hdTop)
+  local avWrap=mk("Frame",{Size=uo(78,78),Position=uo(16,max(8,bh-40)),BackgroundColor3=st.cols.card,BorderSizePixel=0,ZIndex=6},hdTop)
   u.avWrap=avWrap;st.cards[#st.cards+1]=avWrap
   u.avOuterCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},avWrap)
   u.avStroke=mk("UIStroke",{Color=st.cols.card,Thickness=4,Transparency=0,ApplyStrokeMode=smBorder},avWrap)
 
-  local avHaloFrame=mk("Frame",{Size=u2(1,12,1,12),Position=uo(-6,-6),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=6,Visible=false},avWrap)
+  local avHaloFrame=mk("Frame",{Size=u2(1,8,1,8),Position=uo(-4,-4),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=7,Visible=false},avWrap)
   u.avHaloFrame=avHaloFrame
   u.avHaloCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},avHaloFrame)
-  u.avHaloStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=5,Transparency=0.66,ApplyStrokeMode=smBorder},avHaloFrame)
+  u.avHaloStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=4,Transparency=0.74,ApplyStrokeMode=smBorder},avHaloFrame)
   u.avHaloGrad=mk("UIGradient",{Rotation=35},u.avHaloStroke)
 
-  local avDecFrame=mk("Frame",{Size=u2(1,6,1,6),Position=uo(-3,-3),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=10,Visible=false},avWrap)
+  local avDecFrame=mk("Frame",{Size=u2(1,4,1,4),Position=uo(-2,-2),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=10,Visible=false},avWrap)
   u.avDecFrame=avDecFrame
   u.avDecCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},avDecFrame)
   u.avDecStroke=mk("UIStroke",{Color=c3(1,1,1),Thickness=2.8,Transparency=0,ApplyStrokeMode=smBorder},avDecFrame)
@@ -5758,19 +6209,38 @@ function F._PROF.buildLeftIdentity(st,parent)
   u.avImgCorner=mk("UICorner",{CornerRadius=u1(ir/100,0)},u.avImg)
   if st.iconId~=""then F.setAsset(u.avImg,st.iconId)end
 
+  if st.canEdit then
+    local avCam=mk("TextButton",{Size=uo(22,22),Position=uo(-2,54),BackgroundColor3=rgb(14,16,22),BackgroundTransparency=0.22,Text="",AutoButtonColor=true,BorderSizePixel=0,ZIndex=12},avWrap)
+    corner(avCam,11);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},avCam)
+    F.lucide(avCam,"crop",11,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=c3(1,1,1),themed=false,z=13})
+    hook(avCam.MouseButton1Click,function()
+      F.openImageCropStudio({
+        target="icon",assetId=st.iconId,
+        cfg={fit=pt["if"],zoom=pt.iz,x=pt.ix,y=pt.iy,aspect=pt.ia,radius=pt.ir},
+        onApply=function(res)
+          st.iconId=res.id or""
+          if st.fields.tIcon then st.fields.tIcon.Text=st.iconId end
+          pt["if"]=res.fit;pt.iz=res.zoom;pt.ix=res.x;pt.iy=res.y;pt.ia=res.aspect;pt.ir=res.radius
+          if st.iconId~=""then F.setAsset(u.avImg,st.iconId)else u.avImg.Image=F.avatarUrl(F.uidOf(st.u))end
+          st.markDirty();F._PROF.applyImages(st)
+        end,
+      })
+    end)
+  end
+
   local dotCol=st.banInfo and st.cols.danger or(st.muteInfo and st.cols.warn or(st.live and st.cols.ok or rgb(128,132,142)))
   local dot=mk("Frame",{Size=uo(16,16),Position=u2(1,-16,1,-16),BackgroundColor3=dotCol,BorderSizePixel=0,ZIndex=11},avWrap)
   corner(dot,8);u.avDotStroke=mk("UIStroke",{Thickness=2.6,Color=st.cols.card,ApplyStrokeMode=smBorder},dot)
 
   -- Bong bóng suy nghĩ (Status Thought Bubble kiểu Discord kèm 2 chấm nối)
   local stShort=(st.isSelf and P.status)or st.rec.status or""
-  u.dotDot1=mk("Frame",{Size=uo(6,6),Position=uo(90,bh+2),BackgroundColor3=st.cols.sub,BorderSizePixel=0,ZIndex=7,Visible=(stShort~=""or st.canEdit)},hdTop)
+  u.dotDot1=mk("Frame",{Size=uo(6,6),Position=uo(100,bh+2),BackgroundColor3=st.cols.sub,BorderSizePixel=0,ZIndex=7,Visible=(stShort~=""or st.canEdit)},hdTop)
   corner(u.dotDot1,3);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.35},u.dotDot1)
-  u.dotDot2=mk("Frame",{Size=uo(9,9),Position=uo(98,bh-5),BackgroundColor3=st.cols.sub,BorderSizePixel=0,ZIndex=7,Visible=(stShort~=""or st.canEdit)},hdTop)
+  u.dotDot2=mk("Frame",{Size=uo(9,9),Position=uo(108,bh-5),BackgroundColor3=st.cols.sub,BorderSizePixel=0,ZIndex=7,Visible=(stShort~=""or st.canEdit)},hdTop)
   corner(u.dotDot2,5);mk("UIStroke",{Color=st.cols.cBorder,Thickness=1,Transparency=0.35},u.dotDot2)
 
   local stBubble=mk("TextButton",{
-    Size=u2(1,-116,0,38),Position=uo(106,max(6,bh-24)),
+    Size=u2(1,-125,0,38),Position=uo(117,max(6,bh-24)),
     BackgroundColor3=st.cols.sub,Text="",AutoButtonColor=st.canEdit,BorderSizePixel=0,ZIndex=8,ClipsDescendants=true,
     Visible=(stShort~=""or st.canEdit),
   },hdTop)
@@ -5787,7 +6257,8 @@ function F._PROF.buildLeftIdentity(st,parent)
   local nameCol=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=1},body)
   list(nameCol,2)
   local dStr=F.disp((st.isSelf and P.display)or st.rec.display or st.u)
-  u.dnameLbl=mk("TextLabel",{Size=u2(1,0,0,22),BackgroundTransparency=1,Text=dStr,TextColor3=st.cols.txt,Font=fGB,TextSize=16,TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0,LayoutOrder=1},nameCol)
+  local nameClip=mk("Frame",{Size=u2(1,0,0,24),BackgroundTransparency=1,ClipsDescendants=true,LayoutOrder=1},nameCol)
+  u.dnameLbl=mk("TextLabel",{Size=uo(0,24),AutomaticSize=asX,BackgroundTransparency=1,Text=dStr,TextColor3=st.cols.txt,Font=fGB,TextSize=16,TextXAlignment=txL,BorderSizePixel=0},nameClip)
   u.dnameGrad=mk("UIGradient",{Rotation=15,Enabled=false},u.dnameLbl)
   local okCtx,ctxMode=pcall(function()return Enum.ApplyStrokeMode.Contextual end)
   u.dnameStroke=mk("UIStroke",{Thickness=1.2,Transparency=1,Color=rgb(12,14,20),ApplyStrokeMode=okCtx and ctxMode or smBorder},u.dnameLbl)
@@ -5827,25 +6298,35 @@ function F._PROF.buildLeftIdentity(st,parent)
   -- Dải huy hiệu gọn gàng (Status, Dev, Script Author, Theme/Mod Badges)
   local badgeWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=2},body)
   mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO,VerticalAlignment=vaC},badgeWrap)
-  local function badgePill(txt,col,icKey,ord)
+  local badgeRefs={}
+  local function badgePill(txt,colKey,colVal,icKey,ord)
     local offX=icKey and 16 or 0
     local pw=clamp(H.textW(txt,9,fGB)+12+offX,42,130)
-    local p=mk("Frame",{Size=uo(pw,18),BackgroundColor3=col,BackgroundTransparency=0.84,BorderSizePixel=0,LayoutOrder=ord},badgeWrap)
-    corner(p,9);mk("UIStroke",{Color=col,Thickness=1,Transparency=0.5,ApplyStrokeMode=smBorder},p)
-    if icKey then F.lucide(p,icKey,10,{pos=uo(6,4),col=col,themed=false})end
-    local pl=lab(p,txt,{size=u2(1,-offX-4,1,0),pos=uo(offX+2,0),ts=9,bold=true,align=txC,trunc=true});pl.TextColor3=col
+    local p=mk("Frame",{Size=uo(pw,18),BackgroundColor3=colVal,BackgroundTransparency=0.84,BorderSizePixel=0,LayoutOrder=ord},badgeWrap)
+    corner(p,9);local bSt=mk("UIStroke",{Color=colVal,Thickness=1,Transparency=0.45,ApplyStrokeMode=smBorder},p)
+    local bIc=icKey and F.lucide(p,icKey,10,{pos=uo(6,4),col=colVal,themed=false})or nil
+    local pl=lab(p,txt,{size=u2(1,-offX-4,1,0),pos=uo(offX+2,0),ts=9,bold=true,align=txC,trunc=true});pl.TextColor3=colVal
+    badgeRefs[#badgeRefs+1]={p=p,st=bSt,ic=bIc,lbl=pl,key=colKey,col=colVal}
     return p,pl
   end
+  st.fn.refreshBadgePills=function(cCols)
+    for _,br in ipairs(badgeRefs)do
+      local base=br.key and cCols[br.key]or br.col
+      local rc=H.ensureContrast(base,cCols.card,4.0)
+      br.p.BackgroundColor3=rc;br.st.Color=rc;br.lbl.TextColor3=rc
+      if br.ic then br.ic.ImageColor3=rc end
+    end
+  end
   local bOrd=1
-  badgePill(st.live and T("live")or T("off"),st.live and st.cols.ok or st.cols.muted,"activity",bOrd);bOrd=bOrd+1
-  if st.isDevU then badgePill("DEV",rgb(250,168,26),"crown",bOrd);bOrd=bOrd+1 end
+  badgePill(st.live and T("live")or T("off"),st.live and"ok"or"muted",st.live and st.cols.ok or st.cols.muted,"activity",bOrd);bOrd=bOrd+1
+  if st.isDevU then badgePill("DEV",nil,rgb(250,168,26),"crown",bOrd);bOrd=bOrd+1 end
   local scCount=0
   for _,sc in ipairs(S.scripts or{})do if tostring(sc.author or""):lower()==st.uLower then scCount=scCount+1 end end
-  if scCount>0 then badgePill(scCount.." Script"..(scCount>1 and"s"or""),st.cols.acc,"code",bOrd);bOrd=bOrd+1 end
-  if st.muteInfo then badgePill("MUTED",st.cols.danger,"volumeX",bOrd);bOrd=bOrd+1 end
-  if st.banInfo then badgePill("BANNED",st.cols.danger,"ban",bOrd);bOrd=bOrd+1 end
-  if#st.warnList>0 then badgePill(#st.warnList.." "..T("warnings"),st.cols.warn,"alertTri",bOrd);bOrd=bOrd+1 end
-  local chromaP,chromaPL=badgePill("CHROMA",st.cols.acc,"sparkles",bOrd);bOrd=bOrd+1
+  if scCount>0 then badgePill(scCount.." Script"..(scCount>1 and"s"or""),"acc",st.cols.acc,"code",bOrd);bOrd=bOrd+1 end
+  if st.muteInfo then badgePill("MUTED","danger",st.cols.danger,"volumeX",bOrd);bOrd=bOrd+1 end
+  if st.banInfo then badgePill("BANNED","danger",st.cols.danger,"ban",bOrd);bOrd=bOrd+1 end
+  if#st.warnList>0 then badgePill(#st.warnList.." "..T("warnings"),"warn",st.cols.warn,"alertTri",bOrd);bOrd=bOrd+1 end
+  local chromaP,chromaPL=badgePill("CHROMA","acc",st.cols.acc,"sparkles",bOrd);bOrd=bOrd+1
   st.fn.refreshThemeBadges=function()
     local m=pt.mode or"solid";local isCh=(m=="gradient"or m=="mesh"or m=="glass")
     chromaP.Visible=isCh
@@ -5857,10 +6338,21 @@ function F._PROF.buildLeftIdentity(st,parent)
   st.fn.refreshThemeBadges()
 
   -- Hàng nút hành động chính kiểu Discord [Edit / Studio / POV / Share] hoặc [DM / Card / Share / Report]
+  local shArm=0
+  local function tapShareCard()
+    local nowC=os.clock()
+    if nowC-shArm>4 then
+      shArm=nowC
+      F.toast(L=="en"and("Tap Share again in 4s to post @"..st.u.."'s Profile Card to chat")or("Bấm Chia sẻ lần nữa trong 4s để gửi Thẻ Hồ Sơ @"..st.u.." vào chat"),true)
+      return
+    end
+    shArm=0
+    F.shareProfileCard(st.u)
+  end
   local actRow=row(body,30,3)
   if st.canEdit then
-    local edB=F._PROF.btn(st,actRow,"  "..(L=="en"and"Edit Profile"or"Sửa hồ sơ"),{size=u2(1,-138,1,0),key="accent",ts=11,r=7,layout=1})
-    F._PROF.ic(st,edB,"pencil",13,"onAcc",{pos=uo(10,8)})
+    local edB=F._PROF.btn(st,actRow,L=="en"and"Edit Profile"or"Sửa hồ sơ",{size=u2(1,-138,1,0),key="accent",ts=11,r=7,layout=1})
+    F._PROF.btnIcon(st,edB,"pencil",13,"onAcc",26,10)
     hook(edB.MouseButton1Click,function()if st.fn.setTab then st.fn.setTab(3)end end)
 
     local imgB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=2})
@@ -5869,18 +6361,21 @@ function F._PROF.buildLeftIdentity(st,parent)
 
     local povB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=3})
     F._PROF.ic(st,povB,S.viewAs and"eyeOff"or"eye",14,"txt",{pos=uo(8,8)})
-    hook(povB.MouseButton1Click,function()S.viewAs=not S.viewAs;F.openProfile(st.u,1)end)
+    hook(povB.MouseButton1Click,function()
+      if st.dirty then F.toast(L=="en"and"Save changes first before viewing Preview"or"Hãy lưu chỉnh sửa trước khi xem góc nhìn người khác",true);return end
+      S.viewAs=not S.viewAs;F.openProfile(st.u,1,true)
+    end)
 
     local shB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=4})
     F._PROF.ic(st,shB,"forward",14,"ok",{pos=uo(8,8)})
-    hook(shB.MouseButton1Click,function()F.shareProfileCard(st.u)end)
+    hook(shB.MouseButton1Click,tapShareCard)
 
     local setB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=5})
     F._PROF.ic(st,setB,"settings",14,"txt",{pos=uo(8,8)})
     hook(setB.MouseButton1Click,function()F.openSettings()end)
   else
-    local dmB=F._PROF.btn(st,actRow,"  "..T("dm"),{size=u2(1,-104,1,0),key="accent",ts=11,r=7,layout=1})
-    F._PROF.ic(st,dmB,"msgCircle",13,"onAcc",{pos=uo(10,8)})
+    local dmB=F._PROF.btn(st,actRow,T("dm"),{size=u2(1,-104,1,0),key="accent",ts=11,r=7,layout=1})
+    F._PROF.btnIcon(st,dmB,"msgCircle",13,"onAcc",26,10)
     hook(dmB.MouseButton1Click,function()F.openDM(st.u)end)
 
     local copyB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=2})
@@ -5889,12 +6384,12 @@ function F._PROF.buildLeftIdentity(st,parent)
 
     local shB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=3})
     F._PROF.ic(st,shB,"forward",13,"ok",{pos=uo(8,8)})
-    hook(shB.MouseButton1Click,function()F.shareProfileCard(st.u)end)
+    hook(shB.MouseButton1Click,tapShareCard)
 
     local thirdB=F._PROF.btn(st,actRow,"",{size=uo(30,30),key="btnBg",r=7,layout=4})
     if st.isSelf then
       F._PROF.ic(st,thirdB,"eyeOff",14,"ok",{pos=uo(8,8)})
-      hook(thirdB.MouseButton1Click,function()S.viewAs=false;F.openProfile(st.u,1)end)
+      hook(thirdB.MouseButton1Click,function()S.viewAs=false;F.openProfile(st.u,1,true)end)
     else
       F._PROF.ic(st,thirdB,"flag",13,"warn",{pos=uo(8,8)})
       hook(thirdB.MouseButton1Click,function()F.openReport(st.u)end)
@@ -5985,9 +6480,9 @@ function F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
   local edRow=row(edBox,24,3)
   local svB=F._PROF.btn(st,edRow,L=="en"and"Save"or"Lưu",{size=u2(0.36,-4,1,0),key="accent",ts=10,r=6,layout=1})
   local rstB=F._PROF.btn(st,edRow,L=="en"and"Default"or"Mặc định",{size=u2(0.34,-4,1,0),key="btnBg",ts=10,r=6,layout=2})
-  local clB=F._PROF.btn(st,edRow,L=="en"and"Close"or"Đóng",{size=u2(0.30,0,1,0),key="btnBg",ts=10,r=6,layout=3})
+  local clB=F._PROF.btn(st,edRow,L=="en"and"Cancel"or"Hủy",{size=u2(0.30,0,1,0),key="btnBg",ts=10,r=6,layout=3})
 
-  local editMode=nil
+  local editMode,prevAb,prevHi=nil,nil,nil
   local function applyPreview(rawVal)
     local val=H.trim(rawVal or"")
     if editMode=="abLbl"then
@@ -6008,7 +6503,10 @@ function F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
   end
 
   local function persistNow()
-    P.profTheme=F.compactProfTheme(pt)
+    local curPt=type(P.profTheme)=="table"and H.copy(P.profTheme)or{}
+    curPt.abLbl=(pt.abLbl~=""and pt.abLbl)or nil
+    curPt.hiTxt=(pt.hiTxt~=""and pt.hiTxt)or nil
+    P.profTheme=F.compactProfTheme(curPt)
     P._profCleared=false
     if S.users[P.username]then S.users[P.username].profTheme=P.profTheme end
     F.rememberProfile(P.username,{u=P.username,display=P.display,userId=LP.UserId,status=P.status,bio=P.bio,country=P.country,profBanner=P.profBanner,profIcon=P.profIcon,profTheme=P.profTheme,_allowClear=true,_localSave=true,_fromProfileApi=true},true)
@@ -6017,9 +6515,16 @@ function F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
     if F.rebuildFeed then pcall(F.rebuildFeed,true)end
   end
 
+  local function rollbackInline()
+    if editMode=="abLbl"and prevAb~=nil then applyPreview(prevAb)
+    elseif editMode=="hiTxt"and prevHi~=nil then applyPreview(prevHi)end
+    edBox.Visible=false;editMode=nil;prevAb=nil;prevHi=nil
+  end
+
   local function openEditor(mode)
-    if edBox.Visible and editMode==mode then edBox.Visible=false;editMode=nil;return end
-    editMode=mode
+    if edBox.Visible and editMode==mode then rollbackInline();return end
+    if edBox.Visible and editMode~=mode then rollbackInline()end
+    editMode=mode;prevAb=pt.abLbl or"";prevHi=pt.hiTxt or""
     if mode=="abLbl"then
       edHdr.Text=L=="en"and"Edit Section Label (replaces 'About Me', max 40 chars)"or"Sửa nhãn mục (thay 'About Me', tối đa 40 ký tự)"
       edInp.PlaceholderText=L=="en"and"About Me"or"About Me / Giới thiệu..."
@@ -6040,7 +6545,7 @@ function F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
     if not editMode then return end
     applyPreview(edInp.Text)
     persistNow()
-    edBox.Visible=false;editMode=nil
+    edBox.Visible=false;editMode=nil;prevAb=nil;prevHi=nil
     F.toast(T("saved_ok"),true)
   end)
   hook(rstB.MouseButton1Click,function()
@@ -6048,16 +6553,16 @@ function F._PROF.attachBioInlineEditor(st,spot,topBar,tl,hiRow,hiL,dStr)
     edInp.Text=""
     applyPreview("")
     persistNow()
-    edBox.Visible=false;editMode=nil
+    edBox.Visible=false;editMode=nil;prevAb=nil;prevHi=nil
     F.toast(T("saved_ok"),true)
   end)
-  hook(clB.MouseButton1Click,function()edBox.Visible=false;editMode=nil end)
+  hook(clB.MouseButton1Click,rollbackInline)
 end
 
 function F.shareProfileCard(uName)
   local target=H.trim(tostring(uName or P.username)):gsub("^@","")
   if target==""then return end
-  F.closeModal()
+  F.closeModal(true)
   if S.chan=="scripts"or S.chan=="punish"then F.selectChannel("general")end
   U.input.Text="[profile:"..target.."]"
   F.sendNow()
@@ -6106,7 +6611,7 @@ function F._PROF.buildMusicCard(st,parent,wOrd)
     local tLbl=lab(rowF,"🎵 "..F.disp(dispTitle),{size=u2(1,-108,1,0),pos=uo(8,0),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=tLbl
     if tr.title==""and cachedNm==""then F.resolveSoundName(tr.id,function(nm)if tLbl.Parent then tLbl.Text="🎵 "..F.disp(nm)end end)end
     local isOn=(S.activeSoundId==tr.id and S.activeSound and S.activeSound.IsPlaying)
-    local plB=tbtn(rowF,isOn and("⏹ "..T("sound_stop"))or("▶ "..T("sound_play")),{size=uo(62,24),pos=u2(1,-98,0,4),key=isOn and"danger"or"accent",ts=10,r=6})
+    local plB=tbtn(rowF,isOn and("|| "..T("sound_stop"))or("> "..T("sound_play")),{size=uo(62,24),pos=u2(1,-98,0,4),key=isOn and"danger"or"accent",ts=10,r=6})
     S.soundBtns=S.soundBtns or{};S.soundBtns[tr.id]=S.soundBtns[tr.id]or{}
     tinsert(S.soundBtns[tr.id],{btn=plB})
     hook(plB.MouseButton1Click,function()F.playInlineSound(tr.id)end)
@@ -6125,8 +6630,8 @@ function F._PROF.buildBoardTab(st,parent)
   local headerRow=row(parent,24,1)
   local bHdr=lab(headerRow,L=="en"and"Profile Board & Widgets"or"Bảng Hồ Sơ & Tiện Ích",{size=u2(1,-120,1,0),ts=11,bold=true});st.muted[#st.muted+1]=bHdr
   if st.canEdit then
-    local addW=F._PROF.btn(st,headerRow,"  "..(L=="en"and"Widgets"or"Tuỳ chỉnh"),{size=uo(106,24),pos=u2(1,-106,0,0),key="btnBg",ts=10,r=6})
-    F._PROF.ic(st,addW,"grid",12,"txt",{pos=uo(8,6)})
+    local addW=F._PROF.btn(st,headerRow,L=="en"and"Widgets"or"Tuỳ chỉnh",{size=uo(106,24),pos=u2(1,-106,0,0),key="btnBg",ts=10,r=6})
+    F._PROF.btnIcon(st,addW,"grid",12,"txt",24,8)
     hook(addW.MouseButton1Click,function()if st.fn.openWidgetModal then st.fn.openWidgetModal()end end)
   end
 
@@ -6146,8 +6651,8 @@ function F._PROF.buildBoardTab(st,parent)
     end
   end
 
-  local bioText=(st.isSelf and P.bio)or st.rec.bio or""
-  local dStr=F.disp((st.isSelf and P.display)or st.rec.display or st.u)
+  local bioText=(st.fields and st.fields.tBio and H.clip(H.trim(st.fields.tBio.Text),180))or(st.isSelf and P.bio)or st.rec.bio or""
+  local dStr=F.disp((st.fields and st.fields.tName and(H.trim(st.fields.tName.Text)~=""and H.trim(st.fields.tName.Text)or LP.DisplayName))or(st.isSelf and P.display)or st.rec.display or st.u)
   local gName=(st.isSelf and(S.placeName~="?"and S.placeName or"Roblox"))or st.rec.gameName or""
   local gPlace=(st.isSelf and game.PlaceId)or st.rec.placeId or 0
   local gJob=(st.isSelf and tostring(game.JobId or""))or st.rec.jobId or""
@@ -6156,7 +6661,7 @@ function F._PROF.buildBoardTab(st,parent)
   local wOrd=2
   local renderedMusic=false
   for _,wKey in ipairs(wList)do
-    if wKey=="music"then
+    if wKey=="music"and not pt.mHide then
       if F._PROF.buildMusicCard(st,parent,wOrd)then wOrd=wOrd+1;renderedMusic=true end
     elseif wKey=="bio"then
       local spot=F._PROF.makeCard(st,parent,wOrd,12,10);wOrd=wOrd+1
@@ -6174,7 +6679,7 @@ function F._PROF.buildBoardTab(st,parent)
         local hiL=lab(spot,F.disp(hiText),{ts=15,bold=true,wrap=true,auto=true,layout=2})
         st.texts[#st.texts+1]=hiL;u.spotTitle=hiL
       end
-      local emptyBio=st.isSelf and(L=="en"and"No bio yet — switch to the Edit tab to customize your intro."or"Chưa có tiểu sử — chọn tab Sửa hồ sơ để viết giới thiệu.")or(L=="en"and"No bio written."or"Chưa viết tiểu sử.")
+      local emptyBio=st.isSelf and(L=="en"and"No bio yet — switch to the Edit tab to customize your intro."or"Chưa có tiểu sử — chọn tab Sửa để viết giới thiệu.")or(L=="en"and"No bio written."or"Chưa viết tiểu sử.")
       local bl=lab(spot,bioText~=""and F.disp(bioText)or emptyBio,{ts=11,wrap=true,auto=true,layout=3})
       u.spotBio=bl
       if bioText==""then st.muted[#st.muted+1]=bl else st.texts[#st.texts+1]=bl end
@@ -6221,7 +6726,7 @@ function F._PROF.buildBoardTab(st,parent)
       local gnLbl=lab(gRow,F.disp(gName),{size=u2(1,-164,0,18),pos=uo(52,3),ts=12,bold=true,trunc=true});st.texts[#st.texts+1]=gnLbl
       local gpLbl=lab(gRow,"PlaceId: "..tostring(gPlace)..(gJob~=""and(" · "..gJob:sub(1,8).."...")or""),{size=u2(1,-164,0,14),pos=uo(52,23),ts=9,trunc=true});st.muted[#st.muted+1]=gpLbl
       local isSame=(tonumber(gPlace)==game.PlaceId and gJob==tostring(game.JobId or""))
-      local jBtn=F._PROF.btn(st,gRow,isSame and(L=="en"and"Same Server"or"Cùng Server")or(" "..T("join")),{pos=u2(1,-108,0,9),size=uo(108,28),key=isSame and"btnBg"or"ok",ts=10,r=6,track=isSame})
+      local jBtn=F._PROF.btn(st,gRow,isSame and(L=="en"and"Same Server"or"Cùng Server")or T("join"),{pos=u2(1,-108,0,9),size=uo(108,28),key=isSame and"btnBg"or"ok",ts=10,r=6,track=isSame})
       hook(jBtn.MouseButton1Click,function()
         if isSame then F.toast(T("join_srv_self"),true);return end
         if F.armAutoTeleport then F.armAutoTeleport(true)end
@@ -6258,7 +6763,7 @@ function F._PROF.buildBoardTab(st,parent)
       end
     end
   end
-  if not renderedMusic and H.trim(pt.music or"")~=""then
+  if not renderedMusic and not pt.mHide and H.trim(pt.music or"")~=""then
     F._PROF.buildMusicCard(st,parent,wOrd)
   end
 end
@@ -6456,29 +6961,31 @@ function F._PROF.buildEditTab(st,parent)
     st.inputs[#st.inputs+1]=tb
     return tb
   end
-  local tName=profField(T("name"),P.display,false,1)
+  local tName=profField(T("name"),P.display,false,1);tName.PlaceholderText=tostring(LP.DisplayName or"")
   local tStatus=profField(T("status"),P.status,false,2);tStatus.PlaceholderText=T("status_ph")
   local stRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=3},infoCard)
   mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO},stRow)
-  for idx,preset in ipairs({"Gaming","Coding","Scripting","AFK","Busy","X"})do
-    local sb=F._PROF.btn(st,stRow,preset,{size=uo(preset=="X"and 28 or 66,22),ts=10,key="btnBg",r=6,layout=idx})
-    hook(sb.MouseButton1Click,function()tStatus.Text=(preset=="X"and""or preset)end)
+  for idx,preset in ipairs({"Gaming","Coding","Scripting","AFK","Busy","CLEAR"})do
+    local lblTxt=(preset=="CLEAR")and(L=="en"and"Clear"or"Xoá")or preset
+    local sb=F._PROF.btn(st,stRow,lblTxt,{size=uo(preset=="CLEAR"and 50 or 64,22),ts=10,key="btnBg",r=6,layout=idx})
+    hook(sb.MouseButton1Click,function()tStatus.Text=(preset=="CLEAR"and""or preset)end)
   end
-  local tBio=profField(T("bio"),P.bio,true,4);tBio.PlaceholderText=T("bio_ph")
+  local tBio=profField(T("bio").." ("..(L=="en"and"max 180"or"tối đa 180")..")",P.bio,true,4);tBio.PlaceholderText=T("bio_ph")
   local tTag=profField(L=="en"and"Profile Flair / Tag Badge (max 36 chars)"or"Nhãn cá nhân / Flair Badge (tối đa 36 ký tự)",pt.tag,false,5)
   tTag.PlaceholderText=L=="en"and"e.g. Script Dev, Trade King, Chill..."or"vd: Script Dev, Collector, Chill..."
   local tAboutLbl=profField(L=="en"and"Board Section Label (replaces 'About Me', max 40 chars)"or"Nhãn mục Giới thiệu trên Board (thay 'About Me', tối đa 40 ký tự)",pt.abLbl,false,6)
   tAboutLbl.PlaceholderText=L=="en"and"e.g. About Me, Info, Bio..."or"vd: About Me, Giới thiệu, Info..."
   local tHiTxt=profField(L=="en"and"Board Greeting Headline (replaces 'Hi, I'm ...!', max 70 chars)"or"Tiêu đề chào hỏi trên Board (thay 'Hi, I'm ...!', tối đa 70 ký tự)",pt.hiTxt,false,7)
-  tHiTxt.PlaceholderText=L=="en"and"e.g. Hi, I'm Dumb!"or"vd: Hi, I'm Dumb!"
+  tHiTxt.PlaceholderText=(L=="en"and"e.g. Hi, I'm "or"VD: Hi, I'm ")..tostring(P.display or LP.DisplayName).."!"
   local tCountry=profField(L=="en"and"Country (ISO Code or Full Name)"or"Quốc gia (Mã 2 chữ hoặc Tên đầy đủ)",P.country,false,8)
   local ccPv=lab(infoCard,"",{ts=10,key="ok",h=16,layout=9})
-  local function updCc()
+  local function updCc(markD)
     local res=H.resolveCountry(tCountry.Text)
     ccPv.Text="-> "..H.flag(res).." "..H.countryName(res).." ("..res..")"
     if st.fn.refreshFlag then st.fn.refreshFlag(res)end
+    if markD then st.markDirty()end
   end
-  hook(tCountry:GetPropertyChangedSignal("Text"),updCc);updCc()
+  hook(tCountry:GetPropertyChangedSignal("Text"),function()updCc(true)end);updCc(false)
   local ccRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=10},infoCard)
   mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,4),SortOrder=soLO},ccRow)
   for idx,ccode in ipairs({"VN","US","IL","UA","JP","KR","GB","SG","??"})do
@@ -6487,6 +6994,7 @@ function F._PROF.buildEditTab(st,parent)
   end
   local tMusic=profField(L=="en"and"Favorite Music (Sound IDs or [sound:ID]|Name, max 4)"or"Nhạc Roblox yêu thích (Sound ID hoặc [sound:ID]|Tên, tối đa 4)",pt.music,false,11)
   tMusic.PlaceholderText=L=="en"and"e.g. 1837879082|Chill Beat, 9043887091"or"VD: 1837879082|Chill Beat, [sound:9043887091]"
+  hook(tMusic:GetPropertyChangedSignal("Text"),function()pt.music=F.normalizeMusicInput(tMusic.Text);st.markDirty()end)
   st.fields.tMusic=tMusic
 
   -- Ghim Script nổi bật lên Profile Board
@@ -6501,22 +7009,56 @@ function F._PROF.buildEditTab(st,parent)
     mk("UIListLayout",{FillDirection=fdH,Wraps=true,Padding=u1(0,5),SortOrder=soLO},pinWrap)
     local pBtns={}
     local function paintPinBtns()
-      for sid,b in pairs(pBtns)do local on=(pt.pinSc==sid);b.BackgroundColor3=on and st.cols.acc or st.cols.sub;b.TextColor3=on and H.ensureContrast(rgb(255,255,255),st.cols.acc,4.5)or st.cols.txt end
+      local onTxt=H.onColor(st.cols.acc)
+      for sid,b in pairs(pBtns)do local on=(pt.pinSc==sid);b.BackgroundColor3=on and st.cols.acc or st.cols.sub;b.TextColor3=on and onTxt or st.cols.txt end
     end
     local noneB=F._PROF.btn(st,pinWrap,L=="en"and"Auto Latest"or"Tự động mới nhất",{size=uo(106,24),ts=10,r=6,layout=0,track=false});pBtns[""]=noneB
-    hook(noneB.MouseButton1Click,function()pt.pinSc="";paintPinBtns()end)
+    hook(noneB.MouseButton1Click,function()pt.pinSc="";paintPinBtns();st.markDirty()end)
     for idx=1,min(8,#myScripts)do
       local sc=myScripts[idx];local sid=tostring(sc.id)
       local b=F._PROF.btn(st,pinWrap,H.clip(sc.title or sid,18),{size=uo(clamp(H.textW(H.clip(sc.title or sid,18),10,fGB)+16,64,160),24),ts=10,r=6,layout=idx,track=false})
-      pBtns[sid]=b;hook(b.MouseButton1Click,function()pt.pinSc=sid;paintPinBtns()end)
+      pBtns[sid]=b;hook(b.MouseButton1Click,function()pt.pinSc=sid;paintPinBtns();st.markDirty()end)
     end
     paintPinBtns()
   end
+
+  -- Quyền & Dữ liệu Cloud (dễ tìm hơn cho người dùng mới)
+  F._PROF.section(st,parent,L=="en"and"ACCOUNT & CLOUD DATA"or"TÀI KHOẢN & DỮ LIỆU CLOUD",4,"shield")
+  local accCard=F._PROF.makeCard(st,parent,5,12,10)
+  local ar1=row(accCard,28,1)
+  local rqB=F._PROF.btn(st,ar1,T("request_title"),{size=u2(0.48,-3,1,0),key="btnBg",ts=10,r=6})
+  hook(rqB.MouseButton1Click,function()F.openRequest()end)
+  local delBusy,delArm=false,0
+  local rstCloudB=F._PROF.btn(st,ar1,L=="en"and"Reset Cloud Profile"or"Xóa Data Profile",{size=u2(0.52,-3,1,0),key="danger",ts=10,r=6})
+  hook(rstCloudB.MouseButton1Click,function()
+    if delBusy then return end
+    local nowC=os.clock()
+    if nowC-delArm>4 then
+      delArm=nowC;rstCloudB.Text=L=="en"and"Tap again in 4s!"or"Bấm lại trong 4s!"
+      task.delay(4.1,function()if rstCloudB and rstCloudB.Parent and not delBusy and os.clock()-delArm>=4 then rstCloudB.Text=L=="en"and"Reset Cloud Profile"or"Xóa Data Profile"end end)
+      return
+    end
+    delArm=0;delBusy=true
+    F.toast(L=="en"and"Clearing your profile data..."or"Đang xóa Data Profile...",true)
+    task.spawn(function()
+      local d,err=F.rawRequest("POST","/api/profile",{action="delete",target=P.username,by=P.username,reason="Self reset profile data"})
+      delBusy=false
+      if type(d)=="table"and d.ok then
+        P.status="";P.bio="";P.profBanner="";P.profIcon="";P.profTheme={}
+        P._profCleared=true;P._profSavedAt=H.now()
+        F.rememberProfile(P.username,{_forceReset=true},true)
+        S.isDirty=true;F.save(true);F.heartbeat(false)
+        F.toast(L=="en"and"Cleared your profile data!"or"Đã xóa sạch Data Profile!",true)
+        F.openProfile(P.username,1,true)
+      else F.netError(type(d)=="table"and d.error or err)end
+    end)
+  end)
 
   hook(tName:GetPropertyChangedSignal("Text"),function()
     local s=H.trim(tName.Text);local ds=F.disp(s~=""and s or LP.DisplayName)
     if u.dnameLbl then u.dnameLbl.Text=ds end
     if u.spotTitle and H.trim(pt.hiTxt or"")==""then u.spotTitle.Text=(L=="en"and"Hi, I'm "or"Xin chào, mình là ")..ds.."!"end
+    st.markDirty()
   end)
   hook(tStatus:GetPropertyChangedSignal("Text"),function()
     local s=H.trim(tStatus.Text)
@@ -6524,20 +7066,24 @@ function F._PROF.buildEditTab(st,parent)
     if u.dotDot1 then u.dotDot1.Visible=(s~=""or st.canEdit)end
     if u.dotDot2 then u.dotDot2.Visible=(s~=""or st.canEdit)end
     if u.stBubbleLbl then u.stBubbleLbl.Text=s~=""and F.disp(s)or(L=="en"and"+ Set status..."or"+ Đặt trạng thái...");u.stBubbleLbl.TextColor3=s~=""and st.cols.txt or st.cols.muted end
+    st.markDirty()
   end)
   hook(tBio:GetPropertyChangedSignal("Text"),function()
     local s=H.trim(tBio.Text)
     if u.spotBio then u.spotBio.Text=s~=""and F.disp(s)or(L=="en"and"No bio yet."or"Chưa có tiểu sử.");u.spotBio.TextColor3=s~=""and st.cols.txt or st.cols.muted end
+    st.markDirty()
   end)
-  hook(tTag:GetPropertyChangedSignal("Text"),function()if st.fn.refreshFlair then st.fn.refreshFlair(tTag.Text)end end)
+  hook(tTag:GetPropertyChangedSignal("Text"),function()if st.fn.refreshFlair then st.fn.refreshFlair(tTag.Text)end;st.markDirty()end)
   hook(tAboutLbl:GetPropertyChangedSignal("Text"),function()
     local s=H.clip(H.trim(tAboutLbl.Text),40);pt.abLbl=s
     if u.aboutLbl then u.aboutLbl.Text="@"..st.u.." · "..F.disp(s~=""and s or(L=="en"and"About Me"or"Giới thiệu"))end
+    st.markDirty()
   end)
   hook(tHiTxt:GetPropertyChangedSignal("Text"),function()
     local s=H.clip(H.trim(tHiTxt.Text),70);pt.hiTxt=s
     local dn=H.trim(tName.Text);local ds=F.disp(dn~=""and dn or LP.DisplayName)
     if u.spotTitle then u.spotTitle.Text=s~=""and F.disp(s)or((L=="en"and"Hi, I'm "or"Xin chào, mình là ")..ds.."!")end
+    st.markDirty()
   end)
   st.fields.tName=tName;st.fields.tStatus=tStatus;st.fields.tBio=tBio;st.fields.tCountry=tCountry;st.fields.tTag=tTag;st.fields.tAboutLbl=tAboutLbl;st.fields.tHiTxt=tHiTxt
 end
@@ -6549,8 +7095,8 @@ function F._PROF.buildImagesTab(st,parent)
   local nRow=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},noteC)
   F._PROF.ic(st,nRow,"sparkles",15,"acc",{pos=uo(0,2)})
   local nl=lab(nRow,L=="en"
-    and"Roblox Store decals are automatically resolved to native HD textures. Tap 'Crop / Frame' to drag, zoom (100-300%), change Fit mode (Crop/Fit/Stretch/Tile), or adjust aspect ratio!"
-    or"Ảnh Decal từ Roblox Store được tự động tải ở độ phân giải gốc. Bấm 'Căn khung' để kéo ảnh, phóng to/nhỏ, đổi chế độ Fit (không cắt ảnh) hoặc chỉnh tỉ lệ!",
+    and"Roblox Store decals are automatically resolved to native HD textures. Tap 'Crop' to drag, zoom (100-300%), change Fit mode (Crop/Fit/Stretch/Tile), or adjust aspect ratio!"
+    or"Ảnh Decal từ Roblox Store được tự động tải ở độ phân giải gốc. Bấm 'Căn' để kéo ảnh, phóng to/nhỏ, đổi chế độ Fit (không cắt ảnh) hoặc chỉnh tỉ lệ!",
     {size=u2(1,-22,0,0),pos=uo(22,0),ts=10,wrap=true,auto=true});st.muted[#st.muted+1]=nl
 
   local function buildSlot(titleTxt,cat,targetKey,initVal,ord,getCfg,setCfg,onImgText)
@@ -6560,13 +7106,13 @@ function F._PROF.buildImagesTab(st,parent)
     corner(tw,8);st.subCards[#st.subCards+1]=tw
     local ti=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0},tw)
     local emp=lab(tw,"", {size=us(1,1),ts=12,align=txC});F._PROF.ic(st,emp,"image",16,"muted",{pos=uo(12,12)})
-    local tl=lab(topR,titleTxt,{size=u2(1,-212,0,18),pos=uo(48,2),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=tl
-    local infoL=lab(topR,"",{size=u2(1,-212,0,14),pos=uo(48,22),ts=9,trunc=true});st.muted[#st.muted+1]=infoL
+    local tl=lab(topR,titleTxt,{size=u2(1,-222,0,18),pos=uo(48,2),ts=11,bold=true,trunc=true});st.texts[#st.texts+1]=tl
+    local infoL=lab(topR,"",{size=u2(1,-222,0,14),pos=uo(48,22),ts=9,trunc=true});st.muted[#st.muted+1]=infoL
 
-    local storeB=F._PROF.btn(st,topR," Store",{size=uo(72,28),pos=u2(1,-172,0,6),key="accent",ts=10,r=6})
-    F._PROF.ic(st,storeB,"store",12,"onAcc",{pos=uo(7,8)})
-    local cropB=F._PROF.btn(st,topR," "..(L=="en"and"Crop"or"Căn"),{size=uo(64,28),pos=u2(1,-96,0,6),key="btnBg",ts=10,r=6})
-    F._PROF.ic(st,cropB,"crop",12,"txt",{pos=uo(7,8)})
+    local storeB=F._PROF.btn(st,topR,L=="en"and"Store"or"Kho",{size=uo(70,28),pos=u2(1,-172,0,6),key="accent",ts=10,r=6})
+    F._PROF.btnIcon(st,storeB,"store",12,"onAcc",22,7)
+    local cropB=F._PROF.btn(st,topR,L=="en"and"Crop"or"Căn",{size=uo(64,28),pos=u2(1,-98,0,6),key="btnBg",ts=10,r=6})
+    F._PROF.btnIcon(st,cropB,"crop",12,"txt",22,7)
     local clrB=F._PROF.btn(st,topR,"X",{size=uo(28,28),pos=u2(1,-28,0,6),key="danger",ts=11,r=6})
 
     local boxInp=mk("TextBox",{
@@ -6581,66 +7127,92 @@ function F._PROF.buildImagesTab(st,parent)
       local c=getCfg()
       infoL.Text=string.format("%s · %d%% · (%d,%d)",tostring(c.fit or"crop"):upper(),tonumber(c.zoom)or 100,tonumber(c.x)or 0,tonumber(c.y)or 0)
     end
-    local function updThumb()
+    local function updThumb(isInit)
       local aid=H.assetId(boxInp.Text)
       syncInfoLabel()
       if aid and aid~=""then
         emp.Visible=false;ti.Visible=true;F.setAsset(ti,aid)
         F.applyImageFrame(tw,ti,getCfg(),40,40)
       else ti.Image="";ti.Visible=false;emp.Visible=true end
-      if onImgText then onImgText(aid or"")end
+      if onImgText then onImgText(aid or"",isInit==true)end
+      if not isInit then st.markDirty()end
     end
     local function openStudioWithId(idOverride)
       local aid=idOverride or H.assetId(boxInp.Text)or""
       F.openImageCropStudio({
         target=targetKey,assetId=aid,cfg=getCfg(),
         onApply=function(res)
-          if res.id~=""then boxInp.Text=res.id end
-          setCfg(res);updThumb();F._PROF.applyImages(st)
+          setCfg(res)
+          if boxInp.Text~=(res.id or"")then boxInp.Text=(res.id or"")else updThumb(false)end
+          F._PROF.applyImages(st)
         end,
       })
     end
-    hook(boxInp:GetPropertyChangedSignal("Text"),updThumb)
-    hook(clrB.MouseButton1Click,function()boxInp.Text="";updThumb()end)
+    hook(boxInp:GetPropertyChangedSignal("Text"),function()updThumb(false)end)
+    hook(clrB.MouseButton1Click,function()boxInp.Text=""end)
     hook(cropB.MouseButton1Click,function()openStudioWithId()end)
     hook(storeB.MouseButton1Click,function()
-      F.openImageFinder(titleTxt,cat,function(pickedId)boxInp.Text=tostring(pickedId);updThumb()end,{
+      F.openImageFinder(titleTxt,cat,function(pickedId)boxInp.Text=tostring(pickedId)end,{
         onStudio=function(pickedId)openStudioWithId(pickedId)end,
       })
     end)
-    updThumb()
+    updThumb(true)
     return boxInp,updThumb
   end
 
   local tBanner=buildSlot(L=="en"and"1. Profile Banner"or"1. Ảnh Bìa (Banner)","banner","banner",P.profBanner,1,
     function()return{fit=pt.bf,zoom=pt.bz,x=pt.bx,y=pt.by,aspect=pt.ba,height=pt.bh}end,
     function(res)pt.bf=res.fit;pt.bz=res.zoom;pt.bx=res.x;pt.by=res.y;pt.ba=res.aspect;pt.bh=res.height end,
-    function(aid)
+    function(aid,isInit)
       st.bannerId=aid
-      if u.bImg then u.bImg.Visible=(aid~="");if aid~=""then F.setAsset(u.bImg,aid)else u.bImg.Image=""end end
-      F._PROF.applyImages(st)
+      if u.bImg then
+        if u.bImgHost then u.bImgHost.Visible=(aid~="")end
+        u.bImg.Visible=(aid~="")
+        if aid~=""then F.setAsset(u.bImg,aid)else u.bImg.Image=""end
+      end
+      if not isInit then F._PROF.applyImages(st)end
     end)
 
   local tIcon=buildSlot(L=="en"and"2. Profile Avatar Icon"or"2. Ảnh Đại Diện (Avatar)","icon","icon",P.profIcon,2,
     function()return{fit=pt["if"],zoom=pt.iz,x=pt.ix,y=pt.iy,aspect=pt.ia,radius=pt.ir}end,
     function(res)pt["if"]=res.fit;pt.iz=res.zoom;pt.ix=res.x;pt.iy=res.y;pt.ia=res.aspect;pt.ir=res.radius end,
-    function(aid)
+    function(aid,isInit)
       st.iconId=aid
       if u.avImg then if aid~=""then F.setAsset(u.avImg,aid)else u.avImg.Image=F.avatarUrl(F.uidOf(st.u))end end
-      F._PROF.applyImages(st)
+      if not isInit then F._PROF.applyImages(st)end
     end)
 
   local tBgImg,updBgImg=buildSlot(L=="en"and"3. Card Wallpaper"or"3. Ảnh Nền Thẻ Profile","theme","wallpaper",pt.bgImg or"",3,
     function()return{fit=pt.wf,zoom=pt.wz,x=pt.wx,y=pt.wy,aspect=pt.wa}end,
     function(res)pt.wf=res.fit;pt.wz=res.zoom;pt.wx=res.x;pt.wy=res.y;pt.wa=res.aspect end,
-    function(aid)
+    function(aid,isInit)
       pt.bgImg=aid
-      if aid~=""and pt.mode=="solid"then pt.mode="image"end
-      if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end
-      F._PROF.applyColors(st)
+      if not isInit then
+        if aid~=""then pt.mode="image"elseif pt.mode=="image"then pt.mode="solid"end
+        if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end
+        F._PROF.applyColors(st)
+      end
     end)
 
+  local hdBtn=F._PROF.btn(st,parent,L=="en"and"Refresh All Images (Reload HD)"or"Làm nét lại tất cả ảnh (Reload HD)",{size=u2(1,0,0,28),key="btnBg",ts=10,r=7,layout=4})
+  hook(hdBtn.MouseButton1Click,function()
+    for _,aid in ipairs({st.bannerId,st.iconId,pt.bgImg})do
+      if aid and aid~=""then S.assetUrl[aid]=nil;S.textureMap[aid]=nil end
+    end
+    if st.bannerId~=""and u.bImg then F.setAsset(u.bImg,st.bannerId,nil,0,{force=true})end
+    if st.iconId~=""and u.avImg then F.setAsset(u.avImg,st.iconId,nil,0,{force=true})end
+    if pt.bgImg~=""and u.boxBgImg then F.setAsset(u.boxBgImg,pt.bgImg,nil,0,{force=true})end
+    F.toast(L=="en"and"Reloading native HD textures..."or"Đang tải lại ảnh độ phân giải gốc...",true)
+  end)
+
   st.fields.tBanner=tBanner;st.fields.tIcon=tIcon;st.fields.tBgImg=tBgImg;st.fields.updBgImg=updBgImg
+end
+
+function F._PROF.openPickerWrap(st,wrap,show)
+  if show then
+    for _,w in ipairs(st.pickerWraps or{})do if w and w.Parent and w~=wrap then w.Visible=false end end
+  end
+  if wrap then wrap.Visible=show end
 end
 
 function F._PROF.buildAvatarRingStudio(st,parent,refresh)
@@ -6648,6 +7220,7 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
   local cols=st.cols
   local rg={}
   st.ring=rg
+  st.pickerWraps=st.pickerWraps or{}
 
   -- Tiêu đề + Nút nhanh: Theo Theme / Ngẫu nhiên / Tắt viền
   local topRow=row(parent,24,1)
@@ -6656,30 +7229,6 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
   local bSyncTh=F._PROF.btn(st,topRow,L=="en"and"Theme"or"Theo Theme",{size=uo(64,22),pos=u2(1,-158,0,1),key="accent",ts=9,r=5})
   local bRandR=F._PROF.btn(st,topRow,"🎲",{size=uo(28,22),pos=u2(1,-90,0,1),key="btnBg",ts=10,r=5})
   local bOffR=F._PROF.btn(st,topRow,L=="en"and"Off"or"Tắt viền",{size=uo(58,22),pos=u2(1,-58,0,1),key="btnBg",ts=9,r=5})
-  hook(bSyncTh.MouseButton1Click,function()
-    local c1=H.tohex(st.cols.acc)
-    local c2=H.tohex((pt.mode=="gradient"or pt.mode=="mesh")and st.cols.g2 or H.mix(st.cols.acc,c3(1,1,1),0.36))
-    local c3h=(pt.mode=="gradient"or pt.mode=="mesh")and H.tohex(st.cols.g3)or""
-    pt.avDec="custom";pt.rc1=c1;pt.rc2=c2;pt.rc3=c3h
-    if pt.rglow==nil then pt.rglow=true end
-    refresh()
-  end)
-  hook(bRandR.MouseButton1Click,function()
-    local h1=math.random();local h2=(h1+0.14+math.random()*0.18)%1;local h3=(h2+0.16+math.random()*0.18)%1
-    pt.avDec="custom"
-    pt.rc1=H.tohex(Color3.fromHSV(h1,0.88,1))
-    pt.rc2=H.tohex(Color3.fromHSV(h2,0.88,1))
-    pt.rc3=H.tohex(Color3.fromHSV(h3,0.84,1))
-    if not pt.ranim or pt.ranim=="none"then pt.ranim="spin"end
-    pt.rglow=true
-    refresh()
-  end)
-  hook(bOffR.MouseButton1Click,function()
-    pt.avDec="none";pt.rc1="";pt.rc2="";pt.rc3="";pt.rw=3;pt.rrot=35;pt.rglow=true;pt.ranim="none"
-    if rg.setSlRw then rg.setSlRw(3,false)end
-    if rg.setSlRRot then rg.setSlRRot(35,false)end
-    refresh()
-  end)
 
   -- Thẻ Xem trước trực tiếp (Live Studio Preview Card)
   local pvCard=mk("Frame",{Size=u2(1,0,0,74),BackgroundColor3=cols.box,BorderSizePixel=0,LayoutOrder=2},parent)
@@ -6687,9 +7236,9 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
   st.subCards[#st.subCards+1]=pvCard
   local ir=clamp(tonumber(pt.ir)or 50,0,50)
   local pvWrap=mk("Frame",{Size=uo(52,52),Position=uo(12,11),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=4},pvCard)
-  local pvHalo=mk("Frame",{Size=u2(1,8,1,8),Position=uo(-4,-4),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=3,Visible=false},pvWrap)
+  local pvHalo=mk("Frame",{Size=u2(1,6,1,6),Position=uo(-3,-3),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=3,Visible=false},pvWrap)
   local pvHaloCor=mk("UICorner",{CornerRadius=u1(ir/100,0)},pvHalo)
-  local pvHaloSt=mk("UIStroke",{Color=c3(1,1,1),Thickness=4,Transparency=0.66,ApplyStrokeMode=smBorder},pvHalo)
+  local pvHaloSt=mk("UIStroke",{Color=c3(1,1,1),Thickness=3,Transparency=0.74,ApplyStrokeMode=smBorder},pvHalo)
   local pvHaloGr=mk("UIGradient",{Rotation=35},pvHaloSt)
   local pvClip=F.createClipHost(pvWrap,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=4})
   local pvCor=mk("UICorner",{CornerRadius=u1(ir/100,0)},pvClip)
@@ -6697,7 +7246,7 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
     Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,
     ScaleType=Enum.ScaleType.Crop,ZIndex=5,Image=st.iconId~=""and F.thumbUrl(st.iconId,150,150)or F.avatarUrl(F.uidOf(st.u)),
   },pvClip)
-  local pvRing=mk("Frame",{Size=u2(1,4,1,4),Position=uo(-2,-2),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=6,Visible=false},pvWrap)
+  local pvRing=mk("Frame",{Size=u2(1,3,1,3),Position=uo(-1.5,-1.5),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=6,Visible=false},pvWrap)
   local pvRingCor=mk("UICorner",{CornerRadius=u1(ir/100,0)},pvRing)
   local pvRingSt=mk("UIStroke",{Color=c3(1,1,1),Thickness=2.4,Transparency=0,ApplyStrokeMode=smBorder},pvRing)
   local pvRingGr=mk("UIGradient",{Rotation=35},pvRingSt)
@@ -6730,7 +7279,7 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
     hook(b.MouseButton1Click,function()
       pt.avDec=d.id
       if d.id=="custom"then
-        if not tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")then pt.rc1="#38BDF8";pt.rc2="#EC4899";pt.rc3=""end
+        if not H.validHex(pt.rc1)then pt.rc1="#38BDF8";pt.rc2="#EC4899";pt.rc3=""end
       else
         pt.rc1="";pt.rc2="";pt.rc3=""
         pt.rrot=d.rot or 35
@@ -6738,13 +7287,14 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
         pt.ranim=d.anim or"none"
       end
       if rg.setSlRRot then rg.setSlRRot(pt.rrot or 35,false)end
-      refresh()
+      st.markDirty();refresh()
     end)
   end
 
   -- 3 điểm màu tùy chỉnh cho Viền Avatar (Ring #1, #2, #3 + xóa #3)
   local stopRow=row(parent,28,4)
   local rWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false,LayoutOrder=5},parent)
+  st.pickerWraps[#st.pickerWraps+1]=rWrap
   local actRK,rPicker
   rg.stops={}
   local function prepCustomRing()
@@ -6770,64 +7320,79 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
       clrB=mk("TextButton",{Size=uo(16,16),Position=u2(1,-19,0.5,-8),BackgroundColor3=cols.box,Text="×",Font=fGB,TextSize=11,TextColor3=cols.muted,BorderSizePixel=0,ZIndex=4},gb)
       corner(clrB,4)
       hook(clrB.MouseButton1Click,function()
-        prepCustomRing();pt.rc3="";if actRK=="rc3"then rWrap.Visible=false;actRK=nil end;refresh()
+        prepCustomRing();pt.rc3="";if actRK=="rc3"then F._PROF.openPickerWrap(st,rWrap,false);actRK=nil end;st.markDirty();refresh()
       end)
     end
     rg.stops[rk]={btn=gb,sw=sw,lbl=gl,st=gst,clr=clrB,title="Ring #"..idx}
     hook(gb.MouseButton1Click,function()
-      if rWrap.Visible and actRK==rk then rWrap.Visible=false;actRK=nil;return end
+      if rWrap.Visible and actRK==rk then F._PROF.openPickerWrap(st,rWrap,false);actRK=nil;return end
       actRK=rk
       local sp=F.resolveAvatarRing(pt)
       local defH=(sp and(rk=="rc1"and sp.c1 or rk=="rc2"and sp.c2 or sp.c3))or(rk=="rc1"and"#38BDF8"or rk=="rc2"and"#EC4899"or"#A855F7")
-      local curH=tostring(pt[rk]or""):match("^#%x%x%x%x%x%x$")or defH
+      local curH=H.validHex(pt[rk])or defH
       if not rPicker then
         rPicker=F.colorPicker(rWrap,curH,function(hex)
-          if actRK then prepCustomRing();pt[actRK]=hex;refresh()end
-        end)
+          if actRK then prepCustomRing();pt[actRK]=hex;st.markDirty();refresh()end
+        end,{profSt=st})
       else rPicker.set(curH)end
-      rWrap.Visible=true
+      F._PROF.openPickerWrap(st,rWrap,true)
     end)
   end
 
   -- Hiệu ứng chuyển động viền (Tĩnh / Xoay / Nhịp / Cầu vồng)
   local animRow=row(parent,26,6)
   for idx,an in ipairs(F._RING_ANIMS)do
-    local b=mk("TextButton",{Size=u2(0.25,-4,1,0),BackgroundColor3=cols.sub,Text=(L=="en"and an.en or an.vi),Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},animRow)
+    local b=mk("TextButton",{Size=u2(0.25,-5,1,0),BackgroundColor3=cols.sub,Text=(L=="en"and an.en or an.vi),Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},animRow)
     corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
     st.ringAnimBtns[an.id]={btn=b,st=bSt}
     hook(b.MouseButton1Click,function()
-      if not pt.avDec or pt.avDec=="none"then
-        pt.avDec="custom";pt.rc1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or"#38BDF8";pt.rc2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or"#EC4899"
-      end
-      pt.ranim=an.id;refresh()
+      prepCustomRing();pt.ranim=an.id;st.markDirty();refresh()
     end)
   end
 
   -- Thanh trượt Độ dày viền & Góc xoay Gradient
-  local slRw,setSlRw=F.slider(parent,L=="en"and"Ring Thickness"or"Độ dày Viền Avatar",1,6,pt.rw or 3,{step=1,fmt=function(v)return v.."px"end,onChange=function(v)
-    if not pt.avDec or pt.avDec=="none"then pt.avDec="custom";pt.rc1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or"#38BDF8";pt.rc2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or"#EC4899"end
-    pt.rw=v;refresh()
+  local slRw,setSlRw=F.slider(parent,L=="en"and"Ring Thickness"or"Độ dày Viền Avatar",1,6,pt.rw or 3,{profSt=st,step=1,fmt=function(v)return v.."px"end,onChange=function(v)
+    prepCustomRing();pt.rw=v;st.markDirty();refresh()
   end})
   slRw.LayoutOrder=7;st.subCards[#st.subCards+1]=slRw;rg.setSlRw=setSlRw
 
-  local slRRot,setSlRRot=F.slider(parent,L=="en"and"Ring Gradient Angle"or"Góc xoay dải màu Viền",0,360,pt.rrot or 35,{step=5,fmt=function(v)return v.."°"end,onChange=function(v)pt.rrot=v;refresh()end})
+  local slRRot,setSlRRot=F.slider(parent,L=="en"and"Ring Gradient Angle"or"Góc xoay dải màu Viền",0,360,pt.rrot or 35,{profSt=st,step=5,fmt=function(v)return v.."°"end,onChange=function(v)pt.rrot=v;st.markDirty();refresh()end})
   slRRot.LayoutOrder=8;st.subCards[#st.subCards+1]=slRRot;rg.setSlRRot=setSlRRot
 
   -- Công tắc Ánh sáng Hào quang ngoài (Outer Halo Glow)
-  local gwBtn=mk("TextButton",{Size=u2(1,0,0,30),BackgroundColor3=cols.box,Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=9},parent)
-  corner(gwBtn,8);local gwSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},gwBtn)
-  local gwLbl=lab(gwBtn,L=="en"and"Outer Halo Glow"or"Hào quang phát sáng ngoài (Glow)",{size=u2(1,-58,1,0),pos=uo(10,0),ts=10,bold=true,trunc=true});st.texts[#st.texts+1]=gwLbl
-  local gwTrk=mk("Frame",{Size=uo(36,18),Position=u2(1,-46,0.5,-9),BorderSizePixel=0},gwBtn);corner(gwTrk,9)
-  local gwKnob=mk("Frame",{Size=uo(12,12),Position=uo(3,3),BackgroundColor3=c3(1,1,1),BorderSizePixel=0},gwTrk);corner(gwKnob,6)
-  rg.gwBtn=gwBtn;rg.gwSt=gwSt;rg.gwTrk=gwTrk;rg.gwKnob=gwKnob;st.subCards[#st.subCards+1]=gwBtn
-  hook(gwBtn.MouseButton1Click,function()
-    if not pt.avDec or pt.avDec=="none"then pt.avDec="custom";pt.rc1=tostring(pt.rc1 or""):match("^#%x%x%x%x%x%x$")or"#38BDF8";pt.rc2=tostring(pt.rc2 or""):match("^#%x%x%x%x%x%x$")or"#EC4899"end
-    pt.rglow=not(pt.rglow~=false);refresh()
+  local gwBtn,setGwBtn=F.switch(parent,L=="en"and"Outer Halo Glow"or"Hào quang phát sáng ngoài (Glow)",function()return pt.rglow==true end,function(v)
+    prepCustomRing();pt.rglow=v;st.markDirty();refresh()
+  end,{profSt=st})
+  gwBtn.LayoutOrder=9;rg.setGwBtn=setGwBtn
+
+  hook(bSyncTh.MouseButton1Click,function()
+    local c1=H.tohex(st.cols.acc)
+    local c2=H.tohex((pt.mode=="gradient"or pt.mode=="mesh")and st.cols.g2 or H.mix(st.cols.acc,c3(1,1,1),0.36))
+    local c3h=(pt.mode=="gradient"or pt.mode=="mesh")and H.tohex(st.cols.g3)or""
+    pt.avDec="custom";pt.rc1=c1;pt.rc2=c2;pt.rc3=c3h
+    if pt.rglow==nil then pt.rglow=true end
+    st.markDirty();refresh()
+  end)
+  hook(bRandR.MouseButton1Click,function()
+    local h1=math.random();local h2=(h1+0.14+math.random()*0.18)%1;local h3=(h2+0.16+math.random()*0.18)%1
+    pt.avDec="custom"
+    pt.rc1=H.tohex(Color3.fromHSV(h1,0.88,1))
+    pt.rc2=H.tohex(Color3.fromHSV(h2,0.88,1))
+    pt.rc3=H.tohex(Color3.fromHSV(h3,0.84,1))
+    if not pt.ranim or pt.ranim=="none"then pt.ranim="spin"end
+    pt.rglow=true
+    st.markDirty();refresh()
+  end)
+  hook(bOffR.MouseButton1Click,function()
+    pt.avDec="none";pt.rc1="";pt.rc2="";pt.rc3="";pt.rw=3;pt.rrot=35;pt.rglow=true;pt.ranim="none"
+    F._PROF.openPickerWrap(st,rWrap,false);actRK=nil
+    setSlRw(3,false);setSlRRot(35,false);if setGwBtn then setGwBtn(false)end
+    st.markDirty();refresh()
   end)
 
   st.fn.resetRingSliders=function()
-    if rg.setSlRw then rg.setSlRw(pt.rw or 3,false)end
-    if rg.setSlRRot then rg.setSlRRot(pt.rrot or 35,false)end
+    setSlRw(pt.rw or 3,false);setSlRRot(pt.rrot or 35,false)
+    if setGwBtn then setGwBtn(pt.rglow==true)end
   end
 
   st.fn.refreshRingStudio=function()
@@ -6862,7 +7427,7 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
       rg.pvBarFill.Visible=false
     end
     for rk,sb in pairs(rg.stops)do
-      local hx=(sp and((rk=="rc1"and sp.c1)or(rk=="rc2"and sp.c2)or sp.c3))or tostring(pt[rk]or""):match("^#%x%x%x%x%x%x$")
+      local hx=(sp and((rk=="rc1"and sp.c1)or(rk=="rc2"and sp.c2)or sp.c3))or H.validHex(pt[rk])
       if hx and hx~=""then
         sb.sw.BackgroundColor3=H.hex(hx);sb.lbl.Text=hx;sb.lbl.TextColor3=cCols.txt
       else
@@ -6871,10 +7436,204 @@ function F._PROF.buildAvatarRingStudio(st,parent,refresh)
       sb.btn.BackgroundColor3=cCols.sub;sb.st.Color=cCols.cBorder
       if sb.clr then sb.clr.Visible=(rk=="rc3"and hx~=nil and hx~="")end
     end
-    local gOn=(pt.rglow~=false)
-    rg.gwTrk.BackgroundColor3=gOn and cCols.ok or cCols.inpBg
-    rg.gwKnob.Position=gOn and uo(21,3)or uo(3,3)
-    rg.gwSt.Color=gOn and cCols.acc or cCols.cBorder
+    if setGwBtn then setGwBtn(sp and sp.glow==true or pt.rglow==true)end
+  end
+end
+
+function F._PROF.buildNameEffectStudio(st,parent,refresh)
+  local pt=st.pTheme
+  local cols=st.cols
+  local nf={}
+  st.nameFx=nf
+  st.pickerWraps=st.pickerWraps or{}
+
+  -- Tiêu đề + Nút nhanh: Theo Theme / Ngẫu nhiên / Tắt hiệu ứng
+  local divLine=mk("Frame",{Size=u2(1,0,0,1),BackgroundColor3=cols.cBorder,BackgroundTransparency=0.45,BorderSizePixel=0,LayoutOrder=10},parent)
+  st.dividers[#st.dividers+1]=divLine
+
+  local topRow=row(parent,24,11)
+  local neHdr=lab(topRow,L=="en"and"Name Effect Studio"or"Studio Hiệu Ứng Tên",{size=u2(1,-162,1,0),ts=10,bold=true,trunc=true})
+  st.muted[#st.muted+1]=neHdr
+  local bSyncN=F._PROF.btn(st,topRow,L=="en"and"Theme"or"Theo Theme",{size=uo(64,22),pos=u2(1,-158,0,1),key="accent",ts=9,r=5})
+  local bRandN=F._PROF.btn(st,topRow,"🎲",{size=uo(28,22),pos=u2(1,-90,0,1),key="btnBg",ts=10,r=5})
+  local bOffN=F._PROF.btn(st,topRow,L=="en"and"Off"or"Mặc định",{size=uo(58,22),pos=u2(1,-58,0,1),key="btnBg",ts=9,r=5})
+
+  -- Thẻ Xem trước trực tiếp tên hiển thị
+  local pvCard=mk("Frame",{Size=u2(1,0,0,54),BackgroundColor3=cols.card,BorderSizePixel=0,LayoutOrder=12,ClipsDescendants=true},parent)
+  corner(pvCard,9);local pvSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},pvCard)
+  pad(pvCard,10,6,10,6)
+  local pvClip=mk("Frame",{Size=u2(1,0,0,22),BackgroundTransparency=1,ClipsDescendants=true},pvCard)
+  local pvLbl=mk("TextLabel",{Size=uo(0,22),AutomaticSize=asX,BackgroundTransparency=1,Text="",Font=fGB,TextSize=15,TextXAlignment=txL,BorderSizePixel=0},pvClip)
+  local pvGrad,pvStroke=F.setupNameLabel(pvLbl,pt,cols.txt,cols.card,{accHex=H.tohex(cols.acc),autoOutlineOnLight=true})
+  local pvSub=lab(pvCard,"",{size=u2(1,0,0,14),pos=uo(0,26),ts=9,trunc=true});st.muted[#st.muted+1]=pvSub
+  nf.pvCard=pvCard;nf.pvSt=pvSt;nf.pvLbl=pvLbl;nf.pvGrad=pvGrad;nf.pvStroke=pvStroke;nf.pvSub=pvSub
+
+  local function prepCustomName()
+    if pt.nEff~="custom"then
+      local sp=F.resolveNameEffect(pt,H.tohex(st.cols.acc))
+      pt.nEff="custom"
+      if sp then
+        pt.nc1=sp.c1 or"#38BDF8";pt.nc2=sp.c2 or"#EC4899";pt.nc3=sp.c3 or""
+        pt.nsc=sp.sc or"#0C0E14";pt.nsw=sp.sw or 1.2;pt.nrot=sp.rot or 15;pt.nglow=(sp.glow==true);pt.nanim=sp.anim or"none"
+      else
+        pt.nc1="#38BDF8";pt.nc2="#EC4899";pt.nc3="";pt.nsc="#0C0E14";pt.nsw=1.2;pt.nrot=15;pt.nglow=false;pt.nanim="none"
+      end
+    end
+  end
+
+  -- Lưới Preset Hiệu ứng tên (11 mẫu kèm preview chữ "Aa")
+  local neGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=13},parent)
+  mk("UIGridLayout",{CellSize=u2(1/3,-4,0,28),CellPadding=uo(4,4),SortOrder=soLO},neGrid)
+  for idx,ne in ipairs(F._NAME_EFFS)do
+    local b=mk("TextButton",{Size=us(1,1),BackgroundColor3=cols.sub,Text="",BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},neGrid)
+    corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
+    local aaBox=mk("Frame",{Size=uo(20,16),Position=uo(4,6),BackgroundColor3=cols.box,BorderSizePixel=0},b);corner(aaBox,4)
+    local aa=mk("TextLabel",{Size=us(1,1),BackgroundTransparency=1,Text="Aa",Font=fGB,TextSize=10,TextColor3=ne.c1 and c3(1,1,1)or cols.txt,BorderSizePixel=0},aaBox)
+    if ne.c1 then mk("UIGradient",{Rotation=ne.rot or 15,Color=F.ringColorSeq(ne.c1,ne.c2,ne.c3)},aa)end
+    local dl=lab(b,ne.name,{size=u2(1,-29,1,0),pos=uo(27,0),ts=9,bold=true,trunc=true});dl.TextColor3=cols.txt
+    st.neffBtns[ne.id]={btn=b,st=bSt,lbl=dl,aaBox=aaBox,aa=aa,isSolid=(ne.id=="solid")}
+    hook(b.MouseButton1Click,function()
+      pt.nEff=ne.id
+      if ne.id=="custom"then
+        if not H.validHex(pt.nc1)then pt.nc1="#38BDF8";pt.nc2="#EC4899";pt.nc3="";pt.nsc="#0C0E14";pt.nsw=1.2;pt.nrot=15 end
+      else
+        pt.nc1="";pt.nc2="";pt.nc3="";pt.nsc=""
+        pt.nsw=ne.sw or 0;pt.nrot=ne.rot or 15;pt.nglow=(ne.glow==true);pt.nanim=ne.anim or"none"
+      end
+      if st.fn.resetNameSliders then st.fn.resetNameSliders()end
+      st.markDirty();refresh()
+    end)
+  end
+
+  -- 4 Điểm màu Tên (#1, #2, #3 + Viền chữ)
+  local stopRow=row(parent,28,14)
+  local nWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false,LayoutOrder=15},parent)
+  st.pickerWraps[#st.pickerWraps+1]=nWrap
+  local actNK,nPicker
+  nf.stops={}
+  local stopMeta={
+    {k="nc1",t="#1"},{k="nc2",t="#2"},{k="nc3",t="+#3",hasX=true},{k="nsc",t=L=="en"and"Edge"or"Viền"},
+  }
+  for idx,sm in ipairs(stopMeta)do
+    local rk=sm.k
+    local gb=mk("TextButton",{Size=u2(0.25,-5,1,0),BackgroundColor3=cols.sub,Text="",BorderSizePixel=0,LayoutOrder=idx,AutoButtonColor=true},stopRow)
+    corner(gb,6);local gst=mk("UIStroke",{Color=cols.cBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},gb)
+    local sw=mk("Frame",{Size=uo(12,12),Position=uo(4,8),BorderSizePixel=0},gb);corner(sw,3)
+    local gl=lab(gb,"",{size=u2(1,sm.hasX and-32 or-20,1,0),pos=uo(18,0),ts=8,bold=true,trunc=true})
+    local clrB
+    if sm.hasX then
+      clrB=mk("TextButton",{Size=uo(14,14),Position=u2(1,-16,0.5,-7),BackgroundColor3=cols.box,Text="×",Font=fGB,TextSize=10,TextColor3=cols.muted,BorderSizePixel=0,ZIndex=4},gb)
+      corner(clrB,4)
+      hook(clrB.MouseButton1Click,function()
+        prepCustomName();pt.nc3="";if actNK=="nc3"then F._PROF.openPickerWrap(st,nWrap,false);actNK=nil end;st.markDirty();refresh()
+      end)
+    end
+    nf.stops[rk]={btn=gb,sw=sw,lbl=gl,st=gst,clr=clrB,title=sm.t}
+    hook(gb.MouseButton1Click,function()
+      if nWrap.Visible and actNK==rk then F._PROF.openPickerWrap(st,nWrap,false);actNK=nil;return end
+      actNK=rk
+      local sp=F.resolveNameEffect(pt,H.tohex(st.cols.acc))
+      local defH=(sp and((rk=="nc1"and sp.c1)or(rk=="nc2"and sp.c2)or(rk=="nc3"and sp.c3)or sp.sc))
+        or(rk=="nc1"and"#38BDF8"or rk=="nc2"and"#EC4899"or rk=="nc3"and"#A855F7"or"#0C0E14")
+      local curH=H.validHex(pt[rk])or defH
+      if not nPicker then
+        nPicker=F.colorPicker(nWrap,curH,function(hex)
+          if actNK then prepCustomName();pt[actNK]=hex;st.markDirty();refresh()end
+        end,{profSt=st})
+      else nPicker.set(curH)end
+      F._PROF.openPickerWrap(st,nWrap,true)
+    end)
+  end
+
+  -- Chuyển động chữ (Tĩnh / Shimmer / Nhịp / Cầu vồng)
+  local animRow=row(parent,26,16)
+  for idx,an in ipairs(F._NAME_ANIMS)do
+    local b=mk("TextButton",{Size=u2(0.25,-5,1,0),BackgroundColor3=cols.sub,Text=(L=="en"and an.en or an.vi),Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},animRow)
+    corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
+    st.nameAnimBtns[an.id]={btn=b,st=bSt}
+    hook(b.MouseButton1Click,function()prepCustomName();pt.nanim=an.id;st.markDirty();refresh()end)
+  end
+
+  local slNsw,setSlNsw=F.slider(parent,L=="en"and"Name Outline Thickness"or"Độ dày Viền chữ Tên",0,3,pt.nsw or 0,{profSt=st,step=0.2,fmt=function(v)return string.format("%.1fpx",v)end,onChange=function(v)
+    prepCustomName();pt.nsw=v;st.markDirty();refresh()
+  end})
+  slNsw.LayoutOrder=17;st.subCards[#st.subCards+1]=slNsw
+
+  local slNRot,setSlNRot=F.slider(parent,L=="en"and"Name Gradient Angle"or"Góc xoay dải màu Tên",0,360,pt.nrot or 15,{profSt=st,step=5,fmt=function(v)return v.."°"end,onChange=function(v)
+    prepCustomName();pt.nrot=v;st.markDirty();refresh()
+  end})
+  slNRot.LayoutOrder=18;st.subCards[#st.subCards+1]=slNRot
+
+  local ngSw,setNgSw=F.switch(parent,L=="en"and"Name Outer Glow"or"Hào quang chữ phát sáng (Glow)",function()return pt.nglow==true end,function(v)
+    prepCustomName();pt.nglow=v;st.markDirty();refresh()
+  end,{profSt=st})
+  ngSw.LayoutOrder=19
+
+  hook(bSyncN.MouseButton1Click,function()
+    local c1=H.tohex(st.cols.acc)
+    local c2=H.tohex((pt.mode=="gradient"or pt.mode=="mesh")and st.cols.g2 or H.mix(st.cols.acc,c3(1,1,1),0.45))
+    local c3h=(pt.mode=="gradient"or pt.mode=="mesh")and H.tohex(st.cols.g3)or""
+    pt.nEff="custom";pt.nc1=c1;pt.nc2=c2;pt.nc3=c3h
+    pt.nsc=H.tohex(H.mix(st.cols.acc,c3(0,0,0),0.72));pt.nsw=1.2;pt.nrot=15
+    setSlNsw(1.2,false);setSlNRot(15,false);st.markDirty();refresh()
+  end)
+  hook(bRandN.MouseButton1Click,function()
+    local h1=math.random();local h2=(h1+0.16+math.random()*0.18)%1;local h3=(h2+0.16+math.random()*0.18)%1
+    pt.nEff="custom"
+    pt.nc1=H.tohex(Color3.fromHSV(h1,0.85,1))
+    pt.nc2=H.tohex(Color3.fromHSV(h2,0.85,1))
+    pt.nc3=H.tohex(Color3.fromHSV(h3,0.82,1))
+    pt.nsc="#090B10";pt.nsw=1.2;pt.nglow=true
+    if not pt.nanim or pt.nanim=="none"then pt.nanim="shimmer"end
+    setSlNsw(1.2,false);setNgSw(true);st.markDirty();refresh()
+  end)
+  hook(bOffN.MouseButton1Click,function()
+    pt.nEff="solid";pt.nc1="";pt.nc2="";pt.nc3="";pt.nsc="";pt.nsw=0;pt.nrot=15;pt.nglow=false;pt.nanim="none"
+    F._PROF.openPickerWrap(st,nWrap,false);actNK=nil
+    setSlNsw(0,false);setSlNRot(15,false);setNgSw(false)
+    st.markDirty();refresh()
+  end)
+
+  st.fn.resetNameSliders=function()
+    setSlNsw(pt.nsw or 0,false);setSlNRot(pt.nrot or 15,false);setNgSw(pt.nglow==true)
+  end
+
+  st.fn.refreshNameFxStudio=function()
+    local cCols=st.cols
+    local dTxt=F.disp((st.isSelf and(st.fields.tName and H.trim(st.fields.tName.Text)~=""and st.fields.tName.Text or P.display))or st.rec.display or st.u)
+    local fm=FONT_MAP[pt.font or"gotham"]or FONT_MAP.gotham
+    pvLbl.Text=dTxt;pvLbl.Font=fm.bold
+    pvCard.BackgroundColor3=cCols.card
+    local sp=F.applyNameEffectUi(pvLbl,pvGrad,pvStroke,pt,cCols.txt,cCols.card,{accHex=H.tohex(cCols.acc),autoOutlineOnLight=true})
+    pvSt.Color=sp and cCols.acc or cCols.cBorder
+    if sp then
+      local aLbl=sp.anim
+      for _,a in ipairs(F._NAME_ANIMS)do if a.id==sp.anim then aLbl=(L=="en"and a.en or a.vi);break end end
+      pvSub.Text=string.format("✨ %s • %.1fpx • %s%s",sp.name,sp.sw,aLbl,sp.glow and" • Glow"or"")
+    else
+      pvSub.Text=L=="en"and"Solid Default Color"or"Màu chữ cơ bản (Mặc định)"
+    end
+    local onTxt=H.onColor(cCols.acc)
+    for k,nb in pairs(st.neffBtns)do
+      if nb.btn and nb.btn.Parent then
+        local on=(pt.nEff or"solid")==k
+        nb.btn.BackgroundColor3=on and cCols.acc or cCols.sub
+        if nb.lbl then nb.lbl.TextColor3=on and onTxt or cCols.txt end
+        if nb.aaBox then nb.aaBox.BackgroundColor3=cCols.box end
+        if nb.aa and nb.isSolid then nb.aa.TextColor3=cCols.txt end
+      end
+    end
+    for rk,sb in pairs(nf.stops)do
+      local hx=(sp and((rk=="nc1"and sp.c1)or(rk=="nc2"and sp.c2)or(rk=="nc3"and sp.c3)or sp.sc))or H.validHex(pt[rk])
+      if hx and hx~=""then
+        sb.sw.BackgroundColor3=H.hex(hx);sb.lbl.Text=hx;sb.lbl.TextColor3=cCols.txt
+      else
+        sb.sw.BackgroundColor3=cCols.inpBg;sb.lbl.Text=sb.title;sb.lbl.TextColor3=cCols.muted
+      end
+      sb.btn.BackgroundColor3=cCols.sub;sb.st.Color=cCols.cBorder
+      if sb.clr then sb.clr.Visible=(rk=="nc3"and hx~=nil and hx~="")end
+    end
+    setNgSw(sp and sp.glow==true or pt.nglow==true)
   end
 end
 
@@ -6882,35 +7641,37 @@ function F._PROF.buildStyleTab(st,parent)
   local pt=st.pTheme
   local cols=st.cols
   local refresh=function()F._PROF.applyColors(st,st.fields.tBg and st.fields.tBg.Text or pt.bg,st.fields.tAcc and st.fields.tAcc.Text or pt.acc,st.fields.tTxt and st.fields.tTxt.Text or pt.txt)end
+  st.pickerWraps=st.pickerWraps or{}
 
-  -- 1. Discord Avatar Decoration Ring Studio & Nameplate Effects
-  F._PROF.section(st,parent,L=="en"and"AVATAR RING STUDIO & NAME EFFECT"or"STUDIO VIỀN AVATAR & HIỆU ỨNG TÊN",1,"sparkles")
+  -- 1. Discord Avatar Decoration Ring Studio & Name Effect Studio
+  F._PROF.section(st,parent,L=="en"and"AVATAR RING & NAME EFFECT STUDIO"or"STUDIO VIỀN AVATAR & HIỆU ỨNG TÊN",1,"sparkles")
   local cosC=F._PROF.makeCard(st,parent,2,10,8)
   F._PROF.buildAvatarRingStudio(st,cosC,refresh)
-  local neLbl=lab(cosC,L=="en"and"Display Name Effect"or"Hiệu ứng Tên hiển thị",{ts=10,bold=true,layout=10});st.muted[#st.muted+1]=neLbl
-  local neRow=row(cosC,26,11)
-  for idx,ne in ipairs(F._NAME_EFFS)do
-    local b=mk("TextButton",{Size=u2(1/#F._NAME_EFFS,-3,1,0),BackgroundColor3=cols.sub,Text=ne.name,Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},neRow)
-    corner(b,6);local bSt=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},b)
-    st.neffBtns[ne.id]={btn=b,st=bSt}
-    hook(b.MouseButton1Click,function()pt.nEff=ne.id;refresh()end)
-  end
+  F._PROF.buildNameEffectStudio(st,cosC,refresh)
 
   -- 2. Chroma & Background Modes
   F._PROF.section(st,parent,L=="en"and"CHROMA & BACKGROUND MODE"or"CHẾ ĐỘ NỀN & CHUYỂN SẮC CHROMA",3,"layers")
   local chC=F._PROF.makeCard(st,parent,4,10,8)
   local mR1,mR2=row(chC,26,1),row(chC,26,2)
   local function mkModeB(pr,ws,mkKey,lblK,ord)
-    local b=mk("TextButton",{Size=u2(ws,-4,1,0),BackgroundColor3=cols.sub,Text=T(lblK),Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=ord},pr)
+    local b=mk("TextButton",{Size=u2(ws,ws<0.4 and -4 or -3,1,0),BackgroundColor3=cols.sub,Text=T(lblK),Font=fGB,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=ord},pr)
     corner(b,6);local bst=mk("UIStroke",{Color=cols.cBorder,Thickness=1.2,Transparency=0.25,ApplyStrokeMode=smBorder},b)
     st.modeBtns[mkKey]={btn=b,st=bst};st.chips[#st.chips+1]=b
-    hook(b.MouseButton1Click,function()pt.mode=mkKey;if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end;refresh()end)
+    hook(b.MouseButton1Click,function()
+      pt.mode=mkKey
+      if mkKey=="image"and(pt.bgImg or"")==""then
+        F.toast(L=="en"and"Tip: Pick a Card Wallpaper in the Images tab (slot #3)!"or"Mẹo: Vào tab Ảnh mục 3 để chọn Ảnh Nền Thẻ!",true)
+      end
+      if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end
+      st.markDirty();refresh()
+    end)
   end
   mkModeB(mR1,1/3,"solid","bg_solid",1);mkModeB(mR1,1/3,"gradient","bg_gradient",2);mkModeB(mR1,1/3,"mesh","bg_mesh",3)
   mkModeB(mR2,0.5,"glass","bg_glass",1);mkModeB(mR2,0.5,"image","bg_image",2)
 
   local gRow=row(chC,28,3)
   local gWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false,LayoutOrder=4},chC)
+  st.pickerWraps[#st.pickerWraps+1]=gWrap
   local actGK,gPicker
   for idx,gk in ipairs({"g1","g2","g3"})do
     local gb=mk("TextButton",{Size=u2(1/3,-4,1,0),BackgroundColor3=cols.sub,Text="",BorderSizePixel=0,LayoutOrder=idx,AutoButtonColor=true},gRow)
@@ -6919,18 +7680,18 @@ function F._PROF.buildStyleTab(st,parent)
     local sTitle="Stop #"..idx;local gl=lab(gb,sTitle,{size=u2(1,-24,1,0),pos=uo(23,0),ts=9,bold=true,trunc=true});st.texts[#st.texts+1]=gl
     st.gStopBtns[gk]={btn=gb,sw=sw,lbl=gl,st=gst,title=sTitle}
     hook(gb.MouseButton1Click,function()
-      if gWrap.Visible and actGK==gk then gWrap.Visible=false;actGK=nil;return end
-      actGK=gk;local curC=(gk=="g1"and cols.g1)or(gk=="g2"and cols.g2)or cols.g3
+      if gWrap.Visible and actGK==gk then F._PROF.openPickerWrap(st,gWrap,false);actGK=nil;return end
+      actGK=gk;local curC=(gk=="g1"and st.cols.g1)or(gk=="g2"and st.cols.g2)or st.cols.g3
       local sh=H.safeHex(pt[gk],H.tohex(curC))
-      if not gPicker then gPicker=F.colorPicker(gWrap,sh,function(hex)if actGK then pt[actGK]=hex;if pt.mode=="solid"then pt.mode="gradient"end;refresh()end end)
+      if not gPicker then gPicker=F.colorPicker(gWrap,sh,function(hex)if actGK then pt[actGK]=hex;if pt.mode=="solid"then pt.mode="gradient"end;st.markDirty();refresh()end end,{profSt=st})
       else gPicker.set(sh)end
-      gWrap.Visible=true
+      F._PROF.openPickerWrap(st,gWrap,true)
     end)
   end
-  local slRot,setSlRot=F.slider(chC,T("grad_angle"),0,360,pt.gRot,{step=5,fmt=function(v)return v.."°"end,onChange=function(v)pt.gRot=v;refresh()end});slRot.LayoutOrder=5;st.subCards[#st.subCards+1]=slRot
-  local slMix,setSlMix=F.slider(chC,T("grad_mix"),15,100,pt.gMix,{step=1,fmt=function(v)return v.."%"end,onChange=function(v)pt.gMix=v;refresh()end});slMix.LayoutOrder=6;st.subCards[#st.subCards+1]=slMix
-  local slOp=F.slider(chC,T("bg_opacity"),15,100,pt.bgOp,{step=1,fmt=function(v)return v.."%"end,onChange=function(v)pt.bgOp=v;refresh()end});slOp.LayoutOrder=7;st.subCards[#st.subCards+1]=slOp
-  local slDim=F.slider(chC,T("bg_dim"),0,75,pt.bgDim,{step=1,fmt=function(v)return v.."%"end,onChange=function(v)pt.bgDim=v;refresh()end});slDim.LayoutOrder=8;st.subCards[#st.subCards+1]=slDim
+  local slRot,setSlRot=F.slider(chC,T("grad_angle"),0,360,pt.gRot,{profSt=st,step=5,fmt=function(v)return v.."°"end,onChange=function(v)pt.gRot=v;st.markDirty();refresh()end});slRot.LayoutOrder=5;st.subCards[#st.subCards+1]=slRot
+  local slMix,setSlMix=F.slider(chC,T("grad_mix"),15,100,pt.gMix,{profSt=st,step=1,fmt=function(v)return v.."%"end,onChange=function(v)pt.gMix=v;st.markDirty();refresh()end});slMix.LayoutOrder=6;st.subCards[#st.subCards+1]=slMix
+  local slOp,setSlOp=F.slider(chC,T("bg_opacity"),15,100,pt.bgOp,{profSt=st,step=1,fmt=function(v)return v.."%"end,onChange=function(v)pt.bgOp=v;st.markDirty();refresh()end});slOp.LayoutOrder=7;st.subCards[#st.subCards+1]=slOp
+  local slDim,setSlDim=F.slider(chC,T("bg_dim"),0,75,pt.bgDim,{profSt=st,step=1,fmt=function(v)return v.."%"end,onChange=function(v)pt.bgDim=v;st.markDirty();refresh()end});slDim.LayoutOrder=8;st.subCards[#st.subCards+1]=slDim
 
   -- 3. Interface Font & Surface Geometry
   F._PROF.section(st,parent,L=="en"and"FONT & SURFACE GEOMETRY"or"PHÔNG CHỮ & BO GÓC",5,"sliders")
@@ -6941,10 +7702,10 @@ function F._PROF.buildStyleTab(st,parent)
     local fm=FONT_MAP[fk]
     local fb=mk("TextButton",{Size=us(1,1),BackgroundColor3=cols.sub,Text=fm.name,Font=fm.bold,TextSize=10,TextColor3=cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},fGrid)
     corner(fb,6);local fst=mk("UIStroke",{Color=cols.cBorder,Thickness=1.1,Transparency=0.3,ApplyStrokeMode=smBorder},fb)
-    st.fontBtns[fk]={btn=fb,st=fst};hook(fb.MouseButton1Click,function()pt.font=fk;refresh()end)
+    st.fontBtns[fk]={btn=fb,st=fst};hook(fb.MouseButton1Click,function()pt.font=fk;st.markDirty();refresh()end)
   end
-  local slRad,setSlRad=F.slider(sfC,T("ui_radius"),3,16,pt.rad,{step=1,fmt=function(v)return v.."px"end,onChange=function(v)pt.rad=v;refresh()end});slRad.LayoutOrder=2;st.subCards[#st.subCards+1]=slRad
-  local gSw=F.switch(sfC,T("border_glow"),function()return pt.glow~=false end,function(v)pt.glow=v;refresh()end);gSw.LayoutOrder=3
+  local slRad,setSlRad=F.slider(sfC,T("ui_radius"),3,16,pt.rad,{profSt=st,step=1,fmt=function(v)return v.."px"end,onChange=function(v)pt.rad=v;st.markDirty();refresh()end});slRad.LayoutOrder=2;st.subCards[#st.subCards+1]=slRad
+  local gSw,setGSw=F.switch(sfC,T("border_glow"),function()return pt.glow~=false end,function(v)pt.glow=v;st.markDirty();refresh()end,{profSt=st});gSw.LayoutOrder=3
 
   -- 4. Colors & Harmonizer + Sync + Export/Import CBT1
   F._PROF.section(st,parent,L=="en"and"COLORS & THEME TRANSFER"or"MÀU SẮC & CHIA SẺ MÃ THEME",7,"palette")
@@ -6961,45 +7722,51 @@ function F._PROF.buildStyleTab(st,parent)
   local bPkAcc=mk("TextButton",{Size=u2(1/3,-4,1,0),BackgroundColor3=cols.acc,Text="Accent",Font=fGB,TextSize=10,BorderSizePixel=0,LayoutOrder=2},pkR);corner(bPkAcc,6)
   local bPkTxt=mk("TextButton",{Size=u2(1/3,-4,1,0),BackgroundColor3=cols.txt,Text="Text",Font=fGB,TextSize=10,BorderSizePixel=0,LayoutOrder=3},pkR);corner(bPkTxt,6)
   st.fn.refreshColorPickBtns=function(vBg,vAcc,vTxt)
-    local c1=(vBg and pt.bg~=""and H.hex(vBg))or cols.card;bPkBg.BackgroundColor3=c1;bPkBg.TextColor3=H.ensureContrast(rgb(255,255,255),c1,4.5)
-    local c2=(vAcc and pt.acc~=""and H.hex(vAcc))or cols.acc;bPkAcc.BackgroundColor3=c2;bPkAcc.TextColor3=H.ensureContrast(rgb(255,255,255),c2,4.5)
-    local cTxt=(vTxt and pt.txt~=""and H.hex(vTxt))or cols.txt;bPkTxt.BackgroundColor3=cTxt;bPkTxt.TextColor3=H.ensureContrast(rgb(255,255,255),cTxt,4.5)
+    local c1=(vBg and pt.bg~=""and H.hex(vBg))or st.cols.card;bPkBg.BackgroundColor3=c1;bPkBg.TextColor3=H.onColor(c1)
+    local c2=(vAcc and pt.acc~=""and H.hex(vAcc))or st.cols.acc;bPkAcc.BackgroundColor3=c2;bPkAcc.TextColor3=H.onColor(c2)
+    local cTxt=(vTxt and pt.txt~=""and H.hex(vTxt))or st.cols.txt;bPkTxt.BackgroundColor3=cTxt;bPkTxt.TextColor3=H.onColor(cTxt)
   end
   local pkWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false,LayoutOrder=3},colC)
+  st.pickerWraps[#st.pickerWraps+1]=pkWrap
   local actBox,pkObj
   local function togglePk(tb,defH)
-    if pkWrap.Visible and actBox==tb then pkWrap.Visible=false;actBox=nil;return end
+    if pkWrap.Visible and actBox==tb then F._PROF.openPickerWrap(st,pkWrap,false);actBox=nil;return end
     actBox=tb;local sc=H.safeHex(tb.Text,defH)
-    if not pkObj then pkObj=F.colorPicker(pkWrap,sc,function(hex)if actBox then actBox.Text=hex;refresh()end end)else pkObj.set(sc)end
-    pkWrap.Visible=true
+    if not pkObj then pkObj=F.colorPicker(pkWrap,sc,function(hex)if actBox then actBox.Text=hex end end,{profSt=st})else pkObj.set(sc)end
+    F._PROF.openPickerWrap(st,pkWrap,true)
   end
   hook(bPkBg.MouseButton1Click,function()togglePk(tBg,H.tohex(TH.cardBg))end)
   hook(bPkAcc.MouseButton1Click,function()togglePk(tAcc,H.tohex(TH.accent))end)
   hook(bPkTxt.MouseButton1Click,function()togglePk(tTxt,H.tohex(TH.text))end)
-  hook(tBg:GetPropertyChangedSignal("Text"),refresh);hook(tAcc:GetPropertyChangedSignal("Text"),refresh);hook(tTxt:GetPropertyChangedSignal("Text"),refresh)
+  hook(tBg:GetPropertyChangedSignal("Text"),function()st.markDirty();refresh()end)
+  hook(tAcc:GetPropertyChangedSignal("Text"),function()st.markDirty();refresh()end)
+  hook(tTxt:GetPropertyChangedSignal("Text"),function()st.markDirty();refresh()end)
 
   local tr1=row(colC,26,4)
   local bHarm=F._PROF.btn(st,tr1,T("harmonize_btn"),{size=u2(0.5,-3,1,0),key="ok",ts=10,r=6})
   local bAutoC=F._PROF.btn(st,tr1,T("auto_contrast"),{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
   hook(bHarm.MouseButton1Click,function()
     local hb=math.random();local ha=(hb+0.08+math.random()*0.22)%1;local hs=(ha+0.33)%1
-    tBg.Text=H.tohex(Color3.fromHSV(hb,0.36,0.14));tAcc.Text=H.tohex(Color3.fromHSV(ha,0.80,0.96));tTxt.Text=H.tohex(Color3.fromHSV(hb,0.06,0.96))
     pt.g1=H.tohex(Color3.fromHSV(hb,0.40,0.11));pt.g2=H.tohex(Color3.fromHSV(ha,0.52,0.23));pt.g3=H.tohex(Color3.fromHSV(hs,0.48,0.21))
-    if pt.mode=="solid"then pt.mode="gradient"end;refresh()
+    if pt.mode=="solid"then pt.mode="gradient"end
+    tBg.Text=H.tohex(Color3.fromHSV(hb,0.36,0.14));tAcc.Text=H.tohex(Color3.fromHSV(ha,0.80,0.96));tTxt.Text=H.tohex(Color3.fromHSV(hb,0.06,0.96))
+    st.markDirty();refresh()
   end)
   hook(bAutoC.MouseButton1Click,function()
-    local bgC=H.safeHex(tBg.Text,nil)and H.hex(tBg.Text)or cols.card
-    tTxt.Text=H.lum(bgC)<0.45 and"#F4F5F8"or"#14161E";refresh();F.toast(T("contrast_done"),true)
+    local bgC=H.safeHex(tBg.Text,nil)and H.hex(tBg.Text)or st.cols.card
+    tTxt.Text=H.lum(bgC)<0.45 and"#F4F5F8"or"#14161E";st.markDirty();refresh();F.toast(T("contrast_done"),true)
   end)
 
   local tr2=row(colC,26,5)
   local bFromApp=F._PROF.btn(st,tr2,L=="en"and"From App Theme"or"Lấy từ App",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
   local bToApp=F._PROF.btn(st,tr2,L=="en"and"Apply to App"or"Đặt làm App",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
   hook(bFromApp.MouseButton1Click,function()
-    F.computeTheme();tBg.Text=H.tohex(TH.bg2);tAcc.Text=H.tohex(TH.accent);tTxt.Text=H.tohex(TH.text)
-    pt.g1=H.tohex(TH.g1);pt.g2=H.tohex(TH.g2);pt.g3=H.tohex(TH.g3);pt.mode=P.backgroundMode or"gradient";pt.font=P.fontFamily or"gotham"
+    F.computeTheme()
+    local base=THEMES[P.theme]or THEMES.dark
+    pt.g1=H.safeHex(P.custom.g1,base.g1 or base.bg);pt.g2=H.safeHex(P.custom.g2,base.g2 or base.bg2);pt.g3=H.safeHex(P.custom.g3,base.g3 or base.bg3)
+    pt.mode=P.backgroundMode or"gradient";pt.font=P.fontFamily or"gotham"
     pt.gRot=tonumber(P.gradAngle)or 28;pt.gMix=floor((tonumber(P.gradMix)or 0.65)*100+0.5);pt.rad=tonumber(P.uiRadius)or 10;pt.glow=(P.borderGlow~=false)
-    if(P.backgroundImage or"")~=""then pt.bgImg=H.assetId(P.backgroundImage)or""end
+    pt.bgImg=H.assetId(P.backgroundImage or"")or""
     pt.bgOp=clamp(floor((tonumber(P.backgroundOpacity)or 0.82)*100+0.5),15,100)
     pt.bgDim=clamp(floor((tonumber(P.backgroundDim)or 0.25)*100+0.5),0,75)
     do local bf=type(P.bgFrame)=="table"and P.bgFrame or{}
@@ -7007,13 +7774,19 @@ function F._PROF.buildStyleTab(st,parent)
       pt.wz=clamp(tonumber(bf.zoom)or 100,100,300);pt.wx=clamp(tonumber(bf.x)or 0,-100,100);pt.wy=clamp(tonumber(bf.y)or 0,-100,100)
       pt.wa=(F._ASPECT and F._ASPECT[bf.aspect or""])and bf.aspect or"auto"
     end
-    setSlRot(pt.gRot,false);setSlMix(pt.gMix,false);setSlRad(pt.rad,false);refresh();if st.fn.applyImages then st.fn.applyImages(false)end;F.toast(T("theme_ok"),true)
+    tBg.Text=H.tohex(TH.bg2);tAcc.Text=H.tohex(TH.accent);tTxt.Text=H.tohex(TH.text)
+    if st.fields.tBgImg then st.fields.tBgImg.Text=pt.bgImg end
+    if st.fields.updBgImg then st.fields.updBgImg(true)end
+    setSlRot(pt.gRot,false);setSlMix(pt.gMix,false);setSlOp(pt.bgOp,false);setSlDim(pt.bgDim,false);setSlRad(pt.rad,false);setGSw(pt.glow)
+    if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end
+    st.markDirty();refresh();F.toast(T("theme_ok"),true)
   end)
   hook(bToApp.MouseButton1Click,function()
+    P.theme=H.lum(st.cols.box)<0.45 and"dark"or"light"
     if H.safeHex(tBg.Text,nil)then P.custom.bg2=H.safeHex(tBg.Text,nil);P.custom.bg=H.safeHex(tBg.Text,nil)end
     if H.safeHex(tAcc.Text,nil)then P.custom.accent=H.safeHex(tAcc.Text,nil)end
     if H.safeHex(tTxt.Text,nil)then P.custom.text=H.safeHex(tTxt.Text,nil)end
-    if H.safeHex(pt.g1,nil)then P.custom.g1=pt.g1 end;if H.safeHex(pt.g2,nil)then P.custom.g2=pt.g2 end;if H.safeHex(pt.g3,nil)then P.custom.g3=pt.g3 end
+    if H.validHex(pt.g1)then P.custom.g1=pt.g1 end;if H.validHex(pt.g2)then P.custom.g2=pt.g2 end;if H.validHex(pt.g3)then P.custom.g3=pt.g3 end
     P.backgroundMode=pt.mode or"gradient"
     if(pt.bgImg or"")~=""then P.backgroundImage=H.assetId(pt.bgImg)or""
     elseif P.backgroundMode=="image"and(P.backgroundImage or"")==""and(st.bannerId or"")~=""then P.backgroundImage=st.bannerId end
@@ -7034,27 +7807,40 @@ function F._PROF.buildStyleTab(st,parent)
   local codeInp=mk("TextBox",{Size=u2(0.55,-3,1,0),BackgroundColor3=cols.inpBg,TextColor3=cols.inpTxt,PlaceholderColor3=cols.muted,Text="",PlaceholderText=T("theme_paste"),ClearTextOnFocus=false,Font=fCode,TextSize=10,BorderSizePixel=0,TextXAlignment=txL},codeR)
   corner(codeInp,6);pad(codeInp,6,2,6,2);mk("UIStroke",{Color=cols.iBorder,Thickness=1,Transparency=0.35,ApplyStrokeMode=smBorder},codeInp);st.inputs[#st.inputs+1]=codeInp
   hook(bCopyT.MouseButton1Click,function()
-    F.copyText("CBT1:"..H.jenc({n="custom",a=0,c={bg=tBg.Text,bg2=tBg.Text,accent=tAcc.Text,text=tTxt.Text,g1=pt.g1,g2=pt.g2,g3=pt.g3},bm=pt.mode,bi=pt.bgImg,bo=(pt.bgOp or 82)/100,bd=(pt.bgDim or 25)/100,ga=pt.gRot,gm=(pt.gMix or 65)/100,ur=pt.rad,ff=pt.font,bglow=pt.glow}))
+    F.copyText("CBT1:"..H.jenc({n="custom",a=0,c={bg=tBg.Text,bg2=tBg.Text,accent=tAcc.Text,text=tTxt.Text,g1=pt.g1,g2=pt.g2,g3=pt.g3},bm=pt.mode,bi=pt.bgImg,bo=(pt.bgOp or 82)/100,bd=(pt.bgDim or 25)/100,bf=pt.wf,bz=pt.wz,bx=pt.wx,by=pt.wy,ba=pt.wa,ga=pt.gRot,gm=(pt.gMix or 65)/100,ur=pt.rad,ff=pt.font,bglow=pt.glow}))
   end)
   hook(codeInp.FocusLost,function(enter)
     local raw=H.trim(codeInp.Text);if raw==""then return end
-    local j=raw:match("^CBT[12]:(.+)$");local d=j and H.jdec(j)
+    local j=raw:match("CBT[12]:(%b{})");local d=j and H.jdec(j)
     if type(d)=="table"then
       local c=type(d.c)=="table"and d.c or{};local base=d.n and THEMES[d.n]
-      tBg.Text=H.safeHex(c.bg2 or c.bg or(base and base.bg2),nil)or tBg.Text;tAcc.Text=H.safeHex(c.accent or(base and base.accent),nil)or tAcc.Text;tTxt.Text=H.safeHex(c.text or(base and base.text),nil)or tTxt.Text
       pt.g1=H.safeHex(c.g1 or(base and base.g1),nil)or pt.g1;pt.g2=H.safeHex(c.g2 or(base and base.g2),nil)or pt.g2;pt.g3=H.safeHex(c.g3 or(base and base.g3),nil)or pt.g3
       if d.bm and(d.bm=="solid"or d.bm=="gradient"or d.bm=="mesh"or d.bm=="glass"or d.bm=="image")then pt.mode=d.bm end
+      if d.bi~=nil then pt.bgImg=H.assetId(d.bi)or""end
+      if d.bo~=nil then pt.bgOp=clamp(floor((tonumber(d.bo)or 0.82)*100+0.5),15,100);setSlOp(pt.bgOp,false)end
+      if d.bd~=nil then pt.bgDim=clamp(floor((tonumber(d.bd)or 0.25)*100+0.5),0,75);setSlDim(pt.bgDim,false)end
+      if d.bf then pt.wf=(d.bf=="fit"or d.bf=="stretch"or d.bf=="tile")and d.bf or"crop"end
+      if d.bz then pt.wz=clamp(tonumber(d.bz)or 100,100,300)end
+      if d.bx then pt.wx=clamp(tonumber(d.bx)or 0,-100,100)end
+      if d.by then pt.wy=clamp(tonumber(d.by)or 0,-100,100)end
+      if d.ba then pt.wa=(F._ASPECT and F._ASPECT[d.ba])and d.ba or"auto"end
+      if st.fields.tBgImg then st.fields.tBgImg.Text=pt.bgImg end
+      if st.fields.updBgImg then st.fields.updBgImg(true)end
       if d.ff and FONT_MAP[d.ff]then pt.font=d.ff end
       if d.ga then pt.gRot=clamp(tonumber(d.ga)or 28,0,360);setSlRot(pt.gRot,false)end
       if d.gm then pt.gMix=clamp(floor((tonumber(d.gm)or 0.65)*100+0.5),15,100);setSlMix(pt.gMix,false)end
       if d.ur then pt.rad=clamp(tonumber(d.ur)or 10,3,16);setSlRad(pt.rad,false)end
-      if d.bglow~=nil then pt.glow=(d.bglow==true)end
-      codeInp.Text="";refresh();F.toast(T("theme_ok"),true)
+      if d.bglow~=nil then pt.glow=(d.bglow==true);setGSw(pt.glow)end
+      tBg.Text=H.safeHex(c.bg2 or c.bg or(base and base.bg2),nil)or tBg.Text
+      tAcc.Text=H.safeHex(c.accent or(base and base.accent),nil)or tAcc.Text
+      tTxt.Text=H.safeHex(c.text or(base and base.text),nil)or tTxt.Text
+      if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end
+      codeInp.Text="";st.markDirty();refresh();F.toast(T("theme_ok"),true)
     elseif enter then F.toast(T("theme_bad"),true)end
   end)
 
-  -- 5. 34 Preset Themes
-  F._PROF.section(st,parent,L=="en"and"34 CHROMA & PRESET THEMES"or"34 MẪU CHROMA & THEME CÓ SẴN",9,"wand")
+  -- 5. Preset Themes
+  F._PROF.section(st,parent,L=="en"and(#THEME_ORDER+4).." CHROMA & PRESET THEMES"or(#THEME_ORDER+4).." MẪU CHROMA & THEME CÓ SẴN",9,"wand")
   local catRow=row(parent,24,10)
   local pGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,LayoutOrder=11},parent)
   local curCat="all";local cBtns={};local presets={}
@@ -7078,24 +7864,31 @@ function F._PROF.buildStyleTab(st,parent)
         if pr.cat=="chroma"then mk("UIGradient",{Rotation=pr.gRot or 28,Color=ColorSequence.new({ColorSequenceKeypoint.new(0,H.hex(pr.g1)),ColorSequenceKeypoint.new(0.55,H.hex(pr.g2)),ColorSequenceKeypoint.new(1,H.hex(pr.g3))})},pb)end
         local pl=lab(pb,pr.label,{size=u2(1,-8,1,0),pos=uo(4,0),bold=true,ts=10,align=txC,trunc=true});pl.TextColor3=H.ensureContrast(pTxt,pBg,4.5)
         hook(pb.MouseButton1Click,function()
-          tBg.Text=pr.bg;tAcc.Text=pr.acc;tTxt.Text=pr.txt;pt.g1=pr.g1;pt.g2=pr.g2;pt.g3=pr.g3;pt.gRot=pr.gRot or 28;setSlRot(pt.gRot,false)
+          pt.g1=pr.g1;pt.g2=pr.g2;pt.g3=pr.g3;pt.gRot=pr.gRot or 28;setSlRot(pt.gRot,false)
           if pr.isReset then
-            pt.mode="solid";pt.font="gotham";pt.rad=12;pt.glow=true;pt.avDec="none";pt.rc1="";pt.rc2="";pt.rc3="";pt.rw=3;pt.rrot=35;pt.rglow=true;pt.ranim="none";pt.nEff="solid";setSlRad(12,false)
+            pt.mode="solid";pt.font="gotham";pt.rad=12;pt.glow=true;pt.bgOp=82;pt.bgDim=25
+            pt.avDec="none";pt.rc1="";pt.rc2="";pt.rc3="";pt.rw=3;pt.rrot=35;pt.rglow=true;pt.ranim="none"
+            pt.nEff="solid";pt.nc1="";pt.nc2="";pt.nc3="";pt.nsc="";pt.nsw=0;pt.nrot=15;pt.nglow=false;pt.nanim="none"
+            pt.bgImg=""
+            setSlRad(12,false);setSlOp(82,false);setSlDim(25,false);setGSw(true)
             if st.fn.resetRingSliders then st.fn.resetRingSliders()end
+            if st.fn.resetNameSliders then st.fn.resetNameSliders()end
             if st.fields.tBgImg then st.fields.tBgImg.Text=""end
           elseif pr.cat=="chroma"and pt.mode=="solid"then pt.mode="gradient"end
+          tBg.Text=pr.bg;tAcc.Text=pr.acc;tTxt.Text=pr.txt
           if st.fn.refreshThemeBadges then st.fn.refreshThemeBadges()end
-          F._PROF.applyColors(st,pr.bg,pr.acc,pr.txt)
+          st.markDirty();F._PROF.applyColors(st,pr.bg,pr.acc,pr.txt)
         end)
       end
     end
   end
   for idx,cd in ipairs({{"all","cat_all"},{"chroma","cat_chroma"},{"dark","cat_dark"},{"light","cat_light"}})do
     local cid,ck=cd[1],cd[2]
-    local cb=mk("TextButton",{Size=u2(0.25,-4,1,0),BackgroundColor3=cid=="all"and cols.acc or cols.sub,Text=T(ck),Font=fGB,TextSize=10,TextColor3=cid=="all"and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},catRow)
+    local cb=mk("TextButton",{Size=u2(0.25,-5,1,0),BackgroundColor3=cid=="all"and cols.acc or cols.sub,Text=T(ck),Font=fGB,TextSize=10,TextColor3=cid=="all"and H.onColor(cols.acc)or cols.txt,BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=idx},catRow)
     corner(cb,6);cBtns[cid]=cb
     hook(cb.MouseButton1Click,function()
-      curCat=cid;for k,b in pairs(cBtns)do local on=(k==curCat);b.BackgroundColor3=on and cols.acc or cols.sub;b.TextColor3=on and H.ensureContrast(rgb(255,255,255),cols.acc,4.5)or cols.txt end
+      curCat=cid;local ot=H.onColor(st.cols.acc)
+      for k,b in pairs(cBtns)do local on=(k==curCat);b.BackgroundColor3=on and st.cols.acc or st.cols.sub;b.TextColor3=on and ot or st.cols.txt end
       rebuildPresets()
     end)
   end
@@ -7119,6 +7912,7 @@ function F._PROF.saveProfile(st)
   if f.tAcc then pt.acc=H.safeHex(f.tAcc.Text,nil)or""end
   if f.tTxt then pt.txt=H.safeHex(f.tTxt.Text,nil)or""end
   if f.tBgImg then pt.bgImg=H.assetId(f.tBgImg.Text)or""end
+  st.dirty=false;st._boardDirty=false
   P.profTheme=F.compactProfTheme(pt)
   P._profCleared=false
   if S.users[P.username]then S.users[P.username].profTheme=P.profTheme;S.users[P.username].profBanner=P.profBanner;S.users[P.username].profIcon=P.profIcon end
@@ -7126,7 +7920,7 @@ function F._PROF.saveProfile(st)
   P._profSavedAt=H.now()
   S.isDirty=true;F.save(true);F.heartbeat(false);F.pushMyProfileSync(nil,true)
   if F.rebuildFeed then pcall(F.rebuildFeed,true)end
-  F.toast(T("saved_ok"),true);F.closeModal()
+  F.toast(T("saved_ok"),true);F.closeModal(true)
 end
 
 --- [F.openProfile] Mở hộp thoại Hồ sơ người dùng chuẩn Discord hiện đại (Responsive 2 cột trên PC / 1 cột trên Mobile) kèm Studio cắt ảnh
@@ -7143,6 +7937,8 @@ function F.openProfile(u,initTab,_noFetch)
   local isWide=(v.X>=680 and v.Y>=460)
   local mw=isWide and min(770,v.X-24)or min(425,v.X-16)
   local mh=isWide and min(565,v.Y-24)or min(650,v.Y-16)
+  st._mw=mw;st._mh=mh;st._isWide=isWide;st._bw=isWide and floor((mw-28)*0.37)or(mw-28)
+  do local om=st.markDirty;st.markDirty=function()st._boardDirty=true;om()end end
 
   local scr,_,box=F.modalBox(T("profile"),mw,mh,{noAppTheme=true,cols=st.cols,pt=st.pTheme})
   box.ClipsDescendants=true
@@ -7155,15 +7951,16 @@ function F.openProfile(u,initTab,_noFetch)
 
   local uSt=st.ui
   uSt.box=box
-  uSt.boxGradFrame=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(1,1,1),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=40,Visible=false},box)
+  uSt.boxGradFrame=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(1,1,1),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=41,Visible=false},box)
   uSt.boxGradCorner=corner(uSt.boxGradFrame,pt.rad or 12)
   uSt.boxUIGrad=mk("UIGradient",{Rotation=pt.gRot or 28},uSt.boxGradFrame)
-  uSt.boxMeshFrame=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(1,1,1),BackgroundTransparency=0.52,BorderSizePixel=0,ZIndex=40,Visible=false},box)
+  uSt.boxMeshFrame=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(1,1,1),BackgroundTransparency=0.52,BorderSizePixel=0,ZIndex=41,Visible=false},box)
   uSt.boxMeshCorner=corner(uSt.boxMeshFrame,pt.rad or 12)
   uSt.boxMeshGrad=mk("UIGradient",{Rotation=140,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0.15),NumberSequenceKeypoint.new(0.5,0.65),NumberSequenceKeypoint.new(1,0.2)})},uSt.boxMeshFrame)
-  uSt.boxBgImg=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,ImageTransparency=0.82,ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0,ZIndex=41,Visible=false},box)
-  uSt.boxImgCorner=corner(uSt.boxBgImg,pt.rad or 12)
-  uSt.boxTintFrame=mk("Frame",{Size=us(1,1),BackgroundColor3=st.cols.box,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=41,Visible=false},box)
+  uSt.boxImgHost=F.createClipHost(box,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=41,Visible=false})
+  uSt.boxImgCorner=corner(uSt.boxImgHost,pt.rad or 12)
+  uSt.boxBgImg=mk("ImageLabel",{Size=us(1,1),BackgroundTransparency=1,ImageTransparency=0.82,ScaleType=Enum.ScaleType.Crop,BorderSizePixel=0,ZIndex=41,Visible=false},uSt.boxImgHost)
+  uSt.boxTintFrame=mk("Frame",{Size=us(1,1),BackgroundColor3=st.cols.box,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=42,Visible=false},box)
   uSt.boxTintCorner=corner(uSt.boxTintFrame,pt.rad or 12)
   uSt.boxStroke=box:FindFirstChildOfClass("UIStroke")
   uSt.boxStrokeGrad=uSt.boxStroke and(uSt.boxStroke:FindFirstChildOfClass("UIGradient")or mk("UIGradient",{Rotation=40},uSt.boxStroke))or nil
@@ -7173,9 +7970,10 @@ function F.openProfile(u,initTab,_noFetch)
     local wt=1-clamp((tonumber(pt.bgOp)or 82)/100,0.15,1)
     if aid and aid~=""then
       local tr=(pt.mode=="image"or pt.mode==nil or pt.mode=="")and wt or max(0.76,wt)
+      uSt.boxImgHost.Visible=true
       uSt.boxBgImg.ImageTransparency=tr;uSt.boxBgImg.Visible=true;F.setAsset(uSt.boxBgImg,aid,nil,tr)
-      F.applyImageFrame(box,uSt.boxBgImg,{fit=pt.wf,zoom=pt.wz,x=pt.wx,y=pt.wy,aspect=pt.wa},mw,mh)
-    else uSt.boxBgImg.Visible=false;uSt.boxBgImg.Image=""end
+      F.applyImageFrame(uSt.boxImgHost,uSt.boxBgImg,{fit=pt.wf,zoom=pt.wz,x=pt.wx,y=pt.wy,aspect=pt.wa},mw,mh)
+    else uSt.boxImgHost.Visible=false;uSt.boxBgImg.Visible=false;uSt.boxBgImg.Image=""end
   end
 
   local leftParent,rightParent,navParent,saveParent
@@ -7196,13 +7994,18 @@ function F.openProfile(u,initTab,_noFetch)
   else
     leftParent=scr
     navParent=mk("Frame",{Size=u2(1,0,0,32),BackgroundTransparency=1,LayoutOrder=2},scr)
-    rightParent=scr;saveParent=scr
+    rightParent=scr
+    if st.canEdit then
+      scr.Size=u2(1,-16,1,-86)
+      saveParent=mk("Frame",{Size=u2(1,-16,0,36),Position=u2(0,8,1,-42),BackgroundTransparency=1,ZIndex=44},box)
+    end
   end
 
   F._PROF.buildLeftIdentity(st,leftParent)
 
-  -- Thanh Tab kiểu gạch chân hiện đại của Discord
-  local tabRow=mk("Frame",{Size=us(1,1),BackgroundTransparency=1},navParent)
+  -- Thanh Tab kiểu gạch chân cuộn ngang mượt trên cả Mobile & PC
+  local okXDir,xDir=pcall(function()return Enum.ScrollingDirection.X end)
+  local tabRow=mk("ScrollingFrame",{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=0,CanvasSize=u2(),AutomaticCanvasSize=asX,ScrollingDirection=okXDir and xDir or nil},navParent)
   mk("UIListLayout",{FillDirection=fdH,Padding=u1(0,10),SortOrder=soLO,VerticalAlignment=vaC},tabRow)
   local navLine=mk("Frame",{Size=u2(1,0,0,1),Position=u2(0,0,1,-1),BackgroundColor3=st.cols.cBorder,BackgroundTransparency=0.5,BorderSizePixel=0},navParent)
   st.dividers[#st.dividers+1]=navLine
@@ -7239,6 +8042,7 @@ function F.openProfile(u,initTab,_noFetch)
     local curOrder={}
     for p in tostring(pt.wOrder or"bio,scripts,game,stats"):gmatch("[^,]+")do curOrder[#curOrder+1]=H.trim(p:lower())end
     local enabled={};for _,k in ipairs(curOrder)do enabled[k]=true end
+    if pt.mHide then enabled["music"]=nil end
     for _,k in ipairs({"bio","music","scripts","game","stats"})do if not enabled[k]then curOrder[#curOrder+1]=k end end
     local wNames={bio=L=="en"and"About Me / Bio"or"Giới thiệu (Bio)",music=L=="en"and"Favorite Music"or"Sở thích Âm nhạc",scripts=L=="en"and"Shared Scripts Showcase"or"Kho Script Chia Sẻ",game=L=="en"and"Live Roblox Game Card"or"Game Roblox Đang Chơi",stats=L=="en"and"Community Stats"or"Chỉ số Cộng đồng"}
     local listWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},wScr);list(listWrap,6)
@@ -7249,8 +8053,10 @@ function F.openProfile(u,initTab,_noFetch)
         local r=mk("Frame",{Size=us(1,1),BackgroundTransparency=1},rCard)
         local tog=tbtn(r,enabled[k]and"ON"or"OFF",{size=uo(42,24),pos=uo(0,2),key=enabled[k]and"ok"or"btnBg",ts=10,r=6})
         lab(r,wNames[k]or k,{size=u2(1,-108,1,0),pos=uo(50,0),ts=11,bold=true,trunc=true})
-        local upB=tbtn(r,"▲",{size=uo(24,24),pos=u2(1,-52,0,2),key="btnBg",ts=10,r=5})
-        local dnB=tbtn(r,"▼",{size=uo(24,24),pos=u2(1,-24,0,2),key="btnBg",ts=10,r=5})
+        local upB=tbtn(r,"",{size=uo(24,24),pos=u2(1,-52,0,2),key="btnBg",ts=10,r=5})
+        F.lucide(upB,"chevLeft",12,{pos=us(0.5,0.5),anc=v2(0.5,0.5),contrastBg="btnBg"}).Rotation=90
+        local dnB=tbtn(r,"",{size=uo(24,24),pos=u2(1,-24,0,2),key="btnBg",ts=10,r=5})
+        F.lucide(dnB,"chevLeft",12,{pos=us(0.5,0.5),anc=v2(0.5,0.5),contrastBg="btnBg"}).Rotation=-90
         hook(tog.MouseButton1Click,function()enabled[k]=not enabled[k]or nil;redraw()end)
         hook(upB.MouseButton1Click,function()if idx>1 then curOrder[idx],curOrder[idx-1]=curOrder[idx-1],curOrder[idx];redraw()end end)
         hook(dnB.MouseButton1Click,function()if idx<#curOrder then curOrder[idx],curOrder[idx+1]=curOrder[idx+1],curOrder[idx];redraw()end end)
@@ -7262,6 +8068,8 @@ function F.openProfile(u,initTab,_noFetch)
       local nextList={};for _,k in ipairs(curOrder)do if enabled[k]then nextList[#nextList+1]=k end end
       if#nextList==0 then nextList={"bio"}end
       pt.wOrder=tconcat(nextList,",")
+      pt.mHide=(not enabled["music"])and true or nil
+      st.markDirty();st._boardDirty=false
       wClose()
       for _,c in ipairs(panes[1]:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
       F._PROF.buildBoardTab(st,panes[1]);F._PROF.applyColors(st)
@@ -7280,6 +8088,11 @@ function F.openProfile(u,initTab,_noFetch)
   end
 
   st.fn.setTab=function(idx)
+    if idx==1 and st.canEdit and st._boardDirty and panes[1]then
+      st._boardDirty=false
+      for _,c in ipairs(panes[1]:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
+      F._PROF.buildBoardTab(st,panes[1]);F._PROF.applyColors(st)
+    end
     st.curTab=idx;initTab=idx
     for k,p in pairs(panes)do p.Visible=(k==idx)end
     st.fn.refreshTabVisuals()
@@ -7296,10 +8109,32 @@ function F.openProfile(u,initTab,_noFetch)
   end
 
   if st.canEdit and saveParent then
-    local sv=mk("TextButton",{Size=u2(1,0,0,34),BackgroundColor3=st.cols.acc,Text="  "..T("save_profile"),Font=fGB,TextSize=12,TextColor3=H.ensureContrast(rgb(255,255,255),st.cols.acc,4.5),BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=90},saveParent)
+    local sv=mk("TextButton",{Size=u2(1,0,0,34),BackgroundColor3=st.cols.acc,Text=T("save_profile"),Font=fGB,TextSize=12,TextColor3=H.onColor(st.cols.acc),BorderSizePixel=0,AutoButtonColor=true,LayoutOrder=90,ZIndex=44},saveParent)
     corner(sv,8);st.accents[#st.accents+1]=sv
-    F._PROF.ic(st,sv,"save",14,"onAcc",{pos=uo(14,10)})
+    F._PROF.btnIcon(st,sv,"save",14,"onAcc",28,12,{padR=8})
+    st.fn.refreshDirty=function()
+      if sv and sv.Parent then sv.Text=(st.dirty and"* "or"")..T("save_profile")end
+    end
     hook(sv.MouseButton1Click,function()F._PROF.saveProfile(st)end)
+
+    local closingConfirm=false
+    S.modalGuard=function(doClose)
+      if not st.dirty then return true end
+      if closingConfirm then return false end
+      closingConfirm=true
+      local pScr,pClose=F.popup(L=="en"and"Unsaved Profile Changes"or"Có thay đổi chưa lưu",320,170,{
+        onClose=function()closingConfirm=false end
+      })
+      lab(pScr,L=="en"and"You have unsaved edits on your Profile. Save before closing?"or"Bạn vừa chỉnh sửa Hồ sơ nhưng chưa lưu. Bạn muốn lưu trước khi đóng không?",{wrap=true,auto=true,ts=11})
+      local r=row(pScr,32,2)
+      local svNow=rbtn(r,L=="en"and"Save & Close"or"Lưu & Đóng",{size=u2(0.52,-3,1,0),key="ok",ts=11})
+      local disc=rbtn(r,L=="en"and"Discard"or"Bỏ qua",{size=u2(0.48,-3,1,0),key="danger",ts=11})
+      local keep=rbtn(pScr,L=="en"and"Keep Editing"or"Tiếp tục sửa",{h=28,key="btnBg",ts=10})
+      hook(svNow.MouseButton1Click,function()closingConfirm=false;pClose();F._PROF.saveProfile(st)end)
+      hook(disc.MouseButton1Click,function()closingConfirm=false;st.dirty=false;pClose();doClose()end)
+      hook(keep.MouseButton1Click,function()closingConfirm=false;pClose()end)
+      return false
+    end
   end
 
   F.unthemeTree(box)
@@ -7685,10 +8520,20 @@ function F.openRoleEditor(role)local isNew=role==nil
 -- 20. TÙY CHỈNH CHỦ ĐỀ (THEME STUDIO), XIN CẤP ROLE, CÀI ĐẶT & CHẨN ĐOÁN
 -- =============================================================================
 --- [F.autoContrast] Tự động cân chỉnh lại màu chữ chính và chữ phụ để đảm bảo độ tương phản tốt trên nền Theme hiện tại
-function F.autoContrast()local bgc=TH.bg if H.contrast(TH.text,bgc)<4.5 then P.custom.text=H.lum(bgc)<0.4 and"#F2F3F5"or"#111214"end
+function F.autoContrast()
+  local bgc=TH.bg;local bg2c=TH.bg2 or TH.bg
+  local base=THEMES[P.themeName]or THEMES.midnight
+  local rawTxt=H.safeHex(P.custom.text,base.text)
+  local txtC=H.hex(rawTxt)
+  if H.contrast(txtC,bgc)<4.5 or H.contrast(txtC,bg2c)<4.5 then
+    P.custom.text=H.lum(bgc)<0.45 and"#F2F3F5"or"#111214"
+  end
   F.computeTheme()
-  if H.contrast(TH.muted,bgc)<3 then P.custom.muted=H.tohex(H.mix(TH.text,bgc,0.38))end
-  F.paintTheme();S.isDirty=true F.toast(T("contrast_done"),true)end
+  if H.contrast(TH.muted,bgc)<3 or H.contrast(TH.muted,bg2c)<3 then
+    P.custom.muted=H.tohex(H.mix(TH.text,bgc,0.38))
+  end
+  F.paintTheme();S.isDirty=true;F.save(true);F.toast(T("contrast_done"),true)
+end
 --- [F.harmonizePalette] Tự động sinh bảng màu hài hòa theo lý thuyết vòng tròn màu HSV kèm kiểm tra tương phản WCAG
 function F.harmonizePalette()
   local isDark=H.lum(TH.bg)<0.45
@@ -7720,8 +8565,12 @@ function F.themeCode()
 end
 --- [F.importTheme] Nhập và áp dụng cấu hình Theme từ chuỗi mã chia sẻ (`CBT1:...`)
 function F.importTheme(code)
-  local j=H.trim(code):match("^CBT[12]:(.+)$")local d=j and H.jdec(j)if type(d)~="table"then return false end
-  if THEMES[d.n]then P.themeName=d.n end
+  local j=H.trim(code):match("CBT[12]:(%b{})")local d=j and H.jdec(j)if type(d)~="table"then return false end
+  if d.n and THEMES[d.n]then P.themeName=d.n
+  else
+    local bgHex=type(d.c)=="table"and H.safeHex(d.c.bg or d.c.bg2,nil)
+    P.themeName=(bgHex and H.lum(H.hex(bgHex))>=0.5)and"light"or"midnight"
+  end
   P.custom={}
   for k,v in pairs(type(d.c)=="table"and d.c or{})do
     if(THEMES.dark[k]or k=="mentionText"or k=="emojiText"or k=="g1"or k=="g2"or k=="g3")and tostring(v):match("^#%x%x%x%x%x%x$")then P.custom[k]=v end
@@ -7752,19 +8601,48 @@ end
 F._THEME={}
 function F._THEME.buildPreview(scr,onPickCrop)
   local pv=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,ClipsDescendants=true},scr)
-  corner(pv,P.uiRadius or 10);stroke(pv,"border",1.2,0.3)
+  local pvCor=corner(pv,P.uiRadius or 10)
+  local pvSt=mk("UIStroke",{Thickness=1.2,Transparency=0.3,ApplyStrokeMode=smBorder},pv)
   local pvWpHost=F.createClipHost(pv,{Size=us(1,1),BackgroundTransparency=1,BorderSizePixel=0,ClipsDescendants=true,ZIndex=1,Visible=false})
+  local pvWpCor=corner(pvWpHost,P.uiRadius or 10)
   local pvWp=mk("ImageLabel",{Size=us(1,1),AnchorPoint=v2(0.5,0.5),Position=us(0.5,0.5),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=1},pvWpHost)
   local pvTint=mk("Frame",{Size=us(1,1),BorderSizePixel=0,ZIndex=1,Visible=false},pv)
+  local pvTintCor=corner(pvTint,P.uiRadius or 10)
+  local pvMesh=mk("Frame",{Size=us(1,1),BackgroundColor3=c3(1,1,1),BackgroundTransparency=0.52,BorderSizePixel=0,ZIndex=1,Visible=false},pv)
+  local pvMeshCor=corner(pvMesh,P.uiRadius or 10)
+  local pvMeshGrad=mk("UIGradient",{Rotation=140,Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0.18),NumberSequenceKeypoint.new(0.5,0.68),NumberSequenceKeypoint.new(1,0.22)})},pvMesh)
   local pvBody=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,ZIndex=2},pv)
-  pad(pvBody,8,8,8,8);list(pvBody,4)
+  pad(pvBody,7,6,7,6);list(pvBody,3)
   local pvGrad=mk("UIGradient",{Rotation=P.gradAngle or 28},pv)
-  local pvFrameBtn=mk("TextButton",{Size=uo(62,20),Position=u2(1,-6,0,6),AnchorPoint=v2(1,0),Text="  Frame",Font=fGB,TextSize=9,BorderSizePixel=0,AutoButtonColor=true,Visible=false,ZIndex=6},pv)
+  local pvFrameBtn=mk("TextButton",{Size=uo(62,20),Position=u2(1,-6,0,5),AnchorPoint=v2(1,0),Text=L=="en"and"Frame"or"Căn",Font=fGB,TextSize=9,BorderSizePixel=0,AutoButtonColor=true,Visible=false,ZIndex=6},pv)
   th(pvFrameBtn,"BackgroundColor3","title");th(pvFrameBtn,"TextColor3","text");corner(pvFrameBtn,6);stroke(pvFrameBtn,"accent",1,0.35)
-  F.lucide(pvFrameBtn,"crop",10,{pos=uo(6,5),key="accent",z=7})
+  F.btnIcon(pvFrameBtn,"crop",10,18,6,{key="accent",z=7})
   hook(pvFrameBtn.MouseButton1Click,function()if onPickCrop then onPickCrop()end end)
-  local function updPv()
+
+  local samples={}
+  local function sample(who,text,key,order)
+    local f=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=order,ZIndex=3},pvBody)
+    local sc=corner(f,max(4,(P.uiRadius or 10)-2));pad(f,7,3,7,3)
+    local lb=lab(f,who.."  "..text,{ts=11,wrap=true,auto=true})
+    samples[#samples+1]={f=f,c=sc,l=lb,k=key,ord=order}
+  end
+  sample("Alice",T("sample_hi"),"bg2",1)
+  sample(T("you"),T("sample_reply"),"own",2)
+  sample("Bob","@"..P.username..T("sample_ping"),"mention",3)
+  local chipsR=row(pvBody,24,4);chipsR.ZIndex=3
+  tbtn(chipsR,"Accent",{size=u2(0.25,-5,1,0),key="accent",ts=10,r=5})
+  tbtn(chipsR,"OK",{size=u2(0.25,-5,1,0),key="ok",ts=10,r=5})
+  tbtn(chipsR,"Warn",{size=u2(0.25,-5,1,0),key="warn",ts=10,r=5})
+  tbtn(chipsR,"Danger",{size=u2(0.25,-5,1,0),key="danger",ts=10,r=5})
+
+  local function updPv(forceLoad)
     local m=P.backgroundMode or"solid"
+    local rad=clamp(tonumber(P.uiRadius)or 10,3,16)
+    local ms=P.msgStyle or"card"
+    local fm=FONT_MAP[P.fontFamily or"gotham"]or FONT_MAP.gotham
+    local gOn=(P.borderGlow~=false)
+    pvCor.CornerRadius=u1(0,rad);pvWpCor.CornerRadius=u1(0,rad);pvTintCor.CornerRadius=u1(0,rad);pvMeshCor.CornerRadius=u1(0,rad)
+    pvSt.Color=gOn and TH.accent or TH.border;pvSt.Thickness=gOn and 1.5 or 1.1;pvSt.Transparency=gOn and 0.18 or 0.4
     local imgId=H.assetId(P.backgroundImage or"")
     local showImg=(m=="image"and imgId~=nil)
     pvWpHost.Visible=showImg
@@ -7775,45 +8653,58 @@ function F._THEME.buildPreview(scr,onPickCrop)
       pvWp.ImageTransparency=wpTr
       pvTint.BackgroundColor3=TH.bg
       pvTint.BackgroundTransparency=1-clamp(tonumber(P.backgroundDim)or 0.25,0,0.75)
-      if pv._lastImg~=imgId then
+      if forceLoad==true or pv._lastImg~=imgId then
         pv._lastImg=imgId
         F.setAsset(pvWp,imgId,function()
           if pvWp and pvWp.Parent then
             pvWp.ImageTransparency=wpTr
-            F.applyImageFrame(pvWpHost,pvWp,P.bgFrame,380,145)
+            F.applyImageFrame(pvWpHost,pvWp,P.bgFrame,380,120)
           end
-        end,wpTr)
+        end,wpTr,{force=(forceLoad==true)})
       end
-      F.applyImageFrame(pvWpHost,pvWp,P.bgFrame,380,145)
+      F.applyImageFrame(pvWpHost,pvWp,P.bgFrame,380,120)
     end
-    if m=="gradient"or m=="mesh"or m=="glass"then
+    local isGrad=(m=="gradient"or m=="mesh"or m=="glass")
+    pvMesh.Visible=(m=="mesh")
+    if isGrad then
       pv.BackgroundColor3=c3(1,1,1)
+      pv.BackgroundTransparency=(m=="glass")and F.surfaceAlpha("modal")or F.surfaceAlpha("bg")
       pvGrad.Enabled=true
       pvGrad.Rotation=tonumber(P.gradAngle)or 28
-      pvGrad.Color=ColorSequence.new({
-        ColorSequenceKeypoint.new(0,TH.g1),
-        ColorSequenceKeypoint.new(0.52,TH.g2),
-        ColorSequenceKeypoint.new(1,TH.g3),
-      })
+      if m=="glass"then
+        pvGrad.Color=ColorSequence.new({
+          ColorSequenceKeypoint.new(0,H.mix(TH.bg2,TH.accent,0.18)),
+          ColorSequenceKeypoint.new(0.5,TH.cardBg),
+          ColorSequenceKeypoint.new(1,H.mix(TH.bg2,TH.g3,0.34)),
+        })
+      else
+        pvGrad.Color=ColorSequence.new({
+          ColorSequenceKeypoint.new(0,TH.g1),
+          ColorSequenceKeypoint.new(0.52,TH.g2),
+          ColorSequenceKeypoint.new(1,TH.g3),
+        })
+      end
+      if m=="mesh"then
+        pvMeshGrad.Rotation=(pvGrad.Rotation+115)%360
+        pvMeshGrad.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,TH.accent),ColorSequenceKeypoint.new(0.55,TH.g2),ColorSequenceKeypoint.new(1,TH.g3)})
+      end
     else
       pv.BackgroundColor3=TH.bg
+      pv.BackgroundTransparency=showImg and 0 or F.surfaceAlpha("bg")
       pvGrad.Enabled=false
     end
+    for _,sm in ipairs(samples)do
+      local bg=TH[sm.k]or TH.bg2
+      sm.f.Size=(sm.ord==1 and showImg)and u2(1,-68,0,0)or u2(1,0,0,0)
+      sm.f.BackgroundColor3=bg
+      sm.f.BackgroundTransparency=(ms=="minimal")and 1 or F.surfaceAlpha("card")
+      sm.c.CornerRadius=u1(0,(ms=="flat")and 4 or max(4,rad-2))
+      sm.l.Font=fm.bold
+      sm.l.TextColor3=H.ensureContrast(TH.text,(ms=="minimal")and TH.bg or bg,4.2)
+    end
   end
-  themed(pv,updPv)
-  local function sample(who,text,key,order)
-    local f=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=order,ZIndex=3},pvBody)
-    themed(f,function(o)o.BackgroundColor3=TH[key];o.BackgroundTransparency=F.surfaceAlpha("card")end)
-    corner(f,max(4,(P.uiRadius or 10)-2));pad(f,8,4,8,4);lab(f,who.."  "..text,{ts=12,wrap=true,auto=true})
-  end
-  sample("Alice",T("sample_hi"),"cardBg",1)
-  sample(T("you"),T("sample_reply"),"own",2)
-  sample("Bob","@"..P.username..T("sample_ping"),"mention",3)
-  local chipsR=row(pvBody,26,4);chipsR.ZIndex=3
-  tbtn(chipsR,"Accent",{size=u2(0.25,-5,1,0),key="accent",ts=11})
-  tbtn(chipsR,"OK",{size=u2(0.25,-5,1,0),key="ok",ts=11})
-  tbtn(chipsR,"Warn",{size=u2(0.25,-5,1,0),key="warn",ts=11})
-  tbtn(chipsR,"Danger",{size=u2(0.25,-5,1,0),key="danger",ts=11})
+  themed(pv,function()updPv(false)end)
+  updPv(false)
   return updPv
 end
 function F._THEME.buildWallpaperCard(scr,onBgChanged)
@@ -7828,26 +8719,30 @@ function F._THEME.buildWallpaperCard(scr,onBgChanged)
   lab(rTop,T("bg_image"),{size=u2(1,-58,0,18),pos=uo(52,2),bold=true,ts=11,trunc=true})
   local specLbl=lab(rTop,"CROP · 100% · (0,0)",{size=u2(1,-58,0,16),pos=uo(52,22),ts=10,key="muted",trunc=true})
   local actRow=row(bgCard,28,2)
-  local sBtn=rbtn(actRow,L=="en"and"   Store"or"   Kho ảnh",{size=u2(0.34,-4,1,0),key="accent",ts=10,r=6,layout=1})
-  F.lucide(sBtn,"store",12,{pos=uo(8,8),col=H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
-  local fBtn=rbtn(actRow,L=="en"and"   Frame"or"   Căn khung",{size=u2(0.36,-4,1,0),key="btnBg",ts=10,r=6,layout=2})
-  F.lucide(fBtn,"crop",12,{pos=uo(8,8),key="accent"})
+  local sBtn=rbtn(actRow,L=="en"and"Store"or"Kho ảnh",{size=u2(0.34,-4,1,0),key="accent",ts=10,r=6,layout=1})
+  local sbIc=F.btnIcon(sBtn,"store",12,21,6,{col=H.onColor(TH.accent),themed=false})
+  themed(sbIc,function(ic)ic.ImageColor3=H.onColor(TH.accent)end)
+  local fBtn=rbtn(actRow,L=="en"and"Frame"or"Căn khung",{size=u2(0.36,-4,1,0),key="btnBg",ts=10,r=6,layout=2})
+  F.btnIcon(fBtn,"crop",12,21,6,{key="accent"})
   local hdBtn=rbtn(actRow,"",{size=u2(0.15,-4,1,0),key="btnBg",ts=10,r=6,layout=3})
   F.lucide(hdBtn,"refresh",12,{pos=us(0.5,0.5),anc=v2(0.5,0.5),key="ok"})
   local clearBg=rbtn(actRow,"",{size=u2(0.15,-2,1,0),key="danger",ts=10,r=6,layout=4})
-  F.lucide(clearBg,"x",12,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=c3(1,1,1),themed=false})
+  local clIc=F.lucide(clearBg,"x",12,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=H.onColor(TH.danger),themed=false})
+  themed(clIc,function(ic)ic.ImageColor3=H.onColor(TH.danger)end)
   local bgInput=mk("TextBox",{
     Size=u2(1,0,0,26),Text=tostring(P.backgroundImage or""),
     PlaceholderText=T("bg_image_hint"),ClearTextOnFocus=false,Font=fCode,TextSize=11,BorderSizePixel=0,TextXAlignment=txL,LayoutOrder=3
   },bgCard)
   F.styleInput(bgInput,"code",false)
   local reuseRow=row(bgCard,24,4)
-  local useBan=rbtn(reuseRow,L=="en"and"   Profile Banner"or"   Banner Hồ sơ",{size=u2(0.38,-3,1,0),key="btnBg",ts=9,r=6,layout=1})
-  F.lucide(useBan,"image",11,{pos=uo(6,6),key="accent"})
-  local useProfBg=rbtn(reuseRow,L=="en"and"   Profile Card"or"   Nền Hồ sơ",{size=u2(0.36,-3,1,0),key="btnBg",ts=9,r=6,layout=2})
-  F.lucide(useProfBg,"layers",11,{pos=uo(6,6),key="accent"})
-  local applyBg=rbtn(reuseRow,L=="en"and"   Apply"or"   Áp dụng",{size=u2(0.26,-2,1,0),key="ok",ts=9,r=6,layout=3})
-  F.lucide(applyBg,"check",11,{pos=uo(6,6),col=c3(1,1,1),themed=false})
+  local useBan=rbtn(reuseRow,L=="en"and"Profile Banner"or"Banner Hồ sơ",{size=u2(0.38,-3,1,0),key="btnBg",ts=9,r=6,layout=1})
+  F.btnIcon(useBan,"image",11,18,5,{key="accent",padR=2})
+  local useProfBg=rbtn(reuseRow,L=="en"and"Profile Card"or"Nền Hồ sơ",{size=u2(0.36,-3,1,0),key="btnBg",ts=9,r=6,layout=2})
+  F.btnIcon(useProfBg,"layers",11,18,5,{key="accent",padR=2})
+  local applyBg=rbtn(reuseRow,L=="en"and"Apply"or"Áp dụng",{size=u2(0.26,-2,1,0),key="ok",ts=9,r=6,layout=3})
+  local apIc=F.btnIcon(applyBg,"check",11,18,5,{col=H.onColor(TH.ok),themed=false,padR=2})
+  themed(apIc,function(ic)ic.ImageColor3=H.onColor(TH.ok)end)
+
   local function updBgCard(forceReload)
     local bf=type(P.bgFrame)=="table"and P.bgFrame or{}
     specLbl.Text=string.upper(bf.fit or"crop").." · "..tostring(floor(tonumber(bf.zoom)or 100)).."% · ("..tostring(floor(tonumber(bf.x)or 0))..","..tostring(floor(tonumber(bf.y)or 0))..")"
@@ -7868,37 +8763,43 @@ function F._THEME.buildWallpaperCard(scr,onBgChanged)
   updBgCard(false)
   hook(bgInput:GetPropertyChangedSignal("Text"),function()updBgCard(false)end)
   local function commitImg(id,frameCfg)
-    P.backgroundImage=id;P.backgroundMode="image";bgInput.Text=id
+    P.backgroundImage=id;P.backgroundMode="image"
+    if bgInput.Text~=id then bgInput.Text=id end
     if type(frameCfg)=="table"then P.bgFrame=frameCfg end
     updBgCard(false);F.paintTheme();S.isDirty=true;F.save(true)
-    if onBgChanged then onBgChanged()end
+    if onBgChanged then onBgChanged(false)end
     F.toast(T("bg_applied"),true)
   end
-  hook(bgInput.FocusLost,function(enter)if enter then local id=H.assetId(bgInput.Text);if id then commitImg(id)end end end)
-  hook(sBtn.MouseButton1Click,function()
-    F.openImageFinder(T("bg_image"),"theme",function(pickedId)commitImg(tostring(pickedId))end)
+  hook(bgInput.FocusLost,function()
+    local id=H.assetId(bgInput.Text)
+    if id and id~=""and id~=P.backgroundImage then commitImg(id)end
   end)
+  local function openStoreForBg()
+    F.openImageFinder(T("bg_image"),"theme",function(pickedId)commitImg(tostring(pickedId))end)
+  end
+  hook(sBtn.MouseButton1Click,openStoreForBg)
   local function openCrop()
     local curId=H.assetId(bgInput.Text)or H.assetId(P.backgroundImage or"")
     F.openImageCropStudio({target="wallpaper",assetId=curId or"",cfg=P.bgFrame,title=L=="en"and"Wallpaper Crop & Framing Studio"or"Căn Khung Ảnh Nền (Wallpaper Studio)",
       onLiveChange=function(st)
         P.backgroundImage=st.id;P.bgFrame={fit=st.fit,zoom=st.zoom,x=st.x,y=st.y,aspect=st.aspect}
         if st.id~=""then P.backgroundMode="image"end
-        updBgCard(false);F.applyMainWallpaper(false);if onBgChanged then onBgChanged()end
+        updBgCard(false);F.applyMainWallpaper(false);if onBgChanged then onBgChanged(false)end
       end,
       onApply=function(st)
         P.backgroundImage=st.id;P.bgFrame={fit=st.fit,zoom=st.zoom,x=st.x,y=st.y,aspect=st.aspect}
-        if st.id~=""then bgInput.Text=st.id;P.backgroundMode="image"end
-        updBgCard(false);F.paintTheme();S.isDirty=true;F.save(true);if onBgChanged then onBgChanged()end;F.toast(T("theme_ok"),true)
+        if st.id~=""then bgInput.Text=st.id;P.backgroundMode="image"elseif P.backgroundMode=="image"then P.backgroundMode="solid"end
+        updBgCard(false);F.paintTheme();S.isDirty=true;F.save(true);if onBgChanged then onBgChanged(false)end;F.toast(T("theme_ok"),true)
       end,
-      onCancel=function()updBgCard(false);F.paintTheme();if onBgChanged then onBgChanged()end end})
+      onCancel=function()updBgCard(false);F.paintTheme();if onBgChanged then onBgChanged(false)end end})
   end
   hook(fBtn.MouseButton1Click,openCrop)
   hook(hdBtn.MouseButton1Click,function()
-    local id=H.assetId(bgInput.Text)
+    local id=H.assetId(bgInput.Text)or H.assetId(P.backgroundImage or"")
     if not id then F.toast(T("bg_invalid"),true);return end
     S.assetUrl[id]=nil;if S.textureMap then S.textureMap[id]=nil end
-    updBgCard(true);F.applyMainWallpaper(true);F.toast(L=="en"and"Refreshing HD asset..."or"Đang tải lại ảnh HD gốc...",true)
+    updBgCard(true);F.applyMainWallpaper(true);if onBgChanged then onBgChanged(true)end
+    F.toast(L=="en"and"Refreshing HD asset..."or"Đang tải lại ảnh HD gốc...",true)
   end)
   hook(applyBg.MouseButton1Click,function()
     local id=H.assetId(bgInput.Text)
@@ -7906,8 +8807,8 @@ function F._THEME.buildWallpaperCard(scr,onBgChanged)
     commitImg(id)
   end)
   hook(clearBg.MouseButton1Click,function()
-    P.backgroundImage="";P.backgroundMode="solid";bgInput.Text="";updBgCard(false)
-    F.paintTheme();S.isDirty=true;F.save(true);if onBgChanged then onBgChanged()end;F.toast(T("bg_applied"),true)
+    P.backgroundImage="";if P.backgroundMode=="image"then P.backgroundMode="solid"end;bgInput.Text="";updBgCard(false)
+    F.paintTheme();S.isDirty=true;F.save(true);if onBgChanged then onBgChanged(false)end;F.toast(T("bg_applied"),true)
   end)
   hook(useBan.MouseButton1Click,function()
     local id=H.assetId(P.profBanner or"")
@@ -7919,25 +8820,50 @@ function F._THEME.buildWallpaperCard(scr,onBgChanged)
     local pt=type(P.profTheme)=="table"and P.profTheme or{}
     local id=H.assetId(pt.bgImg or"")
     if not id then F.toast(L=="en"and"No Profile Card Wallpaper set yet"or"Hồ sơ chưa có ảnh nền thẻ!",true);return end
-    if pt.bgOp then P.backgroundOpacity=clamp((tonumber(pt.bgOp)or 82)/100,0.15,1)end
-    if pt.bgDim then P.backgroundDim=clamp((tonumber(pt.bgDim)or 25)/100,0,0.75)end
+    P.backgroundOpacity=clamp((tonumber(pt.bgOp)or 82)/100,0.15,1)
+    P.backgroundDim=clamp((tonumber(pt.bgDim)or 25)/100,0,0.75)
     commitImg(id,{fit=pt.wf or"crop",zoom=tonumber(pt.wz)or 100,x=tonumber(pt.wx)or 0,y=tonumber(pt.wy)or 0,aspect=pt.wa or"auto"})
   end)
-  return{bgInput=bgInput,update=updBgCard,openCrop=openCrop}
+  return{bgInput=bgInput,update=updBgCard,openCrop=openCrop,openStore=openStoreForBg}
 end
---- [F.openTheme] Mở hộp thoại tùy chỉnh Giao diện & Màu sắc (Theme Studio v46) kèm Chuyển sắc 3 điểm (Chroma), Mesh, Kính mờ & Wallpaper Framing
-function F.openTheme()
-  S.reopenModal=F.openTheme
-  local scr=F.modalBox(T("theme"),420,660)
-  local bgCtrl,updPv,refreshRows
+--- [F.openTheme] Mở hộp thoại tùy chỉnh Giao diện & Màu sắc (Theme Studio v47) kèm Preview cố định trên đầu, Undo & Wallpaper Framing
+function F.openTheme(keepScroll)
+  local prevScrY=keepScroll and S._themeScrY or 0
+  if not keepScroll then S._themeUndoSnap=F.themeCode()end
+  local undoSnap=S._themeUndoSnap or F.themeCode()
+  S.reopenModal=function()F.openTheme(true)end
+  local scr,_,box=F.modalBox(T("theme"),420,660)
+  local bgCtrl,updPv,refreshRows,syncAllControls,buildPresetGrid,rebuildSavedSlots,paintSel
+
+  -- ghim Preview + Undo ở trên, nút Save & Close ở dưới box (giữa là ScrollingFrame mượt)
+  local topPin=mk("Frame",{Size=u2(1,-16,0,28),Position=uo(8,38),BackgroundTransparency=1,ZIndex=44},box)
+  local undoB=rbtn(topPin,L=="en"and"Undo"or"Hoàn tác",{size=uo(84,26),pos=uo(0,1),key="btnBg",ts=10,r=6})
+  F.btnIcon(undoB,"rotateCcw",11,20,6,{key="warn"})
+  lab(topPin,L=="en"and"Live Preview"or"Xem trước (Tự áp dụng)",{size=u2(1,-184,1,0),pos=uo(90,0),ts=10,bold=true,key="muted",align=txC,trunc=true})
+  local topSaveBtn=rbtn(topPin,L=="en"and"Save"or"Lưu nhanh",{size=uo(88,26),pos=u2(1,-88,0,1),key="ok",ts=10,r=6})
+  local tsvIc=F.btnIcon(topSaveBtn,"save",11,21,7,{col=H.onColor(TH.ok),themed=false})
+  themed(tsvIc,function(ic)ic.ImageColor3=H.onColor(TH.ok)end)
+
+  local pvPin=mk("Frame",{Size=u2(1,-16,0,130),Position=uo(8,69),BackgroundTransparency=1,ZIndex=44},box)
+  updPv=F._THEME.buildPreview(pvPin,function()if bgCtrl and bgCtrl.openCrop then bgCtrl.openCrop()end end)
+
+  scr.Size=u2(1,-16,1,-250);scr.Position=uo(8,203)
+  hook(scr:GetPropertyChangedSignal("CanvasPosition"),function()S._themeScrY=scr.CanvasPosition.Y end)
+
+  local botPin=mk("Frame",{Size=u2(1,-16,0,36),Position=u2(0,8,1,-42),BackgroundTransparency=1,ZIndex=44},box)
+  local svThemeBtn=rbtn(botPin,L=="en"and"Save & Close"or"Lưu & Đóng",{size=us(1,1),key="ok",ts=12,r=8})
+  local bsvIc=F.btnIcon(svThemeBtn,"save",14,28,12,{col=H.onColor(TH.ok),themed=false,padR=8})
+  themed(bsvIc,function(ic)ic.ImageColor3=H.onColor(TH.ok)end)
+
   local function saveThemeAll(closeAfter)
     if bgCtrl and bgCtrl.bgInput then
       local rawBg=H.trim(bgCtrl.bgInput.Text)
       if rawBg~=""then
         local id=H.assetId(rawBg)
         if id then
+          local changed=(id~=P.backgroundImage)
           P.backgroundImage=id
-          P.backgroundMode="image"
+          if changed and P.backgroundMode~="image"then P.backgroundMode="image"end
           bgCtrl.bgInput.Text=id
           if bgCtrl.update then bgCtrl.update(false)end
         end
@@ -7947,101 +8873,22 @@ function F.openTheme()
     end
     F.paintTheme()
     if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end
-    S.isDirty=true
-    F.save(true)
-    F.toast(T("saved_ok"),true)
+    S.isDirty=true;F.save(true);F.toast(T("saved_ok"),true)
     if closeAfter then F.closeModal()end
   end
-
-  local topHdr=row(scr,28)
-  lab(topHdr,string.upper(T("theme_preview")),{size=u2(0.52,-4,1,0),ts=10,bold=true,key="muted"})
-  local topSaveBtn=rbtn(topHdr,"   "..(L=="en"and"Save Theme"or"Lưu Giao Diện"),{size=u2(0.48,-4,1,0),key="ok",ts=11,r=7})
-  F.lucide(topSaveBtn,"save",12,{pos=uo(10,8),col=c3(1,1,1),themed=false})
   hook(topSaveBtn.MouseButton1Click,function()saveThemeAll(false)end)
+  hook(svThemeBtn.MouseButton1Click,function()saveThemeAll(true)end)
+  hook(undoB.MouseButton1Click,function()
+    if F.importTheme(undoSnap)then syncAllControls();F.save(true);F.toast(L=="en"and"Reverted changes"or"Đã hoàn tác về lúc mở",true)end
+  end)
 
-  updPv=F._THEME.buildPreview(scr,function()if bgCtrl and bgCtrl.openCrop then bgCtrl.openCrop()end end)
-
-  -- 1. Chế độ nền (5 chế độ: Màu phẳng, Chuyển sắc Chroma, Đa tầng Mesh, Kính mờ Glass, Ảnh nền)
-  F.section(scr,T("bg_mode"))
-  local bgModes1=row(scr,28)
-  local bgModes2=row(scr,28)
-  local function makeModeBtn(parentRow,wScale,mode,labelKey)
-    local b=tbtn(parentRow,T(labelKey),{size=u2(wScale,-4,1,0),ts=10,r=7})
-    local st=mk("UIStroke",{Thickness=1.3,Transparency=0.2,ApplyStrokeMode=smBorder},b)
-    themed(b,function(button)
-      local active=(P.backgroundMode==mode)
-      button.BackgroundColor3=active and TH.accent or TH.btnBg
-      button.TextColor3=active and(H.lum(TH.accent)>0.42 and rgb(20,20,24)or c3(1,1,1))or H.ensureContrast(TH.text,TH.btnBg,4.8)
-      st.Color=active and TH.accent or TH.border
-    end)
-    hook(b.MouseButton1Click,function()
-      P.backgroundMode=mode;F.paintTheme();if updPv then updPv()end;S.isDirty=true;F.save(true)
-    end)
-  end
-  makeModeBtn(bgModes1,1/3,"solid","bg_solid")
-  makeModeBtn(bgModes1,1/3,"gradient","bg_gradient")
-  makeModeBtn(bgModes1,1/3,"mesh","bg_mesh")
-  makeModeBtn(bgModes2,0.5,"glass","bg_glass")
-  makeModeBtn(bgModes2,0.5,"image","bg_image")
-
-  -- Thanh chỉnh Góc nghiêng & Cường độ Chuyển sắc + 3 Điểm màu Gradient (Stop 1, Stop 2, Stop 3)
-  F.section(scr,T("grad_custom"))
-  local gStopRow=row(scr,32)
-  local gradHolder=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false},scr)
-  local gradPk,activeGradKey
-  local gStopBtns={}
-  for idx,gk in ipairs({"g1","g2","g3"})do
-    local gb=mk("TextButton",{Size=u2(1/3,-4,1,0),Text="",BorderSizePixel=0,LayoutOrder=idx,AutoButtonColor=true},gStopRow)
-    th(gb,"BackgroundColor3","cardBg");corner(gb,8);stroke(gb,"border",1,0.4)
-    local sw=mk("Frame",{Size=uo(18,18),Position=uo(6,7),BorderSizePixel=0},gb)corner(sw,5);stroke(sw,"muted",1,0.4)
-    local lbl=lab(gb,"Stop #"..idx,{size=u2(1,-30,1,0),pos=uo(28,0),ts=10,bold=true,trunc=true})
-    themed(gb,function()
-      sw.BackgroundColor3=TH[gk]or TH.bg
-      lbl.Text="Stop #"..idx.." "..H.tohex(TH[gk]or TH.bg)
-    end)
-    gStopBtns[gk]={sw=sw,lbl=lbl}
-    hook(gb.MouseButton1Click,function()
-      if activeGradKey==gk and gradHolder.Visible then
-        gradHolder.Visible=false;activeGradKey=nil;return
-      end
-      activeGradKey=gk
-      for _,c in ipairs(gradHolder:GetChildren())do c:Destroy()end
-      gradHolder.Visible=true
-      gradPk=F.colorPicker(gradHolder,H.tohex(TH[gk]or TH.bg),function(hex)
-        P.custom[gk]=hex
-        if P.backgroundMode=="solid"then P.backgroundMode="gradient"end
-        F.paintTheme();S.isDirty=true
-      end)
-    end)
-  end
-  F.slider(scr,T("grad_angle"),0,360,floor(tonumber(P.gradAngle)or 28),{step=5,fmt=function(v)return v.."°"end,
-    onChange=function(v)P.gradAngle=v;F.paintTheme()end,onDone=function()S.isDirty=true end})
-  F.slider(scr,T("grad_mix"),15,100,floor((tonumber(P.gradMix)or 0.65)*100+0.5),{step=1,fmt=function(v)return v.."%"end,
-    onChange=function(v)P.gradMix=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
-
-  bgCtrl=F._THEME.buildWallpaperCard(scr,function()if updPv then updPv()end end)
-  F.slider(scr,T("bg_opacity"),15,100,floor(P.backgroundOpacity*100+0.5),{step=1,fmt=function(v)return v.."%"end,
-    onChange=function(v)P.backgroundOpacity=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
-  F.slider(scr,T("bg_dim"),0,75,floor(P.backgroundDim*100+0.5),{step=1,fmt=function(v)return v.."%"end,
-    onChange=function(v)P.backgroundDim=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
-
-  -- 2. Bộ sưu tập 30 Mẫu Giao diện (Presets) có bộ lọc Danh mục (Tất cả / Chuyển sắc / Tối / Sáng)
-  F.section(scr,T("preset").." (30)")
+  -- 1. Bộ sưu tập Mẫu Giao diện (Presets) đưa lên đầu để người mới dễ chọn nhất
+  F.section(scr,T("preset").." ("..#THEME_ORDER..")")
   local catRow=row(scr,26)
   local pg=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)
   local selStrokes,rows={},{}
-  local function paintSel()for n,s in pairs(selStrokes)do s.Transparency=(n==P.themeName)and 0 or 1 end end
-  refreshRows=function()
-    F.computeTheme()
-    for k,r in pairs(rows)do
-      if r.sw and r.sw.Parent then
-        r.sw.BackgroundColor3=TH[k]
-        r.hx.Text=H.tohex(TH[k])
-        r.reset.Visible=P.custom[k]~=nil
-      end
-    end
-  end
-  local function buildPresetGrid()
+  paintSel=function()for n,s in pairs(selStrokes)do s.Transparency=(n==P.themeName)and 0 or 1 end end
+  buildPresetGrid=function()
     for _,c in ipairs(pg:GetChildren())do c:Destroy()end
     selStrokes={}
     mk("UIGridLayout",{CellSize=u2(1/3,-4,0,48),CellPadding=uo(5,5),SortOrder=soLO},pg)
@@ -8049,9 +8896,11 @@ function F.openTheme()
     for i,name in ipairs(THEME_ORDER)do
       local t=THEMES[name]
       local tCat=t.cat or(H.lum(H.hex(t.bg))<0.45 and"dark"or"light")
-      if curCat=="all"or curCat==tCat or(curCat=="dark"and tCat=="chroma"and H.lum(H.hex(t.bg))<0.45)then
+      local isLight=(tCat=="light"or(tCat=="chroma"and H.lum(H.hex(t.bg))>=0.45))
+      local isDark=(tCat=="dark"or(tCat=="chroma"and H.lum(H.hex(t.bg))<0.45))
+      if curCat=="all"or curCat==tCat or(curCat=="dark"and isDark)or(curCat=="light"and isLight)then
         local b=mk("TextButton",{Text="",BackgroundColor3=c3(1,1,1),BorderSizePixel=0,LayoutOrder=i,AutoButtonColor=true,ClipsDescendants=true},pg)corner(b,8)
-        local bGrad=mk("UIGradient",{Rotation=t.gRot or 28,Color=ColorSequence.new({
+        mk("UIGradient",{Rotation=t.gRot or 28,Color=ColorSequence.new({
           ColorSequenceKeypoint.new(0,H.hex(t.g1 or t.bg)),
           ColorSequenceKeypoint.new(0.55,H.hex(t.g2 or t.bg2)),
           ColorSequenceKeypoint.new(1,H.hex(t.g3 or t.bg3)),
@@ -8062,16 +8911,15 @@ function F.openTheme()
           mk("UIStroke",{Color=H.hex(t.bg3),Thickness=1,Transparency=0.4},sq)
         end
         if t.cat=="chroma"then
-          local tag=mk("TextLabel",{Size=uo(36,13),Position=u2(1,-40,0,5),BackgroundColor3=H.hex(t.accent),Text="CHROMA",Font=fGB,TextSize=7,TextColor3=H.lum(H.hex(t.accent))>0.55 and rgb(18,18,22)or c3(1,1,1),BorderSizePixel=0},b)
+          local tag=mk("TextLabel",{Size=uo(36,13),Position=u2(1,-40,0,5),BackgroundColor3=H.hex(t.accent),Text="CHROMA",Font=fGB,TextSize=7,TextColor3=H.onColor(H.hex(t.accent)),BorderSizePixel=0},b)
           corner(tag,4)
         end
-        local dispName=name:gsub("_"," ")
-        mk("TextLabel",{Size=u2(1,-10,0,18),Position=uo(6,25),BackgroundTransparency=1,Text=dispName,Font=fGB,TextSize=10,TextColor3=H.hex(t.text),TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0},b)
+        mk("TextLabel",{Size=u2(1,-10,0,18),Position=uo(6,25),BackgroundTransparency=1,Text=name:gsub("_"," "),Font=fGB,TextSize=10,TextColor3=H.hex(t.text),TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0},b)
         hook(b.MouseButton1Click,function()
           P.themeName=name;P.custom={}
           if t.cat=="chroma"and P.backgroundMode=="solid"then P.backgroundMode="gradient"end
           if t.gRot then P.gradAngle=t.gRot end
-          F.paintTheme();S.isDirty=true;paintSel();refreshRows()
+          F.paintTheme();S.isDirty=true;syncAllControls()
         end)
       end
     end
@@ -8079,49 +8927,112 @@ function F.openTheme()
   end
   for idx,catDef in ipairs({{"all","cat_all"},{"chroma","cat_chroma"},{"dark","cat_dark"},{"light","cat_light"}})do
     local cid,ckey=catDef[1],catDef[2]
-    local cb=tbtn(catRow,T(ckey),{size=u2(0.25,-4,1,0),ts=10,r=6,layout=idx})
+    local cb=tbtn(catRow,T(ckey),{size=u2(0.25,-5,1,0),ts=10,r=6,layout=idx})
     themed(cb,function(btn)
       local on=(S.themeCatFilter or"all")==cid
       btn.BackgroundColor3=on and TH.accent or TH.btnBg
-      btn.TextColor3=on and(H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1))or TH.text
+      btn.TextColor3=on and H.onColor(TH.accent)or TH.text
     end)
     hook(cb.MouseButton1Click,function()S.themeCatFilter=cid;F.paintTheme();buildPresetGrid()end)
   end
   buildPresetGrid()
 
+  -- 2. Chế độ nền & Chuyển sắc Chroma + Wallpaper
+  F.section(scr,T("bg_mode"))
+  local bgModes1=row(scr,28)
+  local bgModes2=row(scr,28)
+  local function makeModeBtn(parentRow,wScale,mode,labelKey)
+    local b=tbtn(parentRow,T(labelKey),{size=u2(wScale,-4,1,0),ts=10,r=7})
+    local st=mk("UIStroke",{Thickness=1.3,Transparency=0.2,ApplyStrokeMode=smBorder},b)
+    themed(b,function(button)
+      local active=(P.backgroundMode==mode)
+      button.BackgroundColor3=active and TH.accent or TH.btnBg
+      button.TextColor3=active and H.onColor(TH.accent)or H.ensureContrast(TH.text,TH.btnBg,4.8)
+      st.Color=active and TH.accent or TH.border
+    end)
+    hook(b.MouseButton1Click,function()
+      if mode=="image"and not H.assetId(P.backgroundImage or"")then
+        if bgCtrl and bgCtrl.bgInput and H.assetId(bgCtrl.bgInput.Text)then
+          P.backgroundImage=H.assetId(bgCtrl.bgInput.Text)
+        elseif bgCtrl and bgCtrl.openStore then
+          F.toast(L=="en"and"Pick a wallpaper from Store first!"or"Hãy chọn ảnh nền từ Kho ảnh trước!",true)
+          bgCtrl.openStore();return
+        end
+      end
+      P.backgroundMode=mode;F.paintTheme();if updPv then updPv(false)end;S.isDirty=true;F.save(true)
+    end)
+  end
+  makeModeBtn(bgModes1,1/3,"solid","bg_solid");makeModeBtn(bgModes1,1/3,"gradient","bg_gradient");makeModeBtn(bgModes1,1/3,"mesh","bg_mesh")
+  makeModeBtn(bgModes2,0.5,"glass","bg_glass");makeModeBtn(bgModes2,0.5,"image","bg_image")
+
+  F.section(scr,T("grad_custom"))
+  local gStopRow=row(scr,32)
+  local gradHolder=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false},scr)
+  local gradPk,activeGradKey
+  for idx,gk in ipairs({"g1","g2","g3"})do
+    local gb=mk("TextButton",{Size=u2(1/3,-5,1,0),Text="",BorderSizePixel=0,LayoutOrder=idx,AutoButtonColor=true},gStopRow)
+    th(gb,"BackgroundColor3","cardBg");corner(gb,8);stroke(gb,"border",1,0.4)
+    local sw=mk("Frame",{Size=uo(16,16),Position=uo(5,8),BorderSizePixel=0},gb)corner(sw,4);stroke(sw,"muted",1,0.4)
+    local lbl=lab(gb,"#"..idx,{size=u2(1,-42,1,0),pos=uo(24,0),ts=9,bold=true,trunc=true})
+    local rsG=tbtn(gb,"R",{size=uo(16,18),pos=u2(1,-19,0.5,-9),ts=9,key="bg2",r=4})
+    themed(gb,function()
+      sw.BackgroundColor3=TH[gk]or TH.bg
+      lbl.Text="#"..idx.." "..H.tohex(TH[gk]or TH.bg)
+      rsG.Visible=P.custom[gk]~=nil
+    end)
+    hook(rsG.MouseButton1Click,function()
+      P.custom[gk]=nil;F.paintTheme();S.isDirty=true;syncAllControls()
+      if gradPk and activeGradKey==gk then gradPk.set(H.tohex(TH[gk]or TH.bg))end
+    end)
+    hook(gb.MouseButton1Click,function()
+      if activeGradKey==gk and gradHolder.Visible then gradHolder.Visible=false;activeGradKey=nil;return end
+      activeGradKey=gk
+      local base=THEMES[P.themeName]or THEMES.midnight
+      local rawHex=H.safeHex(P.custom[gk]or base[gk],H.tohex(TH[gk]or TH.bg))
+      if not gradPk then
+        gradPk=F.colorPicker(gradHolder,rawHex,function(hex)
+          if activeGradKey then
+            P.custom[activeGradKey]=hex
+            if P.backgroundMode=="solid"then P.backgroundMode="gradient"end
+            F.paintTheme();S.isDirty=true
+          end
+        end)
+      else gradPk.set(rawHex)end
+      gradHolder.Visible=true
+    end)
+  end
+  local _,setSlAngle=F.slider(scr,T("grad_angle"),0,360,floor(tonumber(P.gradAngle)or 28),{step=5,fmt=function(v)return v.."°"end,
+    onChange=function(v)P.gradAngle=v;F.paintTheme()end,onDone=function()S.isDirty=true end})
+  local _,setSlMix=F.slider(scr,T("grad_mix"),15,100,floor((tonumber(P.gradMix)or 0.65)*100+0.5),{step=1,fmt=function(v)return v.."%"end,
+    onChange=function(v)P.gradMix=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
+
+  bgCtrl=F._THEME.buildWallpaperCard(scr,function(fl)if updPv then updPv(fl)end end)
+  local _,setSlBgOp=F.slider(scr,T("bg_opacity"),15,100,floor(P.backgroundOpacity*100+0.5),{step=1,fmt=function(v)return v.."%"end,
+    onChange=function(v)P.backgroundOpacity=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
+  local _,setSlBgDim=F.slider(scr,T("bg_dim"),0,75,floor(P.backgroundDim*100+0.5),{step=1,fmt=function(v)return v.."%"end,
+    onChange=function(v)P.backgroundDim=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
+
   -- 3. Bộ sưu tập Mẫu cá nhân đã lưu (Personal Saved Theme Slots)
   F.section(scr,T("saved_themes_sec"))
   local savedWrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)list(savedWrap,4)
-  local function rebuildSavedSlots()
+  rebuildSavedSlots=function()
     for _,c in ipairs(savedWrap:GetChildren())do if not c:IsA("UIListLayout")then c:Destroy()end end
     P.savedThemes=type(P.savedThemes)=="table"and P.savedThemes or{}
     local topRow=row(savedWrap,28,1)
     local saveSlotBtn=rbtn(topRow,T("save_slot_btn"),{size=u2(0.54,-3,1,0),key="accent",ts=10,r=7})
     local harmBtn=rbtn(topRow,T("harmonize_btn"),{size=u2(0.46,-3,1,0),key="ok",ts=10,r=7})
     hook(saveSlotBtn.MouseButton1Click,function()
-      if #P.savedThemes>=6 then tremove(P.savedThemes,1)end
-      local copyCustom={}for k,v in pairs(P.custom)do copyCustom[k]=v end
+      if#P.savedThemes>=16 then tremove(P.savedThemes,1)end
       tinsert(P.savedThemes,{
         name=(P.themeName:gsub("_"," ")).." #"..tostring(#P.savedThemes+1),
         themeName=P.themeName,
-        custom=copyCustom,
-        alpha=P.alpha,
         backgroundMode=P.backgroundMode,
-        backgroundImage=P.backgroundImage,
-        backgroundOpacity=P.backgroundOpacity,
-        backgroundDim=P.backgroundDim,
-        bgFrame=P.bgFrame,
-        gradAngle=P.gradAngle,
-        gradMix=P.gradMix,
-        uiRadius=P.uiRadius,
-        fontFamily=P.fontFamily,
-        msgStyle=P.msgStyle,
-        borderGlow=P.borderGlow,
+        code=F.themeCode(),
       })
       S.isDirty=true;F.save(true);rebuildSavedSlots();F.toast(T("saved_ok"),true)
     end)
     hook(harmBtn.MouseButton1Click,function()
-      F.harmonizePalette();refreshRows();paintSel()
+      F.harmonizePalette();syncAllControls()
     end)
     for idx,slot in ipairs(P.savedThemes)do
       local sr=mk("Frame",{Size=u2(1,0,0,30),BorderSizePixel=0,LayoutOrder=idx+1},savedWrap)
@@ -8130,23 +9041,28 @@ function F.openTheme()
       local useB=mk("TextButton",{Size=u2(1,-56,1,0),Position=uo(24,0),BackgroundTransparency=1,Text=tostring(slot.name or("Slot #"..idx)).." ("..tostring(slot.backgroundMode or"solid")..")",Font=fGB,TextSize=11,TextXAlignment=txL,TextTruncate=trEnd,BorderSizePixel=0},sr)
       th(useB,"TextColor3","text")
       local delB=tbtn(sr,"",{size=uo(24,22),pos=u2(1,-28,0,4),key="danger",ts=10,r=5})
-      F.lucide(delB,"x",11,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=c3(1,1,1),themed=false})
+      F.lucide(delB,"x",11,{pos=us(0.5,0.5),anc=v2(0.5,0.5),col=H.onColor(TH.danger),themed=false})
       hook(useB.MouseButton1Click,function()
-        if slot.themeName and THEMES[slot.themeName]then P.themeName=slot.themeName end
-        P.custom={}for k,v in pairs(type(slot.custom)=="table"and slot.custom or{})do P.custom[k]=v end
-        P.alpha=tonumber(slot.alpha)or P.alpha
-        P.backgroundMode=slot.backgroundMode or P.backgroundMode
-        if slot.backgroundImage~=nil then P.backgroundImage=slot.backgroundImage end
-        if slot.backgroundOpacity~=nil then P.backgroundOpacity=slot.backgroundOpacity end
-        if slot.backgroundDim~=nil then P.backgroundDim=slot.backgroundDim end
-        if type(slot.bgFrame)=="table"then P.bgFrame=slot.bgFrame end
-        P.gradAngle=tonumber(slot.gradAngle)or P.gradAngle
-        P.gradMix=tonumber(slot.gradMix)or P.gradMix
-        P.uiRadius=tonumber(slot.uiRadius)or P.uiRadius
-        P.fontFamily=slot.fontFamily or P.fontFamily
-        P.msgStyle=slot.msgStyle or P.msgStyle
-        if slot.borderGlow~=nil then P.borderGlow=slot.borderGlow end
-        F.paintTheme();S.isDirty=true;F.openTheme();F.toast(T("theme_ok"),true)
+        if type(slot.code)=="string"and slot.code~=""then
+          F.importTheme(slot.code)
+        else
+          if slot.themeName and THEMES[slot.themeName]then P.themeName=slot.themeName end
+          P.custom={}for k,v in pairs(type(slot.custom)=="table"and slot.custom or{})do P.custom[k]=v end
+          P.alpha=tonumber(slot.alpha)or P.alpha
+          P.backgroundMode=slot.backgroundMode or P.backgroundMode
+          if slot.backgroundImage~=nil then P.backgroundImage=slot.backgroundImage end
+          if slot.backgroundOpacity~=nil then P.backgroundOpacity=slot.backgroundOpacity end
+          if slot.backgroundDim~=nil then P.backgroundDim=slot.backgroundDim end
+          if type(slot.bgFrame)=="table"then P.bgFrame=H.copy(slot.bgFrame)end
+          P.gradAngle=tonumber(slot.gradAngle)or P.gradAngle
+          P.gradMix=tonumber(slot.gradMix)or P.gradMix
+          P.uiRadius=tonumber(slot.uiRadius)or P.uiRadius
+          P.fontFamily=slot.fontFamily or P.fontFamily
+          P.msgStyle=slot.msgStyle or P.msgStyle
+          if slot.borderGlow~=nil then P.borderGlow=slot.borderGlow end
+          F.paintTheme();if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end
+        end
+        S.isDirty=true;F.save(true);syncAllControls();F.toast(T("theme_ok"),true)
       end)
       hook(delB.MouseButton1Click,function()
         tremove(P.savedThemes,idx);S.isDirty=true;F.save(true);rebuildSavedSlots()
@@ -8157,10 +9073,10 @@ function F.openTheme()
 
   -- 4. Tuỳ chỉnh Kiểu dáng Khung, Bo góc, Phông chữ, Kiểu thẻ tin & Viền Chroma
   F.section(scr,T("ui_style_sec"))
-  F.slider(scr,T("alpha"),0,85,floor(P.alpha*100+0.5),{step=1,fmt=function(v)return v.."%"end,onChange=function(v)P.alpha=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
-  F.slider(scr,T("ui_radius"),3,16,floor(tonumber(P.uiRadius)or 10),{step=1,fmt=function(v)return v.."px"end,
+  local _,setSlAlpha=F.slider(scr,T("alpha"),0,85,floor(P.alpha*100+0.5),{step=1,fmt=function(v)return v.."%"end,onChange=function(v)P.alpha=v/100;F.paintTheme()end,onDone=function()S.isDirty=true end})
+  local _,setSlRad=F.slider(scr,T("ui_radius"),3,16,floor(tonumber(P.uiRadius)or 10),{step=1,fmt=function(v)return v.."px"end,
     onChange=function(v)P.uiRadius=v;F.paintTheme()end,onDone=function()S.isDirty=true;if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end end})
-  F.switch(scr,T("border_glow"),function()return P.borderGlow~=false end,function(v)P.borderGlow=v;F.paintTheme();S.isDirty=true end)
+  local _,setSwGlow=F.switch(scr,T("border_glow"),function()return P.borderGlow~=false end,function(v)P.borderGlow=v;F.paintTheme();S.isDirty=true end)
 
   lab(scr,T("font_family"),{h=14,ts=10,bold=true,key="muted"})
   local fontGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)
@@ -8172,7 +9088,7 @@ function F.openTheme()
     themed(fb,function(btn)
       local on=(P.fontFamily==fKey)
       btn.BackgroundColor3=on and TH.accent or TH.btnBg
-      btn.TextColor3=on and(H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1))or H.ensureContrast(TH.text,TH.btnBg,4.8)
+      btn.TextColor3=on and H.onColor(TH.accent)or H.ensureContrast(TH.text,TH.btnBg,4.8)
     end)
     hook(fb.MouseButton1Click,function()
       P.fontFamily=fKey;F.paintTheme();if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end;S.isDirty=true;F.save(true)
@@ -8187,7 +9103,7 @@ function F.openTheme()
     themed(mb,function(btn)
       local on=(P.msgStyle==mid)
       btn.BackgroundColor3=on and TH.accent or TH.btnBg
-      btn.TextColor3=on and(H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1))or H.ensureContrast(TH.text,TH.btnBg,4.8)
+      btn.TextColor3=on and H.onColor(TH.accent)or H.ensureContrast(TH.text,TH.btnBg,4.8)
     end)
     hook(mb.MouseButton1Click,function()
       P.msgStyle=mid;F.paintTheme();if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end;S.isDirty=true;F.save(true)
@@ -8203,33 +9119,71 @@ function F.openTheme()
     lab(scr,T(g[1]),{h=14,ts=10,bold=true,key="muted"})for _,k in ipairs(g[2])do local wrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)list(wrap,4)
       local head=mk("TextButton",{Size=u2(1,0,0,32),Text="",BorderSizePixel=0,LayoutOrder=1},wrap)th(head,"BackgroundColor3","cardBg");corner(head,8);stroke(head,"border",1,0.5)local sw=mk("Frame",{Size=uo(22,22),Position=uo(6,5),BorderSizePixel=0},head)
       corner(sw,6);stroke(sw,"muted",1,0.5)lab(head,T("ck_"..k),{size=u2(1,-150,1,0),pos=uo(34,0),trunc=true})local hx=lab(head,"",{size=uo(70,32),pos=u2(1,-102,0,0),ts=11,key="muted",align=txR})hx.Font=fCode
-      local rs=tbtn(head,"R",{size=uo(24,24),pos=u2(1,-28,0,4),ts=11,key="bg2",r=6})rows[k]={sw=sw,hx=hx,reset=rs}
+      local rs=tbtn(head,"R",{size=uo(24,24),pos=u2(1,-28,0,4),ts=11,key="bg2",r=6})
       local holder=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1,Visible=false,LayoutOrder=2},wrap)local pk
-      hook(rs.MouseButton1Click,function()P.custom[k]=nil;F.paintTheme();S.isDirty=true;refreshRows();if pk then pk.set(H.tohex(TH[k]))end end)hook(head.MouseButton1Click,function()if not pk then
-          pk=F.colorPicker(holder,H.tohex(TH[k]),function(hex)P.custom[k]=hex;F.paintTheme();S.isDirty=true sw.BackgroundColor3=TH[k];hx.Text=H.tohex(TH[k]);rs.Visible=true end)end
-        if openKey and openKey~=holder then openKey.Visible=false end holder.Visible=not holder.Visible openKey=holder.Visible and holder or nil end)end end refreshRows()local r1=row(scr,30)
-  local ac=rbtn(r1,T("auto_contrast"),{ts=11});hook(ac.MouseButton1Click,function()F.autoContrast();refreshRows()end)local rr=rbtn(r1,T("reset_all"),{key="danger",ts=11})
+      rows[k]={sw=sw,hx=hx,reset=rs,getPk=function()return pk end}
+      hook(rs.MouseButton1Click,function()P.custom[k]=nil;F.paintTheme();S.isDirty=true;refreshRows()end)
+      hook(head.MouseButton1Click,function()
+        if not pk then
+          pk=F.colorPicker(holder,H.tohex(TH[k]),function(hex)P.custom[k]=hex;F.paintTheme();S.isDirty=true;sw.BackgroundColor3=TH[k];hx.Text=H.tohex(TH[k]);rs.Visible=true end)
+        else pk.set(H.tohex(TH[k]))end
+        if openKey and openKey~=holder then openKey.Visible=false end holder.Visible=not holder.Visible openKey=holder.Visible and holder or nil end)end end
+
+  refreshRows=function()
+    F.computeTheme()
+    for k,r in pairs(rows)do
+      if r.sw and r.sw.Parent then
+        r.sw.BackgroundColor3=TH[k];r.hx.Text=H.tohex(TH[k]);r.reset.Visible=P.custom[k]~=nil
+        local pk=r.getPk and r.getPk();if pk then pk.set(H.tohex(TH[k]))end
+      end
+    end
+  end
+  syncAllControls=function()
+    refreshRows();paintSel()
+    setSlAngle(floor(tonumber(P.gradAngle)or 28),false)
+    setSlMix(floor((tonumber(P.gradMix)or 0.65)*100+0.5),false)
+    setSlBgOp(floor((tonumber(P.backgroundOpacity)or 0.82)*100+0.5),false)
+    setSlBgDim(floor((tonumber(P.backgroundDim)or 0.25)*100+0.5),false)
+    setSlAlpha(floor((tonumber(P.alpha)or 0)*100+0.5),false)
+    setSlRad(floor(tonumber(P.uiRadius)or 10),false)
+    setSwGlow(P.borderGlow~=false)
+    if bgCtrl and bgCtrl.bgInput then bgCtrl.bgInput.Text=tostring(P.backgroundImage or"")end
+    if bgCtrl and bgCtrl.update then bgCtrl.update(false)end
+    if updPv then updPv(false)end
+  end
+  refreshRows()
+
+  local r1=row(scr,30)
+  local ac=rbtn(r1,T("auto_contrast"),{ts=11});hook(ac.MouseButton1Click,function()F.autoContrast();refreshRows()end)
+  local rstArm=0
+  local rr=rbtn(r1,T("reset_all"),{key="danger",ts=11})
   hook(rr.MouseButton1Click,function()
+    local nowC=os.clock()
+    if nowC-rstArm>4 then
+      rstArm=nowC;rr.Text=L=="en"and"Tap again!"or"Bấm lại!"
+      task.delay(4.1,function()if rr and rr.Parent and os.clock()-rstArm>=4 then rr.Text=T("reset_all")end end)
+      return
+    end
+    rstArm=0;rr.Text=T("reset_all")
     P.themeName="midnight";P.custom={};P.alpha=0;P.backgroundMode="solid";P.backgroundImage="";P.backgroundOpacity=0.82;P.backgroundDim=0.25
     P.bgFrame={fit="crop",zoom=100,x=0,y=0,aspect="auto"}
     P.gradAngle=28;P.gradMix=0.65;P.uiRadius=10;P.fontFamily="gotham";P.msgStyle="card";P.borderGlow=true
-    F.paintTheme();if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end;S.isDirty=true;F.openTheme()
+    F.paintTheme();if S.booted and F.rebuildFeed then pcall(F.rebuildFeed,true)end;S.isDirty=true;F.save(true);syncAllControls();F.toast(T("saved_ok"),true)
   end)
   local cp=tbtn(scr,T("theme_copy"),{h=30,ts=11})
   hook(cp.MouseButton1Click,function()F.copyText(F.themeCode())end)
   local shT=tbtn(scr,"📤 "..T("theme_share"),{key="ok",h=30,ts=11})
   hook(shT.MouseButton1Click,function()
     local tc=F.themeCode()
+    if#tc>CFG.MAX_CONTENT-10 then F.toast(L=="en"and"Theme code too long for chat, copied to clipboard instead!"or"Mã Theme quá dài cho chat, đã sao chép!",true);F.copyText(tc);return end
     F.closeModal()
     if S.chan=="scripts"or S.chan=="punish"then F.selectChannel("general")end
-    U.input.Text=H.clip("🎨 Theme: "..tc,CFG.MAX_CONTENT)
+    U.input.Text="🎨 Theme: "..tc
     F.sendNow()
   end)
   local imp=field(scr,"","")imp.PlaceholderText=T("theme_paste")local ib=tbtn(scr,T("theme_import"),{key="accent",h=30,ts=11})
-  hook(ib.MouseButton1Click,function()if F.importTheme(imp.Text)then F.save(true);F.toast(T("theme_ok"),true);F.openTheme()else F.toast(T("theme_bad"),true)end end)
-  local svThemeBtn=tbtn(scr,"   "..(L=="en"and"Save Theme"or"Lưu Giao Diện"),{key="ok",h=36,ts=12})
-  F.lucide(svThemeBtn,"save",14,{pos=uo(12,11),col=c3(1,1,1),themed=false})
-  hook(svThemeBtn.MouseButton1Click,function()saveThemeAll(true)end)
+  hook(ib.MouseButton1Click,function()if F.importTheme(imp.Text)then imp.Text="";F.save(true);syncAllControls();F.toast(T("theme_ok"),true)else F.toast(T("theme_bad"),true)end end)
+  if prevScrY>0 then pcall(function()scr.CanvasPosition=v2(0,prevScrY)end)end
 end
 --- [F.openRequest] Mở hộp thoại để người dùng chọn Role và gửi đơn xin cấp Role tới đội ngũ Quản trị
 function F.openRequest()
@@ -8647,26 +9601,37 @@ function F.openBugReport(initTab)
   updateTabUI()
 end
 --- [F.openSettings] Mở hộp thoại Cài đặt tổng hợp (Hồ sơ nhanh, Cài đặt chung, Giao diện, Góp ý & Báo lỗi, Dữ liệu & Công cụ Quản trị)
-function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("settings"),420,640)
+function F.openSettings(keepScroll)
+  local prevScrY=keepScroll and S._setScrY or 0
+  S.reopenModal=function()F.openSettings(true)end
+  local scr=F.modalBox(T("settings"),420,640)
+  hook(scr:GetPropertyChangedSignal("CanvasPosition"),function()S._setScrY=scr.CanvasPosition.Y end)
   local wrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)list(wrap,8)
   local hd=mk("Frame",{Size=u2(1,0,0,76),BorderSizePixel=0,LayoutOrder=1},wrap)
-  th(hd,"BackgroundColor3","cardBg");corner(hd,10);stroke(hd,"border",1,0.35)
+  hd.BackgroundColor3=c3(1,1,1);corner(hd,10);stroke(hd,"border",1,0.35)
   local grad=mk("UIGradient",{Rotation=15},hd)
-  themed(grad,function(g)g.Color=ColorSequence.new(TH.cardBg,H.mix(TH.cardBg,TH.accent,0.15))end)
+  themed(grad,function(g)g.Color=ColorSequence.new(TH.cardBg,H.mix(TH.cardBg,TH.accent,0.16))end)
   F.makeFramedAvatar(hd,{px=48,pos=uo(10,14),z=2,uid=F.uidOf(P.username),customIc=(P.profIcon and P.profIcon~="")and P.profIcon or nil,pt=P.profTheme,strokeKey="accent",strokeThick=2,strokeTrans=0.2})
-  lab(hd,F.disp(P.display or P.username),{size=u2(1,-230,0,20),pos=uo(66,10),bold=true,ts=15,trunc=true})
-  lab(hd,"@"..P.username,{size=u2(1,-172,0,14),pos=uo(66,32),ts=10,key="muted",trunc=true})
-  lab(hd,H.flag(P.country).." "..(H.countryName(P.country)or P.country).." ("..P.country..")",{size=u2(1,-172,0,16),pos=uo(66,48),ts=10,key="muted",trunc=true})
-  local langBtn=tbtn(hd,"   "..(L=="en"and"EN"or"VI"),{key="bg2",ts=10,size=uo(52,26),r=6,pos=u2(1,-158,0,10)})
-  F.lucide(langBtn,"globe",11,{pos=uo(7,7),key="accent"})
-  hook(langBtn.MouseButton1Click,function()F.setLang(L=="en"and"vi"or"en");F.openSettings()end)
-  local pBtn=tbtn(hd,"   "..(L=="en"and"Profile"or"Hồ Sơ"),{key="accent",ts=10,size=uo(94,26),r=6,pos=u2(1,-102,0,10)})
-  F.lucide(pBtn,"userRound",11,{pos=uo(9,7),col=H.lum(TH.accent)>0.55 and rgb(20,20,24)or c3(1,1,1),themed=false})
+  do
+    local pt=type(P.profTheme)=="table"and P.profTheme or{}
+    local nClip=mk("Frame",{Size=u2(1,-232,0,22),Position=uo(66,9),BackgroundTransparency=1,ClipsDescendants=true,ZIndex=3},hd)
+    local dLbl=mk("TextLabel",{Size=uo(0,22),AutomaticSize=asX,BackgroundTransparency=1,Text=F.disp(P.display or P.username),Font=fGB,TextSize=15,TextXAlignment=txL,BorderSizePixel=0},nClip)
+    F.setupNameLabel(dLbl,pt,TH.text,TH.cardBg,{accHex=H.safeHex(pt.acc,nil),autoOutlineOnLight=true})
+  end
+  lab(hd,"@"..P.username,{size=u2(1,-232,0,14),pos=uo(66,33),ts=10,key="muted",trunc=true})
+  lab(hd,H.flag(P.country).." "..(H.countryName(P.country)or P.country).." ("..P.country..")",{size=u2(1,-176,0,16),pos=uo(66,49),ts=10,key="muted",trunc=true})
+  local langBtn=tbtn(hd,L=="en"and"EN"or"VI",{key="bg2",ts=10,size=uo(52,26),r=6,pos=u2(1,-158,0,10)})
+  F.btnIcon(langBtn,"globe",11,20,6,{key="accent"})
+  hook(langBtn.MouseButton1Click,function()F.setLang(L=="en"and"vi"or"en");F.openSettings(true)end)
+  local pBtn=tbtn(hd,L=="en"and"Profile"or"Hồ Sơ",{key="accent",ts=10,size=uo(94,26),r=6,pos=u2(1,-102,0,10)})
+  local pIc=F.btnIcon(pBtn,"userRound",11,22,8,{col=H.onColor(TH.accent),themed=false})
+  themed(pIc,function(ic)ic.ImageColor3=H.onColor(TH.accent)end)
   hook(pBtn.MouseButton1Click,function()F.openProfile(P.username)end)
-  local tBtn=tbtn(hd,"   "..(L=="en"and"Theme"or"Giao diện"),{key="btnBg",ts=10,size=uo(94,26),r=6,pos=u2(1,-102,0,40)})
-  F.lucide(tBtn,"palette",11,{pos=uo(9,7),key="accent"})
+  local tBtn=tbtn(hd,L=="en"and"Theme"or"Giao diện",{key="btnBg",ts=10,size=uo(94,26),r=6,pos=u2(1,-102,0,40)})
+  F.btnIcon(tBtn,"palette",11,22,8,{key="accent"})
   hook(tBtn.MouseButton1Click,function()F.openTheme()end)
-  local function sectionCard(icon,title)local c=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0},wrap)
+  local secOrd=1
+  local function sectionCard(_,title)secOrd=secOrd+1 local c=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,LayoutOrder=secOrd},wrap)
     themed(c,function(o)o.BackgroundColor3=TH.cardBg;o.BackgroundTransparency=F.surfaceAlpha("card")end);corner(c,8);stroke(c,"border",1,0.45);pad(c,10,8,10,10);list(c,6)local hdr=mk("Frame",{Size=u2(1,0,0,20),BackgroundTransparency=1},c)
     local sbar=mk("Frame",{Size=uo(3,12),Position=uo(0,4),BorderSizePixel=0},hdr);th(sbar,"BackgroundColor3","accent");corner(sbar,2)
     lab(hdr,string.upper(title),{size=u2(1,-10,1,0),pos=uo(8,0),ts=10,bold=true,key="accent"})return c end
@@ -8763,7 +9728,7 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
         P.mutedToasts=type(P.mutedToasts)=="table"and P.mutedToasts or{}
         local nxt=not(P.mutedToasts[mc.k]==true)
         P.mutedToasts[mc.k]=nxt and true or nil
-        S.isDirty=true;F.save(true);F.updateInfo();F.openSettings()
+        S.isDirty=true;F.save(true);F.updateInfo();F.openSettings(true)
       end)
     end
     if type(S.chan)=="string"and S.chan:sub(1,3)=="dm:"then
@@ -8773,16 +9738,17 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
       hook(dmB.MouseButton1Click,function()
         local nxt=not(P.mutedToasts[dmKey]==true)
         P.mutedToasts[dmKey]=nxt and true or nil
-        S.isDirty=true;F.save(true);F.updateInfo();F.openSettings()
+        S.isDirty=true;F.save(true);F.updateInfo();F.openSettings(true)
       end)
     end
     local v47Row=row(gen,28)
     local tIc,tLbl=F.translatePrefInfo(P.transLang)
-    local trBtn=rbtn(v47Row,tIc.." "..(L=="en"and"Translate: "or"Dịch: ")..tLbl.." ▾",{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6,layout=1})
-    trBtn.TextTruncate=trEnd
+    local trBtn=rbtn(v47Row,tIc.." "..(L=="en"and"Translate: "or"Dịch: ")..tLbl,{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6,layout=1})
+    pad(trBtn,6,0,18,0);trBtn.TextTruncate=trEnd
+    F.lucide(trBtn,"chevRight",10,{pos=u2(1,13,0.5,0),anc=v2(1,0.5),key="muted",contrastBg="btnBg"}).Rotation=90
     hook(trBtn.MouseButton1Click,function()
       F.openTranslateLangMenu(nil,function(chosenCode,chosenLbl)
-        P.transLang=chosenCode;S.isDirty=true;F.save(true);F.toast("🌐 "..chosenLbl,true);F.openSettings()
+        P.transLang=chosenCode;S.isDirty=true;F.save(true);F.toast("🌐 "..chosenLbl,true);F.openSettings(true)
       end)
     end)
     local bmBtn=rbtn(v47Row,"🔖 "..T("bookmarks_title").." ("..#(P.savedBookmarks or{})..")",{size=u2(0.5,-3,1,0),key="accent",ts=10,r=6,layout=2})
@@ -8791,9 +9757,10 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
   local app=sectionCard("",T("sec_appear"))lab(app,T("quick_theme"),{ts=10,bold=true,key="muted"})
   local qThemes={{"aurora","Aurora ✨"},{"synthwave","Synthwave ✨"},{"tokyo_night","Tokyo Night"},{"obsidian_gold","Obsidian Gold"},{"cotton_candy","Cotton Candy"},{"midnight","Midnight"},}
   local qGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},app)mk("UIGridLayout",{CellSize=u2(1/3,-4,0,28),CellPadding=uo(4,4),SortOrder=soLO},qGrid)for i,qt in ipairs(qThemes)do
-    local t=THEMES[qt[1]]local b=mk("TextButton",{Text=qt[2],Font=fGB,TextSize=10,BackgroundColor3=H.hex(t.bg2),TextColor3=H.hex(t.text),BorderSizePixel=0,LayoutOrder=i,},qGrid)corner(b,6)
+    local t=THEMES[qt[1]]local b=mk("TextButton",{Text=qt[2],Font=fGB,TextSize=10,BackgroundColor3=H.hex(t.bg2),TextColor3=H.ensureContrast(H.hex(t.text),H.hex(t.bg2),4.5),BorderSizePixel=0,LayoutOrder=i,},qGrid)corner(b,6)
     mk("UIStroke",{Color=H.hex(t.accent),Thickness=P.themeName==qt[1]and 1.6 or 1,Transparency=P.themeName==qt[1]and 0 or 0.5,ApplyStrokeMode=smBorder},b)hook(b.MouseButton1Click,function()
-      P.themeName=qt[1];P.custom={};F.paintTheme();S.isDirty=true;F.save(true);F.openSettings()end)end
+      P.themeName=qt[1];P.custom={};if t.cat=="chroma"and P.backgroundMode=="solid"then P.backgroundMode="gradient"end;if t.gRot then P.gradAngle=t.gRot end
+      F.paintTheme();S.isDirty=true;F.save(true);F.openSettings(true)end)end
   do
     local modeRow=row(app,26)
     for idx,md in ipairs({{"solid","Solid"},{"gradient","Chroma"},{"mesh","Mesh"},{"glass","Glass"},{"image",L=="en"and"Image"or"Ảnh"}})do
@@ -8805,7 +9772,7 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
           local cand=H.assetId(pt.bgImg or"")or H.assetId(P.profBanner or"")
           if cand then P.backgroundImage=cand else F.openTheme();return end
         end
-        P.backgroundMode=md[1];F.paintTheme();F.rebuildFeed();S.isDirty=true;F.save(true);F.openSettings()
+        P.backgroundMode=md[1];F.paintTheme();F.rebuildFeed();S.isDirty=true;F.save(true);F.openSettings(true)
       end)
     end
     local fxRow=row(app,26)
@@ -8814,18 +9781,18 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
     hook(fBtn.MouseButton1Click,function()
       local nxt=FONT_ORDER[1]
       for i,fk in ipairs(FONT_ORDER)do if fk==P.fontFamily then nxt=FONT_ORDER[(i%#FONT_ORDER)+1];break end end
-      P.fontFamily=nxt;F.paintTheme();F.rebuildFeed();S.isDirty=true;F.save(true);F.openSettings()
+      P.fontFamily=nxt;F.paintTheme();F.rebuildFeed();S.isDirty=true;F.save(true);F.openSettings(true)
     end)
     local msOrder={"card","flat","minimal"}
     local msBtn=rbtn(fxRow,(L=="en"and"Msg: "or"Tin: ")..tostring(P.msgStyle or"card"),{size=u2(0.5,-3,1,0),key="btnBg",ts=10,r=6})
     hook(msBtn.MouseButton1Click,function()
       local nxt=msOrder[1]
       for i,mk2 in ipairs(msOrder)do if mk2==P.msgStyle then nxt=msOrder[(i%#msOrder)+1];break end end
-      P.msgStyle=nxt;F.rebuildFeed();S.isDirty=true;F.save(true);F.openSettings()
+      P.msgStyle=nxt;F.rebuildFeed();S.isDirty=true;F.save(true);F.openSettings(true)
     end)
     local stRow=row(app,26)
     local bFrameMain=rbtn(stRow,L=="en"and"Frame Wallpaper"or"Căn Ảnh Nền",{size=u2(1,0,1,0),key="btnBg",ts=10,r=6,layout=1})
-    F.lucide(bFrameMain,"crop",11,{pos=uo(10,7),key="accent"})
+    F.btnIcon(bFrameMain,"crop",11,22,8,{key="accent"})
     hook(bFrameMain.MouseButton1Click,function()
       local imgId=H.assetId(P.backgroundImage or"")
       if not imgId then F.openTheme();return end
@@ -8835,7 +9802,7 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
         onCancel=function()F.paintTheme()end})
     end)
   end
-  local tt=tbtn(app,T("theme_studio"),{key="accent",h=32})hook(tt.MouseButton1Click,F.openTheme)
+  local tt=tbtn(app,T("theme_studio"),{key="accent",h=32})hook(tt.MouseButton1Click,function()F.openTheme()end)
   F.slider(app,T("text_size"),11,20,P.textSize,{step=1,fmt=function(v)return v.."px"end,
     onChange=function(v)P.textSize=v;U.input.TextSize=v;if U.inputRich then U.inputRich.TextSize=v end;if F.updateTokenFeedback then F.updateTokenFeedback(U.input.Text)end end,
     onDone=function()S.isDirty=true;F.rebuildFeed()end,})local wr=row(app,28)
@@ -8846,7 +9813,7 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
     F.layout();S.isDirty=true end)local dat=sectionCard("",T("sec_data"))local dr=row(dat,28)local ex=rbtn(dr,T("backup_copy"),{ts=11})hook(ex.MouseButton1Click,function()F.copyText(F.exportSettings())end)
   local cc=rbtn(dr,T("clear_cache"),{ts=11})hook(cc.MouseButton1Click,function()S.reactions,S.polls,S.warns,S.reports={},{},{},{}S.isDirty=true;F.toast(T("cache_cleared"),true)end)
   local im=field(dat,"","");im.PlaceholderText=T("backup_paste")local ib=tbtn(dat,T("backup_import"),{h=28,ts=11})hook(ib.MouseButton1Click,function()
-    if F.importSettings(im.Text)then F.toast(T("backup_ok"),true);F.openSettings()else F.toast(T("backup_bad"),true)end end)if F.isStaff(P.username)then local dev=sectionCard("",T("dev_hub"))local r1=row(dev,30)
+    if F.importSettings(im.Text)then F.toast(T("backup_ok"),true);F.openSettings(true)else F.toast(T("backup_bad"),true)end end)if F.isStaff(P.username)then local dev=sectionCard("",T("dev_hub"))local r1=row(dev,30)
     local hb=rbtn(r1,"/ "..T("help_title"),{ts=11});hook(hb.MouseButton1Click,function()F.openHelp()end)local db=rbtn(r1,T("diag"),{ts=11});hook(db.MouseButton1Click,function()F.openDiag()end)local r2=row(dev,30)
     local ab=rbtn(r2,T("admin"),{key="accent",ts=11});hook(ab.MouseButton1Click,function()F.openAdmin()end)if F.isDev(P.username)then
       local rb=rbtn(r2,T("roles"),{key="accent",ts=11});hook(rb.MouseButton1Click,function()F.openRoles()end)end
@@ -8855,7 +9822,9 @@ function F.openSettings()S.reopenModal=F.openSettings local scr=F.modalBox(T("se
     hook(scB.MouseButton1Click,function()F.closeModal()F.selectChannel("scripts")end)else local misc=sectionCard("",T("sec_dev"))local r1=row(misc,30)
     local hb=rbtn(r1,"/ "..T("help_title"),{size=u2(1/3,-3,1,0),ts=10});hook(hb.MouseButton1Click,function()F.openHelp()end)local db=rbtn(r1,T("diag"),{size=u2(1/3,-3,1,0),ts=10});hook(db.MouseButton1Click,function()F.openDiag()end)
     local rq=rbtn(r1,S.myRequest and T("request_pending")or T("request_title"),{size=u2(1/3,-3,1,0),key=S.myRequest and"warn"or"accent",ts=10});hook(rq.MouseButton1Click,F.openRequest)end
-  local st=tbtn(wrap,T("stop"),{key="danger",h=34})hook(st.MouseButton1Click,function()F.stop()end)lab(wrap,"CB47.0 · "..EXEC.." · "..(S.lpOn and"long-poll"or"poll"),{ts=10,key="muted",align=txC})end
+  local st=tbtn(wrap,T("stop"),{key="danger",h=34,layout=98})hook(st.MouseButton1Click,function()F.stop()end)lab(wrap,"CB47.5 · "..EXEC.." · "..(S.lpOn and"long-poll"or"poll"),{ts=10,key="muted",align=txC,layout=99})
+  if prevScrY>0 then pcall(function()scr.CanvasPosition=v2(0,prevScrY)end)end
+end
 --- [F.openHelp] Mở hộp thoại Hướng dẫn sử dụng và danh sách các lệnh Slash (`/cmd`)
 function F.openHelp()S.reopenModal=F.openHelp local scr=F.modalBox(T("help_title"),360,480)for i,c in ipairs(F.cmdList)do if(not c.staff or F.isStaff(P.username))and(not c.dev or F.isDev(P.username))then
       local b=mk("TextButton",{Size=u2(1,0,0,40),Text="",BorderSizePixel=0,LayoutOrder=i},scr)th(b,"BackgroundColor3","cardBg");corner(b,8);stroke(b,"border",1,0.5)
@@ -8866,7 +9835,7 @@ function F.diagText()local nM,nF=0,0 for _ in pairs(S.msgs)do nM=nM+1 end
   for _ in pairs(S.frames)do nF=nF+1 end
   local roleTag=H.proxyRoleLabel(CFG.PROXY,NET.idx)
   return tconcat({
-    "CB47.0 · "..EXEC.." · "..(IS_MOBILE and"mobile"or"pc"),
+    "CB47.5 · "..EXEC.." · "..(IS_MOBILE and"mobile"or"pc"),
     "user: "..P.username.." ("..P.userId..")",
     "server: "..roleTag.." · "..CFG.PROXY,
     "mode: "..(S.lpOn and"long-poll"or"poll").." · fails "..S.pollFail.." · lastOk "..string.format("%.1f",os.clock()-S.lastPollOk).."s ago",
@@ -9218,7 +10187,7 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
       if not mine then F.markChannelSeen(chan)end
     elseif not mine and not stale then if other then S.dmUnread[chan]=(S.dmUnread[chan]or 0)+1
       elseif S.unread[chan]~=nil then S.unread[chan]=S.unread[chan]+1 end
-      F.paintTabs()end if not mine and not stale then if not F.isSystemActor(m.author,pkt)then F.touchUser(m.author,m.uid,m.display)end local ping=F.mentions(m.content)if ping or other then
+      F.paintTabs()end if not mine and not stale then if not F.isSystemActor(m.author,pkt)then F.touchUser(m.author,m.uid,m.display,m.ts)end local ping=F.mentions(m.content)if ping or other then
         local head=F.disp(m.display or m.author)local body=P.preview and(": "..F.disp(H.clip(F.plain(m.content),70)))or""
         F.chanToast(chan,(ping and"@ "or"DM ")..head..body,false,function()U.main.Visible=true;U.mini.Visible=false;F.selectChannel(chan)end)if not F.isToastMuted(chan)then F.pingSound()end end
       F.bubble(m.author,m.content,chan)if not U.main.Visible then
@@ -9469,29 +10438,55 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
   elseif t=="presence"then
     local pu=tostring(pkt.u or pkt.author or"")
     if pu~=""and pu:lower()~=me:lower()then
-      local rec=S.users[pu]or F.userRec(pu)or{}
+      local pktTs=tonumber(pkt.ts)or H.now()
       if pkt.off==true then
-        rec.age=9999;rec.recvAt=0;rec.inGame=false;rec.jobId=""
-        rec.lastSeen=tonumber(pkt.ts)or H.now()
-        F.rememberProfile(pu,rec,false)
+        local changed=F.markUserOfflineLocal(pu,pktTs)
+        F.rememberProfile(pu,{u=pu,lastSeen=pktTs},false)
+        F.updateInfo()
+        if changed and type(S.refreshOnlineList)=="function"then pcall(S.refreshOnlineList)end
       else
-        rec.display=pkt.d or rec.display or pu
-        rec.userId=tonumber(pkt.id or pkt.uid)or rec.userId or 1
-        if pkt.st~=nil then rec.status=tostring(pkt.st)end
-        if pkt.bio~=nil then rec.bio=tostring(pkt.bio)end
-        if pkt.c~=nil then rec.country=H.resolveCountry(pkt.c)end
-        if pkt.pb~=nil then rec.profBanner=H.assetId(pkt.pb)or""end
-        if pkt.pi~=nil then rec.profIcon=H.assetId(pkt.pi)or""end
-        if pkt.pt~=nil then rec.profTheme=type(pkt.pt)=="table"and pkt.pt or{}end
-        rec.inGame=(pkt.sg==true or(tonumber(pkt.pl)or 0)>0)
-        rec.placeId=tonumber(pkt.pl)or 0
-        rec.gameName=tostring(pkt.gn or"")
-        rec.jobId=tostring(pkt.jb or"")
-        rec.age=0;rec.recvAt=os.clock();rec.isScript=true
-        rec._allowClear=true;F.rememberProfile(pu,rec,true);rec._allowClear=nil
+        local age=max(0,H.now()-pktTs)
+        if age<=CFG.PRESENCE_TIMEOUT then
+          local prev=(S.users and S.users[pu])or(S.usersLow and S.usersLow[pu:lower()])or F.userRec(pu)or{}
+          local wasLive=F.isLive(prev)
+          local rec={}
+          for k,v in pairs(prev)do rec[k]=v end
+          rec.display=pkt.d or rec.display or pu
+          rec.userId=tonumber(pkt.id or pkt.uid)or rec.userId or 1
+          if pkt.st~=nil then rec.status=tostring(pkt.st)end
+          if pkt.bio~=nil then rec.bio=tostring(pkt.bio)end
+          if pkt.c~=nil then rec.country=H.resolveCountry(pkt.c)end
+          if pkt.pb~=nil then rec.profBanner=H.assetId(pkt.pb)or""end
+          if pkt.pi~=nil then rec.profIcon=H.assetId(pkt.pi)or""end
+          if pkt.pt~=nil then rec.profTheme=type(pkt.pt)=="table"and pkt.pt or{}end
+          rec.inGame=(pkt.sg==true or(tonumber(pkt.pl)or 0)>0)
+          rec.placeId=tonumber(pkt.pl)or 0
+          rec.gameName=tostring(pkt.gn or"")
+          rec.jobId=tostring(pkt.jb or"")
+          rec.age=age;rec.recvAt=os.clock();rec.isScript=true;rec.lastSeen=pktTs
+          rec._allowClear=true;F.rememberProfile(pu,rec,true);rec._allowClear=nil
+          F.setUserRec(pu,rec)
+          F.updateInfo()
+          if not wasLive and type(S.refreshOnlineList)=="function"then pcall(S.refreshOnlineList)end
+        else
+          F.rememberProfile(pu,{u=pu,d=pkt.d,id=tonumber(pkt.id or pkt.uid),lastSeen=pktTs},false)
+        end
       end
-      S.users[pu]=rec
+    end
+  elseif t=="lockdown"then
+    local active=(pkt.active==true)
+    local by=tostring(pkt.by or"Admin")
+    local reason=tostring(pkt.reason or"")
+    local ts=tonumber(pkt.ts)or H.now()
+    local seq=max(tonumber(pkt.seq)or 0,ts*1000)
+    if seq>=(tonumber(S.lockdownSeq)or 0)then
+      local prevOn=(type(S.lockdown)=="table"and S.lockdown.active==true)
+      S.lockdown={active=active,by=by,reason=reason,ts=ts,seq=seq}
+      S.lockdownSeq=seq
       F.updateInfo()
+      if not stale and active~=prevOn then
+        F.toast(active and((L=="en"and"🔒 Chat locked by @"or"🔒 Server tạm khóa chat bởi @")..F.disp(by)..(reason~=""and(": "..F.disp(reason))or""))or((L=="en"and"🔓 Chat unlocked by @"or"🔓 Server đã mở khóa chat bởi @")..F.disp(by)),true)
+      end
     end
   elseif t=="profile_sync"then
     local pu=tostring(pkt.u or pkt.author or"")
@@ -9499,7 +10494,11 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
       pkt._allowClear=true;pkt._fromProfileApi=true
       local liveNow=F.isLive(pu)
       local stored=F.rememberProfile(pu,pkt,liveNow)
-      if stored and S.users[pu]then S.users[pu]=stored end
+      local curU=(S.users and S.users[pu])or(S.usersLow and S.usersLow[pu:lower()])
+      if stored and type(curU)=="table"then
+        for k,v in pairs(stored)do curU[k]=v end
+        F.setUserRec(pu,curU)
+      end
       if pu:lower()==me:lower()and stored and stored.display then
         P.display=stored.display
       end
@@ -9540,6 +10539,19 @@ function F.process(pkt,stale)if type(pkt)~="table"or not pkt.type then return en
 --- [F.ingest] Tiếp nhận toàn bộ gói dữ liệu trả về từ `/api/feed` (đồng bộ Devs, Presence, Emojis, Scripts, Groups, Roles và danh sách tin nhắn)
 function F.ingest(data,first)
   if type(data.devs)=="table"then for _,n in ipairs(data.devs)do S.devs[tostring(n):lower()]=true end end
+  if type(data.lockdown)=="table"then
+    local incLk=data.lockdown
+    local incSeq=max(tonumber(data.lockdownSeq)or 0,tonumber(incLk.seq)or 0,(tonumber(incLk.ts)or 0)*1000)
+    if incSeq>=(tonumber(S.lockdownSeq)or 0)then
+      local prevOn=(type(S.lockdown)=="table"and S.lockdown.active==true)
+      local nextOn=(incLk.active==true)
+      S.lockdown={active=nextOn,by=tostring(incLk.by or""),reason=tostring(incLk.reason or""),ts=tonumber(incLk.ts)or 0,seq=incSeq}
+      S.lockdownSeq=incSeq
+      if S.booted and not first and nextOn~=prevOn then
+        F.toast(nextOn and((L=="en"and"🔒 Chat locked by @"or"🔒 Server tạm khóa chat bởi @")..F.disp(S.lockdown.by))or((L=="en"and"🔓 Chat unlocked by @"or"🔓 Server đã mở khóa chat bởi @")..F.disp(S.lockdown.by)),true)
+      end
+    end
+  end
   S.strong=data.strong==true local nowMs=tonumber(data.nowMs)or 0 if type(data.users)=="table"then
     pcall(F.ingestPresence,{ok=true,now=data.now,users=data.users,mute=data.mute,banned=data.banned})end
   if type(data.emojis)=="table"then S.sharedEmojis=data.emojis S.emojiSeq=tonumber(data.emojiSeq)or 0 end
@@ -9700,6 +10712,7 @@ function F.sendNow()local rawInput=H.trim(U.input.Text)if rawInput==""then retur
     F.toast(T("announce_ro"),true)return end
   local text=F.expandShortcodes(rawInput)if#text>CFG.MAX_CONTENT then F.toast(T("too_long"),true);return end if F.muted(P.username)then F.toast(T("muted"),true);return end
   if S.banned then F.toast(T("banned_you"),true);return end
+  if type(S.lockdown)=="table"and S.lockdown.active and not F.isStaff(P.username)then F.toast((L=="en"and"🔒 Server chat is locked by @"or"🔒 Kênh chat đang tạm khóa bởi @")..F.disp(S.lockdown.by or"Admin")..(S.lockdown.reason~=""and(": "..F.disp(S.lockdown.reason))or""),true);return end
   local lt=text:lower()if(lt:find("@everyone",1,true)or lt:find("@here",1,true))and not F.canMentionAll(P.username)then F.toast(T("no_ping"),true);return end
   if S.editing then local m=S.msgs[S.editing]if m and m.author==P.username then m.content=text;m.edited=true if S.frames[m.packetId]then F.dropFrame(m.packetId);F.renderMessage(m)end
       F.bubble(P.username,text,m.chan)
@@ -9964,10 +10977,14 @@ function F.markTeleporting()
   end
   if F.save then F.save(true)end
 end
---- [F.clearGameChatOnQuit] Xóa lịch sử chat `#game` được lưu tạm khi người chơi thoát hẳn game (không phải Rejoin)
+--- [F.clearGameChatOnQuit] Xóa lịch sử chat `#game` và gửi tín hiệu Offline (`off=true`) khi người chơi thoát hẳn game (không phải Rejoin)
 function F.clearGameChatOnQuit()
   if S.isTeleporting then return end
   S.quitting=true
+  if not S._sentQuitOff then
+    S._sentQuitOff=true
+    task.spawn(function()pcall(rawRequest,"POST","/api/presence",{u=P.username,off=true})end)
+  end
   if hasIO and type(delfile)=="function"then pcall(delfile,REJOIN_FILE)end
   if F.save then F.save(true)end
 end
@@ -10085,7 +11102,14 @@ pcall(function()
 end)
 pcall(function()
   hook(Players.PlayerRemoving,function(pl)
-    if pl==LP and not S.isTeleporting then F.clearGameChatOnQuit()end
+    if pl==LP then
+      if not S.isTeleporting then F.clearGameChatOnQuit()end
+    elseif pl and pl.Name then
+      local b=S.bubbles and S.bubbles[pl.Name]
+      if b then pcall(function()if type(b)=="table"and b.bb then b.bb:Destroy()elseif b.Destroy then b:Destroy()end end);S.bubbles[pl.Name]=nil end
+      local sb=S.sameBb and S.sameBb[pl.Name]
+      if sb then pcall(function()sb:Destroy()end);S.sameBb[pl.Name]=nil end
+    end
   end)
 end)
 -- Lệnh /invite: Gửi lời mời vào server game hiện tại lên khung chat
@@ -10217,7 +11241,7 @@ function F.updateTokenFeedback(text)if not U.inputStroke or not U.tokenBar then 
       U.tokenStatePill.Text=T(active.status=="ok"and"tok_state_ok"or(active.status=="wait"and"tok_state_wait"or"tok_state_bad"))end else if U.inputRich then U.inputRich.Visible=false;U.inputRich.Text=""end
     U.input.TextTransparency=0
     local isFocused=S.inputFocused or(U.input and U.input:IsFocused())
-    U.input.TextColor3=TH.text U.inputStroke.Color=isFocused and TH.accent or TH.inputBorder U.inputStroke.Transparency=isFocused and 0.05 or 0.25 if U.chatBarStroke then U.chatBarStroke.Color=TH.border U.chatBarStroke.Transparency=0.35 end if U.tokenDot then
+    U.input.TextColor3=TH.text U.inputStroke.Color=isFocused and TH.accent or TH.inputBorder U.inputStroke.Transparency=isFocused and 0.05 or 0.25 if U.chatBarStroke then local bgGlow=(P.borderGlow~=false)U.chatBarStroke.Color=bgGlow and H.mix(TH.border,TH.accent,0.35)or TH.border U.chatBarStroke.Transparency=bgGlow and 0.18 or 0.35 end if U.tokenDot then
       U.tokenDot.BackgroundColor3=(text~=""or isFocused)and TH.accent or TH.muted end end
   local changed=(U.tokenBar.Visible~=hasTokens)U.tokenBar.Visible=hasTokens return changed end
 --- [F.updateSuggest] Cập nhật thanh gợi ý tự động hoàn thành (Autocomplete Suggestions) cho lệnh `/`, `@mention` và `:emoji:`
@@ -10344,7 +11368,13 @@ hook(U.mini.MouseButton1Click,function()if S.miniMoved then S.miniMoved=false re
 hook(U.bMin.MouseButton1Click,function()U.main.Visible=false;U.mini.Visible=true;P.minimized=true;S.isDirty=true;F.save(true)end)hook(U.bLang.MouseButton1Click,function()F.setLang(L=="en"and"vi"or"en")end)hook(U.bFind.MouseButton1Click,function()
   U.searchBox.Visible=not U.searchBox.Visible if not U.searchBox.Visible then U.searchBox.Text="";S.search="";F.rebuildFeed()else U.searchBox:CaptureFocus()end
   F.layout()end)
-hook(U.searchBox:GetPropertyChangedSignal("Text"),function()S.search=U.searchBox.Text;F.rebuildFeed()end)hook(U.bUsers.MouseButton1Click,F.openOnline)hook(U.bMe.MouseButton1Click,function()F.openProfile(P.username)end)
+hook(U.searchBox:GetPropertyChangedSignal("Text"),function()
+  local txt=U.searchBox.Text
+  S.search=txt
+  S._searchSeq=(S._searchSeq or 0)+1
+  local seq=S._searchSeq
+  if txt==""then F.rebuildFeed()else task.delay(0.12,function()if S._searchSeq==seq then F.rebuildFeed()end end)end
+end)hook(U.bUsers.MouseButton1Click,F.openOnline)hook(U.bMe.MouseButton1Click,function()F.openProfile(P.username)end)
 hook(U.bSet.MouseButton1Click,F.openSettings);(function()for name,b in pairs(U.tabs)do hook(b.MouseButton1Click,function()if name=="dm"then F.openDMList()else F.selectChannel(name)end end)end end)()
 hook(U.sendBtn.MouseButton1Click,F.sendNow)
 hook(U.input.Focused,function()S.inputFocused=true;if U.inputRich then U.inputRich.Visible=false;U.inputRich.Text=""end;U.input.TextTransparency=0;F.updateTokenFeedback(U.input.Text)end)
@@ -10353,10 +11383,11 @@ hook(U.input:GetPropertyChangedSignal("Text"),function()F.updateSuggest()local t
   if not S.editing and S.booted and S.chan then
     P.drafts=type(P.drafts)=="table"and P.drafts or{}
     local ck=F.chanKey(S.chan)
+    local hadDraft=P.drafts[ck]~=nil
     local clean=(H.trim(t)~=""and t:sub(1,1)~="/"and S.chan~="scripts"and S.chan~="punish"and t)or nil
     if P.drafts[ck]~=clean then
       P.drafts[ck]=clean;S.isDirty=true
-      if F.updateInfo then F.updateInfo()end
+      if(clean~=nil)~=hadDraft and F.updateInfo then F.updateInfo()end
     end
   end
   if t~=""and t:sub(1,1)~="/"and S.chan~="scripts"and S.chan~="punish"then
@@ -10395,7 +11426,7 @@ local function pollLoop()while NET.alive do
       pQuery=tconcat(qParts)
       S.lastPresPiggy=os.clock()
     end
-    local path=string.format("/api/feed?since=%s&limit=%d&rs=%s&ss=%s&es=%s&as=%s&ms=%s&vws=%s&gs=%s&fbs=%s&u=%s&gpl=%d&gjb=%s&wait=%d%s",H.num(since),S.lastSeq==0 and CFG.HISTORY or 100,H.num(rs),H.num(S.scriptSeq or 0),H.num(S.emojiSeq or 0),H.num(S.announceSeq or 0),H.num(S.modSeq or 0),H.num(S.seenSeq or 0),H.num(S.groupSeq or 0),H.num(S.feedbackSeq or 0),H.url(P.username),tonumber(game.PlaceId)or 0,H.url(tostring(game.JobId or"")),wait,pQuery)local t0=os.clock()
+    local path=string.format("/api/feed?since=%s&limit=%d&rs=%s&ss=%s&es=%s&as=%s&ms=%s&vws=%s&gs=%s&fbs=%s&lks=%s&u=%s&gpl=%d&gjb=%s&wait=%d%s",H.num(since),S.lastSeq==0 and CFG.HISTORY or 100,H.num(rs),H.num(S.scriptSeq or 0),H.num(S.emojiSeq or 0),H.num(S.announceSeq or 0),H.num(S.modSeq or 0),H.num(S.seenSeq or 0),H.num(S.groupSeq or 0),H.num(S.feedbackSeq or 0),H.num(S.lockdownSeq or 0),H.url(P.username),tonumber(game.PlaceId)or 0,H.url(tostring(game.JobId or"")),wait,pQuery)local t0=os.clock()
     local data,err=rawRequest("GET",path)if not NET.alive then break end if data and data.ok then if sweep then S.sweepAt=os.clock()end
       local first=S.lastSeq==0 S.pollFail,S.lpFails,S.lastPollOk=0,0,os.clock()
       local ok,e=pcall(F.ingest,data,first)if not ok then warn("[CB47] ingest: "..tostring(e))end if first and not S.booted then F.afterBoot()end
@@ -10404,9 +11435,9 @@ local function pollLoop()while NET.alive do
       if S.lpOn and S.lpFails>=3 then S.lpOn=false;S.lpRetryAt=os.clock()+CFG.LP_RETRY end
       F.paintDot()task.wait(min(5,0.5*S.pollFail))end
     if not S.lpOn and S.lpRetryAt and os.clock()>S.lpRetryAt and CFG.LONGPOLL>0 then S.lpOn,S.lpFails,S.lpRetryAt=true,0,nil end end end
---- [heartbeatLoop] Vòng lặp nền định kỳ gửi tín hiệu trực tuyến (`F.heartbeat`) mỗi `CFG.HEARTBEAT` giây
+--- [heartbeatLoop] Vòng lặp nền định kỳ gửi tín hiệu trực tuyến (`F.heartbeat`) khi lâu không nhận được `/api/feed` (tiết kiệm quota Cloudflare)
 local function heartbeatLoop()while NET.alive do task.wait(CFG.HEARTBEAT)
-    if NET.alive then F.heartbeat(false)end end end
+    if NET.alive and(S.lastPollOk==0 or os.clock()-S.lastPollOk>=28)then F.heartbeat(false)end end end
 local function updateBubbles()
   local camPos=workspace.CurrentCamera and workspace.CurrentCamera.CFrame and workspace.CurrentCamera.CFrame.Position
   for _,st in pairs(S.bubbles)do
@@ -10447,9 +11478,12 @@ local function tickLoop()local n=0 while NET.alive do task.wait(0.5)n=n+1 local 
     if n%6==0 and S.booted and U.main and U.main.Visible and P.showSeen then pcall(F.markChannelSeen,S.chan)end
     if n%10==0 then local alive={}
       for _,c in ipairs(conns)do if c.Connected then alive[#alive+1]=c end end conns=alive if#reg>800 then F.pruneThemeReg()end
+      local myLow,expChanged=P.username:lower(),false
+      for uk,ur in pairs(S.users or{})do if tostring(uk):lower()~=myLow and type(ur)=="table"and ur.recvAt and not F.isLive(ur)then if F.markUserOfflineLocal(uk)then expChanged=true end end end
       F.updateInfo()
+      if expChanged and type(S.refreshOnlineList)=="function"then pcall(S.refreshOnlineList)end
       if S.mutes[P.username]and not F.muted(P.username)and P.mute.on then P.mute.on=false;S.isDirty=true end
-      pcall(F.refreshSame)if n%120==0 then local cnt=0 for _,r in pairs(S.users)do if F.isLive(r)then cnt=cnt+1 end end
+      pcall(F.refreshSame)if n%120==0 then local cnt=1 for u,r in pairs(S.users)do if tostring(u):lower()~=myLow and F.isLive(r)then cnt=cnt+1 end end
         if cnt<=1 and#Players:GetPlayers()>1 then F.publish({type="req_presence",author=P.username,chan="general"},"fast")end end end
     if S.isDirty then F.save(false)end end end
 F._bootLoops=function()task.spawn(pollLoop)task.spawn(heartbeatLoop)task.spawn(tickLoop)end end)()
@@ -10480,12 +11514,13 @@ function F.afterBoot()if S.booted then return end
 --- [F.stop] Dừng toàn bộ vòng lặp mạng, lưu dữ liệu lần cuối, ngắt mọi kết nối sự kiện và xóa giao diện Chat Bridge
 function F.stop()if S.stopped then return end
   S.stopped=true F.stopInlineSound()F.save(true)
-  task.spawn(function()pcall(rawRequest,"POST","/api/presence",{u=P.username,off=true})end)task.delay(0.5,function()NET.alive=false end)F.emit("stop")for _,c in ipairs(conns)do pcall(function()c:Disconnect()end)end
+  if not S._sentQuitOff then S._sentQuitOff=true;task.spawn(function()pcall(rawRequest,"POST","/api/presence",{u=P.username,off=true})end)end
+  task.delay(0.5,function()NET.alive=false end)F.emit("stop")for _,c in ipairs(conns)do pcall(function()c:Disconnect()end)end
   for _,b in pairs(S.bubbles)do pcall(function()if type(b)=="table"and b.bb then b.bb:Destroy()elseif b.Destroy then b:Destroy()end end)end for _,b in pairs(S.sameBb or{})do pcall(function()b:Destroy()end)end
   pcall(function()U.gui:Destroy()end)
   for v=47,41,-1 do ENV["CB"..v.."_STOP"]=nil ENV["CB"..v]=nil end end
 for v=47,41,-1 do ENV["CB"..v.."_STOP"]=F.stop end
-;(function()local CB_API={version="47.0",cfg=CFG,F=F,S=S,P=P,U=U,H=H,command=F.command,on=F.on,toast=F.toast,
+;(function()local CB_API={version="47.5",cfg=CFG,F=F,S=S,P=P,U=U,H=H,command=F.command,on=F.on,toast=F.toast,
   send=function(text,chan)if chan then F.selectChannel(chan)end
     U.input.Text=tostring(text);F.sendNow()end,
     request=F.openRequest,admin=F.openAdmin,roles=F.openRoles,diag=F.openDiag,suggest=F.openSuggestions,bug=F.openBugReport}
@@ -10510,5 +11545,5 @@ end)if F._bootLoops then F._bootLoops()end task.spawn(function()
     if S.lastPollOk==0 or os.clock()-S.lastPollOk>90 then S.pollFail=0 S.lpOn=CFG.LONGPOLL>0 S.lpFails=0 warn("[CB47] Watchdog: resync")end
   end
 end)if saved.W==nil and IS_MOBILE then P.W,P.H=340,480 end
-print("[CB47] Chat Bridge v47.0 · "..EXEC.." · "..(L=="en"and"Stop: getgenv().CB47_STOP()"or"Dừng: getgenv().CB47_STOP()"))
+print("[CB47.5] Chat Bridge v47.5 · "..EXEC.." · "..(L=="en"and"Stop: getgenv().CB47_STOP()"or"Dừng: getgenv().CB47_STOP()"))
 end)()
