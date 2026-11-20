@@ -7930,7 +7930,6 @@ function F.openProfile(u,initTab,_noFetch)
   if u==""then return end
   S._profReqGen=(S._profReqGen or 0)+1
   local reqGen=S._profReqGen
-  S.reopenModal=function()F.openProfile(u,initTab,true)end
   local st=F._PROF.initState(u,initTab)
   local pt=st.pTheme
   local v=viewNow()
@@ -7941,6 +7940,7 @@ function F.openProfile(u,initTab,_noFetch)
   do local om=st.markDirty;st.markDirty=function()st._boardDirty=true;om()end end
 
   local scr,_,box=F.modalBox(T("profile"),mw,mh,{noAppTheme=true,cols=st.cols,pt=st.pTheme})
+  S.reopenModal=function()F.openProfile(u,initTab,true)end
   box.ClipsDescendants=true
   for _,ch in ipairs(box:GetChildren())do
     if ch:IsA("UIGradient")then ch:Destroy()
@@ -8600,6 +8600,7 @@ end
 --- Namespace nội bộ Theme Studio: tái sử dụng Preview đóng khung, Wallpaper Framing Studio (Store/Crop/HD) & Đồng bộ Profile <-> App
 F._THEME={}
 function F._THEME.buildPreview(scr,onPickCrop)
+  local lastPvImg=nil
   local pv=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BorderSizePixel=0,ClipsDescendants=true},scr)
   local pvCor=corner(pv,P.uiRadius or 10)
   local pvSt=mk("UIStroke",{Thickness=1.2,Transparency=0.3,ApplyStrokeMode=smBorder},pv)
@@ -8653,8 +8654,8 @@ function F._THEME.buildPreview(scr,onPickCrop)
       pvWp.ImageTransparency=wpTr
       pvTint.BackgroundColor3=TH.bg
       pvTint.BackgroundTransparency=1-clamp(tonumber(P.backgroundDim)or 0.25,0,0.75)
-      if forceLoad==true or pv._lastImg~=imgId then
-        pv._lastImg=imgId
+      if forceLoad==true or lastPvImg~=imgId then
+        lastPvImg=imgId
         F.setAsset(pvWp,imgId,function()
           if pvWp and pvWp.Parent then
             pvWp.ImageTransparency=wpTr
@@ -8831,11 +8832,13 @@ function F.openTheme(keepScroll)
   local prevScrY=keepScroll and S._themeScrY or 0
   if not keepScroll then S._themeUndoSnap=F.themeCode()end
   local undoSnap=S._themeUndoSnap or F.themeCode()
-  S.reopenModal=function()F.openTheme(true)end
   local scr,_,box=F.modalBox(T("theme"),420,660)
+  S.reopenModal=function()F.openTheme(true)end
   local bgCtrl,updPv,refreshRows,syncAllControls,buildPresetGrid,rebuildSavedSlots,paintSel
+  local boxH=min(660,viewNow().Y-16)
+  local pinPreview=(boxH>=480)
 
-  -- ghim Preview + Undo ở trên, nút Save & Close ở dưới box (giữa là ScrollingFrame mượt)
+  -- ghim Undo/Lưu nhanh ở trên, nút Lưu & Đóng ở dưới; màn hình thấp (điện thoại xoay ngang) đưa Preview vào trong vùng cuộn để không ép khung cuộn
   local topPin=mk("Frame",{Size=u2(1,-16,0,28),Position=uo(8,38),BackgroundTransparency=1,ZIndex=44},box)
   local undoB=rbtn(topPin,L=="en"and"Undo"or"Hoàn tác",{size=uo(84,26),pos=uo(0,1),key="btnBg",ts=10,r=6})
   F.btnIcon(undoB,"rotateCcw",11,20,6,{key="warn"})
@@ -8844,13 +8847,18 @@ function F.openTheme(keepScroll)
   local tsvIc=F.btnIcon(topSaveBtn,"save",11,21,7,{col=H.onColor(TH.ok),themed=false})
   themed(tsvIc,function(ic)ic.ImageColor3=H.onColor(TH.ok)end)
 
-  local pvPin=mk("Frame",{Size=u2(1,-16,0,130),Position=uo(8,69),BackgroundTransparency=1,ZIndex=44},box)
-  updPv=F._THEME.buildPreview(pvPin,function()if bgCtrl and bgCtrl.openCrop then bgCtrl.openCrop()end end)
-
-  scr.Size=u2(1,-16,1,-250);scr.Position=uo(8,203)
+  if pinPreview then
+    local pvPin=mk("Frame",{Size=u2(1,-16,0,130),Position=uo(8,69),BackgroundTransparency=1,ClipsDescendants=true,ZIndex=44},box)
+    updPv=F._THEME.buildPreview(pvPin,function()if bgCtrl and bgCtrl.openCrop then bgCtrl.openCrop()end end)
+    scr.Size=u2(1,-16,1,-250);scr.Position=uo(8,203)
+  else
+    scr.Size=u2(1,-16,1,-112);scr.Position=uo(8,70)
+    updPv=F._THEME.buildPreview(scr,function()if bgCtrl and bgCtrl.openCrop then bgCtrl.openCrop()end end)
+  end
   hook(scr:GetPropertyChangedSignal("CanvasPosition"),function()S._themeScrY=scr.CanvasPosition.Y end)
 
-  local botPin=mk("Frame",{Size=u2(1,-16,0,36),Position=u2(0,8,1,-42),BackgroundTransparency=1,ZIndex=44},box)
+  local botH=pinPreview and 36 or 32
+  local botPin=mk("Frame",{Size=u2(1,-16,0,botH),Position=u2(0,8,1,-(botH+6)),BackgroundTransparency=1,ZIndex=44},box)
   local svThemeBtn=rbtn(botPin,L=="en"and"Save & Close"or"Lưu & Đóng",{size=us(1,1),key="ok",ts=12,r=8})
   local bsvIc=F.btnIcon(svThemeBtn,"save",14,28,12,{col=H.onColor(TH.ok),themed=false,padR=8})
   themed(bsvIc,function(ic)ic.ImageColor3=H.onColor(TH.ok)end)
@@ -9080,7 +9088,7 @@ function F.openTheme(keepScroll)
 
   lab(scr,T("font_family"),{h=14,ts=10,bold=true,key="muted"})
   local fontGrid=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)
-  mk("UIGridLayout",{CellSize=u2(0.25,-4,0,28),CellPadding=uo(5,5),SortOrder=soLO,Parent=fontGrid})
+  mk("UIGridLayout",{CellSize=u2(0.25,-4,0,28),CellPadding=uo(5,5),SortOrder=soLO},fontGrid)
   for idx,fKey in ipairs(FONT_ORDER)do
     local fm=FONT_MAP[fKey]
     local fb=tbtn(fontGrid,fm.name,{size=u2(1,0,1,0),ts=10,r=6,layout=idx})
@@ -9183,6 +9191,7 @@ function F.openTheme(keepScroll)
   end)
   local imp=field(scr,"","")imp.PlaceholderText=T("theme_paste")local ib=tbtn(scr,T("theme_import"),{key="accent",h=30,ts=11})
   hook(ib.MouseButton1Click,function()if F.importTheme(imp.Text)then imp.Text="";F.save(true);syncAllControls();F.toast(T("theme_ok"),true)else F.toast(T("theme_bad"),true)end end)
+  do local lo=0 for _,ch in ipairs(scr:GetChildren())do if ch:IsA("GuiObject")then lo=lo+1;ch.LayoutOrder=lo end end end
   if prevScrY>0 then pcall(function()scr.CanvasPosition=v2(0,prevScrY)end)end
 end
 --- [F.openRequest] Mở hộp thoại để người dùng chọn Role và gửi đơn xin cấp Role tới đội ngũ Quản trị
@@ -9603,8 +9612,8 @@ end
 --- [F.openSettings] Mở hộp thoại Cài đặt tổng hợp (Hồ sơ nhanh, Cài đặt chung, Giao diện, Góp ý & Báo lỗi, Dữ liệu & Công cụ Quản trị)
 function F.openSettings(keepScroll)
   local prevScrY=keepScroll and S._setScrY or 0
-  S.reopenModal=function()F.openSettings(true)end
   local scr=F.modalBox(T("settings"),420,640)
+  S.reopenModal=function()F.openSettings(true)end
   hook(scr:GetPropertyChangedSignal("CanvasPosition"),function()S._setScrY=scr.CanvasPosition.Y end)
   local wrap=mk("Frame",{Size=u2(1,0,0,0),AutomaticSize=asY,BackgroundTransparency=1},scr)list(wrap,8)
   local hd=mk("Frame",{Size=u2(1,0,0,76),BorderSizePixel=0,LayoutOrder=1},wrap)
